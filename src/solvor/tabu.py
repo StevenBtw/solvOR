@@ -6,7 +6,7 @@ recently visited moves to escape local optima. Uses aspiration criteria
 to override tabu status when a move improves the best_solution.
 
 Usage:
-    from src.tabu import tabu_search, solve_tsp, Status
+    from solvor.tabu import tabu_search, solve_tsp, Status
     result = tabu_search(initial, objective_fn, neighbors)
     result = solve_tsp(distance_matrix)
 
@@ -27,22 +27,23 @@ Parameter impact:
     max_no_improve    -> controls diversification vs early termination
 """
 
-from collections import namedtuple, deque
-from enum import IntEnum, auto
+from collections import deque
+from collections.abc import Callable, Sequence
 from itertools import pairwise
+from solvor.types import Status, Result
 
 __all__ = ["tabu_search", "solve_tsp", "Status", "Result"]
 
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
-
-def tabu_search(initial, objective_fn, neighbors, minimize=True, cooldown=10, max_iter=1000, max_no_improve=100):
+def tabu_search[T, M](
+    initial: T,
+    objective_fn: Callable[[T], float],
+    neighbors: Callable[[T], Sequence[tuple[M, T]]],
+    *,
+    minimize: bool = True,
+    cooldown: int = 10,
+    max_iter: int = 1000,
+    max_no_improve: int = 100,
+) -> Result:
     """(initial, objective_fn, neighbors, opts) -> Result with best_solution found."""
     sign = 1 if minimize else -1
     evals = 0
@@ -90,7 +91,12 @@ def tabu_search(initial, objective_fn, neighbors, minimize=True, cooldown=10, ma
     final_obj = best_obj * sign
     return Result(best_solution, final_obj, iteration, evals, Status.FEASIBLE)
 
-def solve_tsp(matrix, minimize=True, **kwargs):
+def solve_tsp(
+    matrix: Sequence[Sequence[float]],
+    *,
+    minimize: bool = True,
+    **kwargs,
+) -> Result:
     """(distance_matrix, opts) -> Result with optimal tour as solution."""
     n = len(matrix)
 

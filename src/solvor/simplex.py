@@ -9,7 +9,7 @@ artificial variables. Phase II optimizes the objective using Bland's rule
 to prevent cycling in degenerate cases.
 
 Usage:
-    from src.simplex import solve_lp, Status
+    from solvor.simplex import solve_lp, Status
     result = solve_lp(c, A, b)
     result = solve_lp(c, A, b, minimize=False)  # maximize
 
@@ -31,23 +31,20 @@ Status values:
 """
 
 from array import array
-from collections import namedtuple
-from enum import IntEnum, auto
+from collections.abc import Sequence
+from solvor.types import Status, Result
 
 __all__ = ["solve_lp", "Status", "Result"]
 
-EPS = 1e-10
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
-
-def solve_lp(c, A, b, minimize=True, eps=EPS, max_iter=100_000):
+def solve_lp(
+    c: Sequence[float],
+    A: Sequence[Sequence[float]],
+    b: Sequence[float],
+    *,
+    minimize: bool = True,
+    eps: float = 1e-10,
+    max_iter: int = 100_000,
+) -> Result:
     """(c, A, b, opts) -> Result with optimal solution or status."""
     m, n = len(b), len(c)
     weights = list(c) if minimize else [-ci for ci in c]
@@ -83,6 +80,9 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
     n_total = n + m
     art_cols = []
 
+    # Save original objective BEFORE inserting artificial columns
+    orig_obj = array('d', matrix[-1])
+
     for i in range(m):
         if matrix[i][-1] < -eps:
             for j in range(n_cols):
@@ -103,7 +103,6 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
         return Status.OPTIMAL, 0, matrix, basis, basis_set
 
     n_cols = len(matrix[0])
-    orig_obj = array('d', matrix[-1])
     matrix[-1] = array('d', [0.0] * n_cols)
 
     for col in art_cols:

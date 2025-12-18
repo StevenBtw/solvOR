@@ -6,7 +6,7 @@ model and Expected Improvement acquisition function. Ideal for hyperparameter
 tuning where function evaluations are costly.
 
 Usage:
-    from src.bayesian import bayesian_opt, Status
+    from solvor.bayesian import bayesian_opt, Status
     result = bayesian_opt(objective_fn, bounds=[(0, 1), (0, 1)], max_iter=50)
     result = bayesian_opt(f, bounds, minimize=False)  # maximize
 
@@ -29,23 +29,22 @@ How it works:
     4. Evaluate objective at new point, repeat from step 2
 """
 
-from collections import namedtuple
-from enum import IntEnum, auto
+from collections.abc import Callable, Sequence
 from math import sqrt, exp, pi, erf
 from random import Random
+from solvor.types import Status, Result
 
 __all__ = ["bayesian_opt", "Status", "Result"]
 
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
-
-def bayesian_opt(objective_fn, bounds, minimize=True, max_iter=50, n_initial=5, seed=None):
+def bayesian_opt(
+    objective_fn: Callable[[Sequence[float]], float],
+    bounds: Sequence[tuple[float, float]],
+    *,
+    minimize: bool = True,
+    max_iter: int = 50,
+    n_initial: int = 5,
+    seed: int | None = None,
+) -> Result:
     """(objective_fn, bounds, opts) -> Result with best solution found."""
     rng = Random(seed)
     sign = 1 if minimize else -1
@@ -69,7 +68,7 @@ def bayesian_opt(objective_fn, bounds, minimize=True, max_iter=50, n_initial=5, 
     length_scales = [(hi - lo) / 2 for lo, hi in bounds]
 
     def kernel(x1, x2):
-        sq_dist = sum(((a - b) / l) ** 2 for a, b, l in zip(x1, x2, length_scales))
+        sq_dist = sum(((a - b) / ls) ** 2 for a, b, ls in zip(x1, x2, length_scales))
         return exp(-0.5 * sq_dist)
 
     def gp_predict(x_new, X, Y, noise=1e-6):

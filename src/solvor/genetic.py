@@ -6,7 +6,7 @@ Good for combinatorial optimization where the solution space is discrete
 and the fitness landscape may have many local optima.
 
 Usage:
-    from src.genetic import evolve, Status
+    from solvor.genetic import evolve, Status
     result = evolve(objective_fn, population, crossover, mutate)
     result = evolve(f, pop, cross, mut, minimize=False)  # maximize
 
@@ -37,24 +37,28 @@ Example (TSP):
 """
 
 from collections import namedtuple
-from enum import IntEnum, auto
+from collections.abc import Callable, Sequence
 from operator import attrgetter
 from random import Random
+from solvor.types import Status, Result
 
 __all__ = ["evolve", "Status", "Result"]
 
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 Individual = namedtuple('Individual', ['solution', 'fitness'])
 
-def evolve(objective_fn, population, crossover, mutate, minimize=True, elite_size=2,
-           mutation_rate=0.1, max_gen=100, tournament_k=3, seed=None):
+def evolve[T](
+    objective_fn: Callable[[T], float],
+    population: Sequence[T],
+    crossover: Callable[[T, T], T],
+    mutate: Callable[[T], T],
+    *,
+    minimize: bool = True,
+    elite_size: int = 2,
+    mutation_rate: float = 0.1,
+    max_gen: int = 100,
+    tournament_k: int = 3,
+    seed: int | None = None,
+) -> Result:
     """(objective_fn, population, crossover, mutate, opts) -> Result with best solution."""
     rng = Random(seed)
     sign = 1 if minimize else -1

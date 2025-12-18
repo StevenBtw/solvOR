@@ -8,7 +8,7 @@ integer variables. Nodes are pruned when their bound exceeds the best_solution.
 Best-first selection prioritizes nodes with the tightest bound.
 
 Usage:
-    from src.milp import solve_milp, Status
+    from solvor.milp import solve_milp, Status
     result = solve_milp(c, A, b, integers=[0, 2])
     result = solve_milp(c, A, b, integers=[0, 1], minimize=False)
 
@@ -33,25 +33,28 @@ Parameter impact:
 """
 
 from collections import namedtuple
-from enum import IntEnum, auto
+from collections.abc import Sequence
 from heapq import heappush, heappop
 from math import floor, ceil
-
-from src.simplex import solve_lp, Status as LPStatus
+from solvor.simplex import solve_lp, Status as LPStatus
+from solvor.types import Status, Result
 
 __all__ = ["solve_milp", "Status", "Result"]
 
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 Node = namedtuple('Node', ['bound', 'lower', 'upper', 'depth'])
 
-def solve_milp(c, A, b, integers, minimize=True, eps=1e-6, max_iter=10_000, max_nodes=100_000, gap_tol=1e-6):
+def solve_milp(
+    c: Sequence[float],
+    A: Sequence[Sequence[float]],
+    b: Sequence[float],
+    integers: Sequence[int],
+    *,
+    minimize: bool = True,
+    eps: float = 1e-6,
+    max_iter: int = 10_000,
+    max_nodes: int = 100_000,
+    gap_tol: float = 1e-6,
+) -> Result:
     """(c, A, b, integers, opts) -> Result with optimal integer solution or status."""
     n = len(c)
     int_set = set(integers)
@@ -135,7 +138,6 @@ def solve_milp(c, A, b, integers, minimize=True, eps=1e-6, max_iter=10_000, max_
 
 def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
     n = len(c)
-    m = len(b)
 
     bound_rows = []
     bound_rhs = []
