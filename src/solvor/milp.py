@@ -34,22 +34,13 @@ Parameter impact:
 
 from collections import namedtuple
 from collections.abc import Sequence
-from enum import IntEnum, auto
 from heapq import heappush, heappop
 from math import floor, ceil
-
 from solvor.simplex import solve_lp, Status as LPStatus
+from solvor.types import Status, Result
 
 __all__ = ["solve_milp", "Status", "Result"]
 
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 Node = namedtuple('Node', ['bound', 'lower', 'upper', 'depth'])
 
 def solve_milp(

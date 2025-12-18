@@ -29,22 +29,12 @@ Parameter impact:
     cooling too slow     -> wastes iterations at high temperature
 """
 
-from collections import namedtuple
 from collections.abc import Callable
-from enum import IntEnum, auto
 from math import exp
 from random import random
+from solvor.types import Status, Result
 
 __all__ = ["anneal", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def anneal[T](
     initial: T,

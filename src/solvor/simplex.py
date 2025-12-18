@@ -31,20 +31,10 @@ Status values:
 """
 
 from array import array
-from collections import namedtuple
 from collections.abc import Sequence
-from enum import IntEnum, auto
+from solvor.types import Status, Result
 
 __all__ = ["solve_lp", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def solve_lp(
     c: Sequence[float],

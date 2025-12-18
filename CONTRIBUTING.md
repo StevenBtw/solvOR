@@ -21,22 +21,34 @@ uv run ruff check src/
 
 ## Code Style
 
-Follow the projects style:  
+Follow the project's style:
 
 - **Pure Python** - no external dependencies
 - **snake_case** everywhere
 - **Type hints** on public APIs, skip for internal helpers
 - **Keyword-only** for optional parameters (use `*`)
 - **Minimal comments** - explain *why*, not *what*
+- **Sets for membership** - O(1) lookup, not lists
+- **Immutable state** - solutions passed between iterations should be immutable; working structures can mutate
+
+## Terminology
+
+Use consistent naming across all solvers:
+
+| Term | Usage |
+|------|-------|
+| `solution` | Current candidate being evaluated |
+| `best_solution` | Best found so far |
+| `objective` | Value being optimized |
+| `objective_fn` | Function computing objective |
+| `neighbors` | Adjacent solutions (metaheuristics) |
+| `minimize` | Boolean flag (default `True`) |
 
 ## Adding a New Solver
 
 1. Create `src/solvor/<solver_name>.py`
-2. Export `Status`, `Result`, and main solver function
-3. Follow the `Result` namedtuple format:
-   ```python
-   Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
-   ```
+2. Import shared types: `from solvor.types import Status, Result`
+3. Export `Status`, `Result`, and main solver function in `__all__`
 4. Add exports to `src/solvor/__init__.py`
 5. Add tests to `tests/test_solvers.py`
 6. Update `README.md` with usage examples

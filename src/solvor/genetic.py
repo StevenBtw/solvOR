@@ -38,20 +38,12 @@ Example (TSP):
 
 from collections import namedtuple
 from collections.abc import Callable, Sequence
-from enum import IntEnum, auto
 from operator import attrgetter
 from random import Random
+from solvor.types import Status, Result
 
 __all__ = ["evolve", "Status", "Result"]
 
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 Individual = namedtuple('Individual', ['solution', 'fitness'])
 
 def evolve[T](

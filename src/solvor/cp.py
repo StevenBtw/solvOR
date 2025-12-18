@@ -29,22 +29,11 @@ Returns Result(solution, objective, iterations, evaluations, status)
     objective = 0 (satisfaction only, no optimization)
 """
 
-from collections import namedtuple
-from enum import IntEnum, auto
 from itertools import combinations
-
 from solvor.sat import solve_sat, Status as SATStatus
+from solvor.types import Status, Result
 
 __all__ = ["Model", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 class IntVar:
     def __init__(self, model, lb, ub, name):

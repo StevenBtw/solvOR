@@ -31,21 +31,11 @@ Note: For objective value, evaluate your objective function on result.solution.
 These methods only use gradients, not function values.
 """
 
-from collections import namedtuple
 from collections.abc import Callable, Sequence
-from enum import IntEnum, auto
 from math import sqrt
+from solvor.types import Status, Result
 
 __all__ = ["gradient_descent", "momentum", "adam", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def gradient_descent(
     grad_fn: Callable[[Sequence[float]], Sequence[float]],

@@ -29,22 +29,12 @@ How it works:
     4. Evaluate objective at new point, repeat from step 2
 """
 
-from collections import namedtuple
 from collections.abc import Callable, Sequence
-from enum import IntEnum, auto
 from math import sqrt, exp, pi, erf
 from random import Random
+from solvor.types import Status, Result
 
 __all__ = ["bayesian_opt", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def bayesian_opt(
     objective_fn: Callable[[Sequence[float]], float],

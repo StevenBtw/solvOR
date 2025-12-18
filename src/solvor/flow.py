@@ -30,20 +30,11 @@ Examples:
     # Assignment problem: use min_cost_flow with costs
 """
 
-from collections import namedtuple, defaultdict, deque
+from collections import defaultdict, deque
 from collections.abc import Sequence
-from enum import IntEnum, auto
+from solvor.types import Status, Result
 
 __all__ = ["max_flow", "min_cost_flow", "solve_assignment", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def max_flow[Node](
     graph: dict[Node, list[tuple[Node, int, ...]]],

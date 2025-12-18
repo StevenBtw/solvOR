@@ -1,6 +1,7 @@
 """Solvor - Pure Python Optimization Solvers."""
 
-from solvor.simplex import solve_lp, Status, Result
+from solvor.types import Status, Result
+from solvor.simplex import solve_lp
 from solvor.tabu import tabu_search, solve_tsp
 from solvor.anneal import anneal
 from solvor.milp import solve_milp

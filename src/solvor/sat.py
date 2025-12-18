@@ -28,20 +28,11 @@ Status values:
     MAX_ITER   - Resource limit reached
 """
 
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from collections.abc import Sequence
-from enum import IntEnum, auto
+from solvor.types import Status, Result
 
 __all__ = ["solve_sat", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def solve_sat(
     clauses: Sequence[Sequence[int]],

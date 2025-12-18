@@ -27,21 +27,12 @@ Parameter impact:
     max_no_improve    -> controls diversification vs early termination
 """
 
-from collections import namedtuple, deque
+from collections import deque
 from collections.abc import Callable, Sequence
-from enum import IntEnum, auto
 from itertools import pairwise
+from solvor.types import Status, Result
 
 __all__ = ["tabu_search", "solve_tsp", "Status", "Result"]
-
-class Status(IntEnum):
-    OPTIMAL = auto()
-    FEASIBLE = auto()
-    INFEASIBLE = auto()
-    UNBOUNDED = auto()
-    MAX_ITER = auto()
-
-Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
 def tabu_search[T, M](
     initial: T,
