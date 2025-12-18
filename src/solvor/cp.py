@@ -5,7 +5,7 @@ Solves constraint satisfaction problems by encoding integer variables and
 constraints into SAT clauses, then solving with the SAT backend.
 
 Usage:
-    from src.cp import Model, Status
+    from solvor.cp import Model, Status
     m = Model()
     x = m.int_var(0, 9, 'x')
     y = m.int_var(0, 9, 'y')
@@ -33,7 +33,7 @@ from collections import namedtuple
 from enum import IntEnum, auto
 from itertools import combinations
 
-from src.sat import solve_sat, Status as SATStatus
+from solvor.sat import solve_sat, Status as SATStatus
 
 __all__ = ["Model", "Status", "Result"]
 

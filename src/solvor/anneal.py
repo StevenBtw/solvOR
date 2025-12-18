@@ -6,7 +6,7 @@ Temperature T decreases over time following a cooling schedule, gradually shifti
 from exploration (high T) to exploitation (low T).
 
 Usage:
-    from src.sa import anneal, Status
+    from solvor.anneal import anneal, Status
     result = anneal(initial, objective_fn, neighbors)
     result = anneal(initial, objective_fn, neighbors, minimize=False)
 
@@ -30,6 +30,7 @@ Parameter impact:
 """
 
 from collections import namedtuple
+from collections.abc import Callable
 from enum import IntEnum, auto
 from math import exp
 from random import random
@@ -45,7 +46,17 @@ class Status(IntEnum):
 
 Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
-def anneal(initial, objective_fn, neighbors, minimize=True, temperature=1000.0, cooling=0.9995, min_temp=1e-8, max_iter=100_000):
+def anneal[T](
+    initial: T,
+    objective_fn: Callable[[T], float],
+    neighbors: Callable[[T], T],
+    *,
+    minimize: bool = True,
+    temperature: float = 1000.0,
+    cooling: float = 0.9995,
+    min_temp: float = 1e-8,
+    max_iter: int = 100_000,
+) -> Result:
     """(initial, objective_fn, neighbors, opts) -> Result with best_solution found."""
     sign = 1 if minimize else -1
     evals = 0

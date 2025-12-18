@@ -6,7 +6,7 @@ Successive Shortest Paths (min cost flow). Useful for assignment,
 bipartite matching, transportation, and resource allocation.
 
 Usage:
-    from src.flow import max_flow, min_cost_flow, Status
+    from solvor.flow import max_flow, min_cost_flow, Status
 
     # Max flow: find maximum flow from source to sink
     flow_value, flows = max_flow(graph, source, sink)
@@ -21,9 +21,9 @@ Graph format:
     }
     For max_flow, cost is ignored (can be 0).
 
-Returns:
-    max_flow: (flow_value, flows_dict) where flows_dict[(u,v)] = flow on edge
-    min_cost_flow: (total_cost, flows_dict) or (inf, {}) if infeasible
+Returns Result(solution, objective, iterations, evaluations, status)
+    solution = flows dict where flows[(u,v)] = flow on edge
+    objective = total flow (max_flow) or total cost (min_cost_flow)
 
 Examples:
     # Bipartite matching: source->left, left->right, right->sink (cap=1)
@@ -31,10 +31,10 @@ Examples:
 """
 
 from collections import namedtuple, defaultdict, deque
+from collections.abc import Sequence
 from enum import IntEnum, auto
-from heapq import heappush, heappop
 
-__all__ = ["max_flow", "min_cost_flow", "Status", "Result"]
+__all__ = ["max_flow", "min_cost_flow", "solve_assignment", "Status", "Result"]
 
 class Status(IntEnum):
     OPTIMAL = auto()
@@ -45,8 +45,12 @@ class Status(IntEnum):
 
 Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
-def max_flow(graph, source, sink):
-    """(graph, source, sink) -> (flow_value, flows) using Ford-Fulkerson with BFS."""
+def max_flow[Node](
+    graph: dict[Node, list[tuple[Node, int, ...]]],
+    source: Node,
+    sink: Node,
+) -> Result:
+    """(graph, source, sink) -> Result with max flow value and flows dict."""
     capacity = defaultdict(lambda: defaultdict(int))
     for u in graph:
         for v, cap, *_ in graph[u]:
@@ -90,10 +94,15 @@ def max_flow(graph, source, sink):
         total_flow += path_flow
 
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
-    return total_flow, flows
+    return Result(flows, total_flow, 0, 0, Status.OPTIMAL)
 
-def min_cost_flow(graph, source, sink, demand):
-    """(graph, source, sink, demand) -> (cost, flows) using Successive Shortest Paths."""
+def min_cost_flow[Node](
+    graph: dict[Node, list[tuple[Node, int, int]]],
+    source: Node,
+    sink: Node,
+    demand: int,
+) -> Result:
+    """(graph, source, sink, demand) -> Result using Successive Shortest Paths."""
     capacity = defaultdict(lambda: defaultdict(int))
     cost = defaultdict(lambda: defaultdict(lambda: float('inf')))
     nodes = set()
@@ -145,7 +154,7 @@ def min_cost_flow(graph, source, sink, demand):
     while total_flow < demand:
         path, path_cost = bellman_ford()
         if path is None:
-            return float('inf'), {}
+            return Result({}, float('inf'), 0, 0, Status.INFEASIBLE)
 
         path_flow = demand - total_flow
         for u, v in zip(path, path[1:]):
@@ -166,10 +175,12 @@ def min_cost_flow(graph, source, sink, demand):
         total_flow += path_flow
 
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
-    return total_cost, flows
+    return Result(flows, total_cost, 0, 0, Status.OPTIMAL)
 
-def solve_assignment(cost_matrix):
-    """(cost_matrix) -> (cost, assignment) for minimum cost assignment problem."""
+def solve_assignment(
+    cost_matrix: Sequence[Sequence[float]],
+) -> Result:
+    """(cost_matrix) -> Result with minimum cost assignment."""
     n = len(cost_matrix)
     m = len(cost_matrix[0]) if n > 0 else 0
 
@@ -184,13 +195,13 @@ def solve_assignment(cost_matrix):
     for j in range(m):
         graph[f'R{j}'].append((sink, 1, 0))
 
-    total_cost, flows = min_cost_flow(graph, source, sink, min(n, m))
+    result = min_cost_flow(graph, source, sink, min(n, m))
 
     assignment = [-1] * n
-    for (u, v), f in flows.items():
+    for (u, v), f in result.solution.items():
         if f > 0 and u.startswith('L') and v.startswith('R'):
             i = int(u[1:])
             j = int(v[1:])
             assignment[i] = j
 
-    return total_cost, assignment
+    return Result(assignment, result.objective, 0, 0, result.status)

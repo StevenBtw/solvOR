@@ -6,7 +6,7 @@ Uses DPLL (Davis-Putnam-Logemann-Loveland) with unit propagation and basic
 conflict-driven clause learning (CDCL).
 
 Usage:
-    from src.sat import solve_sat, Status
+    from solvor.sat import solve_sat, Status
     result = solve_sat([[1, 2], [-1, 3], [-2, -3]])  # (x1 OR x2) AND (NOT x1 OR x3) AND ...
     result = solve_sat(clauses, assumptions=[1, -3])  # with assumed literals
 
@@ -29,6 +29,7 @@ Status values:
 """
 
 from collections import namedtuple, defaultdict
+from collections.abc import Sequence
 from enum import IntEnum, auto
 
 __all__ = ["solve_sat", "Status", "Result"]
@@ -42,7 +43,13 @@ class Status(IntEnum):
 
 Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
-def solve_sat(clauses, assumptions=None, max_conflicts=100, max_restarts=100):
+def solve_sat(
+    clauses: Sequence[Sequence[int]],
+    *,
+    assumptions: Sequence[int] | None = None,
+    max_conflicts: int = 100,
+    max_restarts: int = 100,
+) -> Result:
     """(clauses, opts) -> Result with satisfying assignment or UNSAT."""
     if not clauses:
         return Result({}, 0, 0, 0, Status.OPTIMAL)
@@ -120,6 +127,14 @@ def solve_sat(clauses, assumptions=None, max_conflicts=100, max_restarts=100):
                 ci = watches[i]
                 clause = clauses[ci] if ci < len(clauses) else learned[ci - len(clauses)]
 
+                # Unit clauses: if the only literal is false, it's a conflict
+                if len(clause) == 1:
+                    if value(clause[0]) is False:
+                        conflicts += 1
+                        return ci
+                    i += 1
+                    continue
+
                 other = clause[1] if clause[0] == false_lit else clause[0]
                 if value(other) is True:
                     i += 1
@@ -177,7 +192,7 @@ def solve_sat(clauses, assumptions=None, max_conflicts=100, max_restarts=100):
             var = trail[trail_idx]
             trail_idx -= 1
 
-            if var not in [abs(l) for l in learned_clause]:
+            if var not in [abs(lit) for lit in learned_clause]:
                 continue
             if level.get(var, 0) != current_level:
                 continue
@@ -190,15 +205,15 @@ def solve_sat(clauses, assumptions=None, max_conflicts=100, max_restarts=100):
             else:
                 reason_clause = learned[reason_idx - len(clauses)]
 
-            lit = var if var in [abs(l) for l in learned_clause if l > 0 and abs(l) == var] else -var
+            lit = var if var in [abs(x) for x in learned_clause if x > 0 and abs(x) == var] else -var
             if lit in learned_clause:
                 learned_clause.remove(lit)
             elif -lit in learned_clause:
                 learned_clause.remove(-lit)
 
-            for l in reason_clause:
-                if abs(l) != var:
-                    learned_clause.add(l)
+            for reason_lit in reason_clause:
+                if abs(reason_lit) != var:
+                    learned_clause.add(reason_lit)
 
             count = sum(1 for lit in learned_clause if level.get(abs(lit), 0) == current_level)
 
@@ -206,7 +221,7 @@ def solve_sat(clauses, assumptions=None, max_conflicts=100, max_restarts=100):
         if not learned_list:
             return None, -1
 
-        levels = [level.get(abs(l), 0) for l in learned_list]
+        levels = [level.get(abs(lit), 0) for lit in learned_list]
         if len(set(levels)) <= 1:
             backtrack = 0
         else:

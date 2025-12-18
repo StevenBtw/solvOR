@@ -19,7 +19,7 @@ Pure Python optimization solvers. No dependencies, no nonsense.
 ## Quickstart
 
 ```bash
-pip install solvor
+uv add solvor
 ```
 
 ```python
@@ -184,7 +184,9 @@ graph = {
     'b': [('t', 10, 0)],
     't': []
 }
-flow_value, flows = max_flow(graph, 's', 't')
+result = max_flow(graph, 's', 't')
+print(result.objective)  # total flow
+print(result.solution)   # edge flows dict
 ```
 
 ### min_cost_flow / solve_assignment
@@ -197,8 +199,9 @@ costs = [
     [3, 9, 18],
     [10, 6, 12]
 ]
-total_cost, assignment = solve_assignment(costs)
-# assignment[i] = task assigned to worker i
+result = solve_assignment(costs)
+# result.solution[i] = task assigned to worker i
+# result.objective = total cost
 ```
 
 </details>
@@ -240,9 +243,9 @@ Result(
 ## Philosophy
 
 1. **Pure Python** - no numpy, no scipy, no compiled extensions
-2. **Readable** - each solver fits in one file you can actually read
+2. **Readable** - each solvor fits in one file you can actually read
 3. **Consistent** - same Result format, same minimize/maximize convention
-4. **Practical** - solves real problems, not just toy examples
+4. **Practical** - solves real problems, or AoC puzzles
 
 ---
 

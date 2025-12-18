@@ -5,7 +5,7 @@ Minimizes differentiable functions by iteratively moving in the direction
 of steepest descent. Supports vanilla GD, momentum, and Adam variants.
 
 Usage:
-    from src.gradient import gradient_descent, adam, Status
+    from solvor.gradient import gradient_descent, adam, Status
     result = gradient_descent(grad_fn, x0, lr=0.01)
     result = adam(grad_fn, x0)
 
@@ -32,6 +32,7 @@ These methods only use gradients, not function values.
 """
 
 from collections import namedtuple
+from collections.abc import Callable, Sequence
 from enum import IntEnum, auto
 from math import sqrt
 
@@ -46,7 +47,15 @@ class Status(IntEnum):
 
 Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 
-def gradient_descent(grad_fn, x0, minimize=True, lr=0.01, max_iter=1000, tol=1e-6):
+def gradient_descent(
+    grad_fn: Callable[[Sequence[float]], Sequence[float]],
+    x0: Sequence[float],
+    *,
+    minimize: bool = True,
+    lr: float = 0.01,
+    max_iter: int = 1000,
+    tol: float = 1e-6,
+) -> Result:
     """(grad_fn, x0, opts) -> Result with stationary point."""
     sign = 1 if minimize else -1
     x = list(x0)
@@ -67,7 +76,16 @@ def gradient_descent(grad_fn, x0, minimize=True, lr=0.01, max_iter=1000, tol=1e-
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
 
-def momentum(grad_fn, x0, minimize=True, lr=0.01, beta=0.9, max_iter=1000, tol=1e-6):
+def momentum(
+    grad_fn: Callable[[Sequence[float]], Sequence[float]],
+    x0: Sequence[float],
+    *,
+    minimize: bool = True,
+    lr: float = 0.01,
+    beta: float = 0.9,
+    max_iter: int = 1000,
+    tol: float = 1e-6,
+) -> Result:
     """(grad_fn, x0, opts) -> Result with stationary point using momentum."""
     sign = 1 if minimize else -1
     x = list(x0)
@@ -90,8 +108,18 @@ def momentum(grad_fn, x0, minimize=True, lr=0.01, beta=0.9, max_iter=1000, tol=1
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
 
-def adam(grad_fn, x0, minimize=True, lr=0.001, beta1=0.9, beta2=0.999, eps=1e-8,
-         max_iter=1000, tol=1e-6):
+def adam(
+    grad_fn: Callable[[Sequence[float]], Sequence[float]],
+    x0: Sequence[float],
+    *,
+    minimize: bool = True,
+    lr: float = 0.001,
+    beta1: float = 0.9,
+    beta2: float = 0.999,
+    eps: float = 1e-8,
+    max_iter: int = 1000,
+    tol: float = 1e-6,
+) -> Result:
     """(grad_fn, x0, opts) -> Result with stationary point using Adam."""
     sign = 1 if minimize else -1
     x = list(x0)
