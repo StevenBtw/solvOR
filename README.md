@@ -1,4 +1,4 @@
-# Solvor
+# solvOR
 
 ![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) 
@@ -7,7 +7,7 @@ Solvor your optimization needs..
 
 ## What's in the box?
 
-| Category | Solvers | Use Case |
+| Category | Solvors | Use Case |
 |----------|---------|----------|
 | **Linear/Integer** | `solve_lp`, `solve_milp` | Resource allocation, scheduling |
 | **Constraint** | `solve_sat` | Sudoku, configuration, puzzles |
@@ -50,7 +50,7 @@ print(result.solution)  # {'x': 3, 'y': 7}
 
 ---
 
-## Solvers
+## Solvors
 
 <details>
 <summary><strong>Linear & Integer Programming</strong></summary>
@@ -234,7 +234,7 @@ result = solve_exact_cover(matrix)
 
 ## Result Format
 
-All solvers return a consistent `Result` namedtuple:
+All solvors return a consistent `Result` namedtuple:
 
 ```python
 Result(
@@ -250,7 +250,7 @@ Result(
 
 ## When to use what?
 
-| Problem | Solver |
+| Problem | Solvor |
 |---------|--------|
 | Linear constraints, continuous variables | `solve_lp` |
 | Linear constraints, some integers | `solve_milp` |
