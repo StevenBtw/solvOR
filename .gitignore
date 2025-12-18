@@ -5,6 +5,9 @@ dist/
 .venv/
 .cl*/*
 
+# VS Code
+.vscode/
+
 # Tools
 .python-version
 .ruff_cache/
