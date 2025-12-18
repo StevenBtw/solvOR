@@ -1,6 +1,6 @@
 [project]
 name = "solvor"
-version = "0.3.2"
+version = "0.3.3"
 description = "Solvor your optimization needs."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -8,12 +8,12 @@ dependencies = []
 authors = [
     { name = "Steven Bytheway" }
 ]
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 keywords = ["optimization", "solver", "linear-programming", "sat", "metaheuristics", "operations-research"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
@@ -24,7 +24,7 @@ Repository = "https://github.com/StevenBtw/solvor"
 [project.optional-dependencies]
 dev = [
     "pytest>=9.0.2",
-    "ruff>=0.14.9",
+    "ruff>=0.14.10",
 ]
 
 [build-system]

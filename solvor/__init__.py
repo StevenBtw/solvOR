@@ -11,11 +11,13 @@ from solvor.bayesian import bayesian_opt
 from solvor.genetic import evolve
 from solvor.flow import max_flow, min_cost_flow, solve_assignment
 from solvor.gradient import gradient_descent, momentum, adam
+from solvor.dlx import solve_exact_cover
 
 __all__ = [
     "solve_lp", "solve_milp", "tabu_search", "solve_tsp", "anneal",
     "solve_sat", "Model", "bayesian_opt", "evolve",
     "max_flow", "min_cost_flow", "solve_assignment",
     "gradient_descent", "momentum", "adam",
+    "solve_exact_cover",
     "Status", "Result",
 ]

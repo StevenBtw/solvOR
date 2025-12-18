@@ -10,6 +10,7 @@ from solvor.bayesian import bayesian_opt, Status as BayesStatus
 from solvor.genetic import evolve, Status as GAStatus
 from solvor.flow import max_flow, min_cost_flow, solve_assignment, Status as FlowStatus
 from solvor.gradient import gradient_descent, momentum, adam, Status as GradStatus
+from solvor.dlx import solve_exact_cover, Status as DLXStatus
 
 
 class TestSimplex:
@@ -300,13 +301,107 @@ class TestGradient:
         assert abs(result.solution[0]) < 0.1
 
 
+class TestDLX:
+    def test_knuth_example(self):
+        # Knuth's example from "Dancing Links" paper
+        matrix = [
+            [1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 1, 0, 1],
+            [0, 0, 1, 0, 1, 1, 0],
+            [0, 1, 1, 0, 0, 1, 1],
+            [0, 1, 0, 0, 0, 0, 1],
+        ]
+        result = solve_exact_cover(matrix)
+        assert result.status == DLXStatus.OPTIMAL
+        # Rows 1, 3, 5 form exact cover (0-indexed)
+        assert set(result.solution) == {1, 3, 5}
+
+    def test_simple_cover(self):
+        # Simple 3x3 identity-like matrix
+        matrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+        result = solve_exact_cover(matrix)
+        assert result.status == DLXStatus.OPTIMAL
+        assert set(result.solution) == {0, 1, 2}
+
+    def test_no_solution(self):
+        # No exact cover exists (column 2 has no 1s)
+        matrix = [
+            [1, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+        ]
+        result = solve_exact_cover(matrix)
+        assert result.status == DLXStatus.INFEASIBLE
+
+    def test_empty_matrix(self):
+        result = solve_exact_cover([])
+        assert result.status == DLXStatus.OPTIMAL
+        assert result.solution == ()
+
+    def test_find_all_solutions(self):
+        # Matrix with multiple solutions
+        matrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [1, 1, 0],
+            [0, 1, 1],
+        ]
+        result = solve_exact_cover(matrix, find_all=True)
+        assert result.status == DLXStatus.OPTIMAL
+        # Should find multiple solutions: {0,1,2} and {0,4} and {3,2}
+        assert len(result.solution) >= 2
+
+    def test_with_column_names(self):
+        matrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+        result = solve_exact_cover(matrix, columns=['A', 'B', 'C'])
+        assert result.status == DLXStatus.OPTIMAL
+        assert set(result.solution) == {0, 1, 2}
+
+    def test_pentomino_like(self):
+        # A small exact cover instance (like puzzle placement)
+        matrix = [
+            [1, 1, 0, 0, 0],
+            [0, 1, 1, 0, 0],
+            [0, 0, 1, 1, 0],
+            [0, 0, 0, 1, 1],
+            [1, 0, 0, 0, 1],
+        ]
+        result = solve_exact_cover(matrix)
+        assert result.status == DLXStatus.INFEASIBLE  # No exact cover
+
+    def test_max_solutions_limit(self):
+        # Matrix with many solutions, limit to 2
+        matrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [1, 1, 0],
+            [0, 1, 1],
+            [1, 0, 1],
+        ]
+        result = solve_exact_cover(matrix, find_all=True, max_solutions=2)
+        assert result.status == DLXStatus.FEASIBLE
+        assert len(result.solution) == 2
+
+
 class TestStatusConsistency:
     """Verify all modules export consistent Status enum."""
 
     def test_status_values(self):
         # All Status enums should have the same values
         statuses = [LPStatus, MILPStatus, AnnealStatus, TabuStatus,
-                    SATStatus, CPStatus, BayesStatus, GAStatus, FlowStatus, GradStatus]
+                    SATStatus, CPStatus, BayesStatus, GAStatus, FlowStatus, GradStatus,
+                    DLXStatus]
 
         for status in statuses:
             assert hasattr(status, 'OPTIMAL')
