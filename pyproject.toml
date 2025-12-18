@@ -20,6 +20,7 @@ classifiers = [
 
 [project.urls]
 Repository = "https://github.com/StevenBtw/solvor"
+PyPI = "https://pypi.org/project/solvor" 
 
 [project.optional-dependencies]
 dev = [
