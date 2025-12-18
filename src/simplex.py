@@ -79,7 +79,6 @@ def solve_lp(c, A, b, minimize=True, eps=EPS, max_iter=100_000):
     return _extract(matrix, basis, m, n, status, iters + iters2, minimize)
 
 def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
-    """(matrix, basis, m, n) -> (status, iters, matrix, basis) after finding feasible solution."""
     n_cols = len(matrix[0])
     n_total = n + m
     art_cols = []
@@ -138,7 +137,6 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
     return Status.OPTIMAL, iters, matrix, basis, basis_set
 
 def _phase2(matrix, basis, basis_set, m, eps, max_iter):
-    """(matrix, basis, m) -> (status, iters, matrix, basis) after optimizing."""
     n_cols = len(matrix[0])
 
     for iteration in range(max_iter):
@@ -174,7 +172,6 @@ def _phase2(matrix, basis, basis_set, m, eps, max_iter):
     return Status.MAX_ITER, max_iter, matrix, basis, basis_set
 
 def _pivot(matrix, m, row, col, eps):
-    """(matrix, row, col) -> matrix with pivot operation applied."""
     n_cols = len(matrix[0])
     inv = 1.0 / matrix[row][col]
 
@@ -191,7 +188,6 @@ def _pivot(matrix, m, row, col, eps):
     return matrix
 
 def _extract(matrix, basis, m, n, status, iters, minimize):
-    """(matrix, basis) -> Result with solution extracted from basis."""
     solution = [0.0] * n
 
     for i in range(m):

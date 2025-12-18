@@ -36,7 +36,6 @@ from random import random
 
 __all__ = ["anneal", "Status", "Result"]
 
-
 class Status(IntEnum):
     OPTIMAL = auto()
     FEASIBLE = auto()
@@ -44,9 +43,7 @@ class Status(IntEnum):
     UNBOUNDED = auto()
     MAX_ITER = auto()
 
-
 Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
-
 
 def anneal(initial, objective_fn, neighbors, minimize=True, temperature=1000.0, cooling=0.9995, min_temp=1e-8, max_iter=100_000):
     """(initial, objective_fn, neighbors, opts) -> Result with best_solution found."""

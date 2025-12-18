@@ -41,7 +41,6 @@ from src.simplex import solve_lp, Status as LPStatus
 
 __all__ = ["solve_milp", "Status", "Result"]
 
-
 class Status(IntEnum):
     OPTIMAL = auto()
     FEASIBLE = auto()
@@ -49,10 +48,8 @@ class Status(IntEnum):
     UNBOUNDED = auto()
     MAX_ITER = auto()
 
-
 Result = namedtuple('Result', ['solution', 'objective', 'iterations', 'evaluations', 'status'])
 Node = namedtuple('Node', ['bound', 'lower', 'upper', 'depth'])
-
 
 def solve_milp(c, A, b, integers, minimize=True, eps=1e-6, max_iter=10_000, max_nodes=100_000, gap_tol=1e-6):
     """(c, A, b, integers, opts) -> Result with optimal integer solution or status."""
@@ -136,9 +133,7 @@ def solve_milp(c, A, b, integers, minimize=True, eps=1e-6, max_iter=10_000, max_
     status = Status.OPTIMAL if not tree else Status.FEASIBLE
     return Result(best_solution, best_obj, nodes_explored, total_iters, status)
 
-
 def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
-    """(c, A, b, bounds) -> LP result for node subproblem."""
     n = len(c)
     m = len(b)
 
@@ -166,9 +161,7 @@ def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
 
     return solve_lp(c, A_ext, b_ext, minimize=minimize, eps=eps, max_iter=max_iter)
 
-
 def _most_fractional(solution, int_set, eps):
-    """(solution, int_set) -> index of most fractional integer variable or None."""
     best_var, best_frac = None, 0.0
 
     for j in int_set:
@@ -180,9 +173,7 @@ def _most_fractional(solution, int_set, eps):
 
     return best_var
 
-
 def _compute_gap(best_obj, bound, minimize):
-    """(best_obj, bound) -> relative gap between incumbent and bound."""
     if abs(best_obj) < 1e-10:
         return abs(best_obj - bound)
 

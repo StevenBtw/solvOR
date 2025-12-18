@@ -29,6 +29,7 @@ Parameter impact:
 
 from collections import namedtuple, deque
 from enum import IntEnum, auto
+from itertools import pairwise
 
 __all__ = ["tabu_search", "solve_tsp", "Status", "Result"]
 
@@ -95,11 +96,11 @@ def solve_tsp(matrix, minimize=True, **kwargs):
 
     if n < 4:
         tour = list(range(n))
-        obj = sum(matrix[tour[i]][tour[(i + 1) % n]] for i in range(n))
+        obj = sum(matrix[a][b] for a, b in pairwise(tour + [tour[0]]))
         return Result(tour, obj, 0, 1, Status.FEASIBLE)
 
     def objective_fn(tour):
-        return sum(matrix[tour[i]][tour[(i + 1) % n]] for i in range(n))
+        return sum(matrix[a][b] for a, b in pairwise(tour + [tour[0]]))
 
     def neighbors(tour):
         moves = []
