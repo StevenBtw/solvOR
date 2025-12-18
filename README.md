@@ -3,7 +3,7 @@
 ![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) 
 
-Pure Python optimization solvers. No dependencies, no nonsense.
+Solvor your optimization needs..
 
 ## What's in the box?
 

@@ -74,7 +74,7 @@ uv run pytest tests/ -v
 
 ## Philosophy
 
-1. Working > perfect
+1. Usable > perfect
 2. Readable > clever
 3. Simple > general
 4. Fast, but understandable
