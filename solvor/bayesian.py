@@ -1,32 +1,22 @@
 """
-Bayesian Optimization - Gaussian Process-based Global Optimization
+Bayesian Optimization, for when each evaluation is expensive.
 
-Optimizes expensive black-box functions using a Gaussian Process surrogate
-model and Expected Improvement acquisition function. Ideal for hyperparameter
-tuning where function evaluations are costly.
+Use this for hyperparameter tuning, A/B testing, simulation optimization, or any
+black-box problem where you can only afford 20-100 evaluations. Works well in
+low dimensions (5-15 parameters), builds a surrogate model to guess where to
+sample next instead of brute-forcing the space.
 
-Usage:
-    from solvor.bayesian import bayesian_opt, Status
-    result = bayesian_opt(objective_fn, bounds=[(0, 1), (0, 1)], max_iter=50)
-    result = bayesian_opt(f, bounds, minimize=False)  # maximize
+Don't use this for: functions that are cheap to evaluate (just use anneal or genetic with
+more iterations), high-dimensional problems (>20 dims, the surrogate struggles),
+or discrete/categorical parameters without encoding tricks.
 
-Parameters:
-    objective_fn  : x -> float (function to optimize, x is list of floats)
-    bounds        : List of (low, high) tuples for each dimension
-    minimize      : True for min, False for max (default: True)
-    max_iter      : Number of iterations (default: 50)
-    n_initial     : Random initial samples before GP (default: 5)
-    seed          : Random seed (default: None)
+    from solvor.bayesian import bayesian_opt
 
-Returns Result(solution, objective, iterations, evaluations, status)
-    solution = best input found (list of floats)
-    objective = best objective value
+    result = bayesian_opt(cost_fn, bounds=[(0, 1), (-5, 5)])
+    result = bayesian_opt(cost_fn, bounds, minimize=False)  # maximize
 
-How it works:
-    1. Sample n_initial random points
-    2. Fit Gaussian Process to observations
-    3. Find next point by maximizing Expected Improvement
-    4. Evaluate objective at new point, repeat from step 2
+If you're doing serious ML hyperparameter tuning, consider scikit-optimize or
+Optuna, they handle the edge cases and integrations this implementation doesn't.
 """
 
 from collections.abc import Callable, Sequence
@@ -45,7 +35,7 @@ def bayesian_opt(
     n_initial: int = 5,
     seed: int | None = None,
 ) -> Result:
-    """(objective_fn, bounds, opts) -> Result with best solution found."""
+
     rng = Random(seed)
     sign = 1 if minimize else -1
     n_dims = len(bounds)

@@ -1,35 +1,28 @@
 """
-MILP Solver - Branch and Bound for Mixed Integer Linear Programming
+MILP Solver, linear optimization with integer constraints.
 
-Solves: minimize c @ x  subject to  A @ x <= b, x >= 0, x[i] ∈ Z for i in integers
+Use this when you need to minimize or maximize a linear objective with linear
+constraints, and some variables must be integers. Classic problems: diet/blending
+(minimize cost meeting nutritional requirements), scheduling with discrete slots,
+set covering, power grid design, energy management (optimizing consumption across
+timeslots based on production forecasts).
 
-Branch and Bound explores a tree of LP relaxations. Each node adds bounds on
-integer variables. Nodes are pruned when their bound exceeds the best_solution.
-Best-first selection prioritizes nodes with the tightest bound.
+Under the hood, this is branch and bound using simplex as a subroutine. It solves
+LP relaxations (ignoring integer constraints), then branches on fractional values,
+pruning subtrees that can't beat the current best. Best-first search prioritizes
+the most promising branches.
 
-Usage:
-    from solvor.milp import solve_milp, Status
+    from solvor.milp import solve_milp
+
+    # minimize c @ x, subject to A @ x <= b, x >= 0, some x integer
     result = solve_milp(c, A, b, integers=[0, 2])
-    result = solve_milp(c, A, b, integers=[0, 1], minimize=False)
+    result = solve_milp(c, A, b, integers=[0, 1], minimize=False)  # maximize
 
-Parameters:
-    c         : Objective weights (n,)
-    A         : Constraint matrix (m x n)
-    b         : Right-hand side (m,)
-    integers  : Indices of integer-constrained variables
-    minimize  : True for min, False for max (default: True)
-    eps       : Numerical tolerance (default: 1e-6)
-    max_iter  : Maximum simplex iterations per node (default: 10,000)
-    max_nodes : Maximum nodes explored in tree (default: 100,000)
-    gap_tol   : Stop when relative gap < this (default: 1e-6)
+CP is more expressive for logical constraints like "all different" but
+doesn't optimize. SAT handles boolean satisfiability only. MILP is for
+when you have a clear linear objective and need the optimal value.
 
-Returns Result(solution, objective, iterations, evaluations, status)
-    iterations = nodes explored, evaluations = total simplex iterations
-
-Parameter impact:
-    max_nodes too low  -> may miss optimal, returns best feasible
-    gap_tol too tight  -> more nodes explored for marginal improvement
-    eps too tight      -> false integrality detection
+If your problem is purely continuous (no integers), just use simplex (directly).
 """
 
 from collections import namedtuple
@@ -55,7 +48,7 @@ def solve_milp(
     max_nodes: int = 100_000,
     gap_tol: float = 1e-6,
 ) -> Result:
-    """(c, A, b, integers, opts) -> Result with optimal integer solution or status."""
+   
     n = len(c)
     int_set = set(integers)
     total_iters = 0

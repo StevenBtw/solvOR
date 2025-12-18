@@ -1,33 +1,32 @@
 """
-Network Flow - Max Flow and Min Cost Flow Algorithms
+Network Flow, for assignment, matching, and bottleneck analysis.
 
-Solves network flow problems using Ford-Fulkerson (max flow) and
-Successive Shortest Paths (min cost flow). Useful for assignment,
-bipartite matching, transportation, and resource allocation.
+Use max_flow when you need "how much can I push through this network?" -
+assigning workers to tasks, servers to requests, finding bottlenecks.
+Use min_cost_flow when cost matters: "what's the cheapest way to route X units?"
+Think of: transportation, logistics and resource allocation with prices.
 
-Usage:
-    from solvor.flow import max_flow, min_cost_flow, Status
+The max-flow min-cut theorem makes this useful for systems thinking: the maximum
+flow equals the minimum cut, so you find bottlenecks for free.
 
-    # Max flow: find maximum flow from source to sink
-    flow_value, flows = max_flow(graph, source, sink)
+    from solvor.flow import max_flow, min_cost_flow
 
-    # Min cost flow: find cheapest way to send `demand` units
-    cost, flows = min_cost_flow(graph, source, sink, demand)
+    # graph: {node: [(neighbor, capacity, cost), ...]}
+    result = max_flow(graph, source='s', sink='t')
+    result = min_cost_flow(graph, source='s', sink='t', demand=10)
 
-Graph format:
-    graph = {
-        node: [(neighbor, capacity, cost), ...],
-        ...
-    }
-    For max_flow, cost is ignored (can be 0).
+Works well with NetworkX for graph construction and visualization:
 
-Returns Result(solution, objective, iterations, evaluations, status)
-    solution = flows dict where flows[(u,v)] = flow on edge
-    objective = total flow (max_flow) or total cost (min_cost_flow)
+    import networkx as nx
+    G = nx.DiGraph()
+    G.add_edge('s', 'a', capacity=10, cost=1)
+    G.add_edge('a', 't', capacity=5, cost=2)
+    graph = {u: [(v, d['capacity'], d.get('cost', 0))
+                 for v, d in G[u].items()] for u in G}
+    result = max_flow(graph, 's', 't')
 
-Examples:
-    # Bipartite matching: source->left, left->right, right->sink (cap=1)
-    # Assignment problem: use min_cost_flow with costs
+For heavier graph work (shortest paths, centrality, community detection),
+NetworkX is very extensive. This solver focuses on the flow problems.
 """
 
 from collections import defaultdict, deque
@@ -41,7 +40,6 @@ def max_flow[Node](
     source: Node,
     sink: Node,
 ) -> Result:
-    """(graph, source, sink) -> Result with max flow value and flows dict."""
     capacity = defaultdict(lambda: defaultdict(int))
     for u in graph:
         for v, cap, *_ in graph[u]:
@@ -93,7 +91,7 @@ def min_cost_flow[Node](
     sink: Node,
     demand: int,
 ) -> Result:
-    """(graph, source, sink, demand) -> Result using Successive Shortest Paths."""
+    
     capacity = defaultdict(lambda: defaultdict(int))
     cost = defaultdict(lambda: defaultdict(lambda: float('inf')))
     nodes = set()
@@ -171,7 +169,7 @@ def min_cost_flow[Node](
 def solve_assignment(
     cost_matrix: Sequence[Sequence[float]],
 ) -> Result:
-    """(cost_matrix) -> Result with minimum cost assignment."""
+    
     n = len(cost_matrix)
     m = len(cost_matrix[0]) if n > 0 else 0
 

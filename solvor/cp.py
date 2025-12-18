@@ -1,32 +1,27 @@
 """
-CP-SAT Solver - Constraint Programming via SAT Encoding
+CP-SAT Solver, constraint programming with a SAT backend.
 
-Solves constraint satisfaction problems by encoding integer variables and
-constraints into SAT clauses, then solving with the SAT backend.
+Use this for puzzles and scheduling with "all different", arithmetic constraints,
+and logical combinations. Sudoku, N-Queens, nurse rostering, timetabling. The
+solver encodes your integer variables and constraints into SAT clauses, then
+hands it off to the SAT solver. You get the expressiveness of CP with the
+raw solving power of modern SAT.
 
-Usage:
-    from solvor.cp import Model, Status
+Don't use this for: optimization problems (use milp), pure linear problems
+(simplex is simpler and faster), or trivially small problems where the encoding
+overhead isn't worth it.
+
+    from solvor.cp import Model
+
     m = Model()
     x = m.int_var(0, 9, 'x')
     y = m.int_var(0, 9, 'y')
     m.add(m.all_different([x, y]))
     m.add(x + y == 10)
-    result = m.solve()
-    print(result.solution)  # {'x': 3, 'y': 7} or similar
+    result = m.solve()  # {'x': 3, 'y': 7} or similar
 
-Supported constraints:
-    all_different(vars)     - All variables take distinct values
-    sum(vars) == k          - Sum equals constant
-    sum(vars) <= k          - Sum at most constant
-    sum(vars) >= k          - Sum at least constant
-    var == k                - Variable equals constant
-    var != k                - Variable not equal constant
-    var1 == var2            - Variables equal
-    var1 != var2            - Variables different
-
-Returns Result(solution, objective, iterations, evaluations, status)
-    solution = dict mapping variable names to values
-    objective = 0 (satisfaction only, no optimization)
+For problems that need both satisfaction and optimization, or heavier constraint
+logic, z3 sits nicely between this CP approach and full MILP.
 """
 
 from itertools import combinations
@@ -78,7 +73,6 @@ class Model:
         return v
 
     def int_var(self, lb, ub, name=None):
-        """(lb, ub, name) -> IntVar with domain [lb, ub]."""
         if name is None:
             name = f"_v{len(self._vars)}"
         var = IntVar(self, lb, ub, name)
@@ -86,11 +80,9 @@ class Model:
         return var
 
     def all_different(self, variables):
-        """(vars) -> constraint that all variables take different values."""
         return ('all_different', tuple(variables))
 
     def add(self, constraint):
-        """(constraint) -> add constraint to model."""
         self._constraints.append(constraint)
 
     def _encode_exactly_one(self, lits):
@@ -247,19 +239,15 @@ class Model:
                 self._encode_sum_eq(list(terms), aux)
 
     def sum_eq(self, variables, target):
-        """(vars, k) -> constraint that sum of vars equals k."""
         return ('sum_eq', tuple(variables), target)
 
     def sum_le(self, variables, target):
-        """(vars, k) -> constraint that sum of vars <= k."""
         return ('sum_le', tuple(variables), target)
 
     def sum_ge(self, variables, target):
-        """(vars, k) -> constraint that sum of vars >= k."""
         return ('sum_ge', tuple(variables), target)
 
     def solve(self, **kwargs):
-        """() -> Result with solution or UNSAT."""
         self._clauses = []
         self._encode_vars()
 
