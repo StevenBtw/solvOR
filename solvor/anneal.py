@@ -1,32 +1,27 @@
 """
-Simulated Annealing - Probabilistic Metaheuristic for Global Optimization
+Simulated Annealing, a black box optimization that handles local optima well.
 
-Escapes local optima by accepting worse solutions with probability exp(-delta/T).
-Temperature T decreases over time following a cooling schedule, gradually shifting
-from exploration (high T) to exploitation (low T).
+Use this when you have an objective function and can generate neighbors, but don't
+know much else about the problem structure. Fast to prototype, low constraints on
+problem formulation. Works well on landscapes with many local optima where gradient
+descent would get stuck.
 
-Usage:
-    from solvor.anneal import anneal, Status
-    result = anneal(initial, objective_fn, neighbors)
-    result = anneal(initial, objective_fn, neighbors, minimize=False)
+Don't use this for: problems where you need guarantees, or when you have constraints
+that are easier to encode in MILP/CP. If you need more control over the search,
+consider tabu (memory of visited states) or genetic (population-based exploration).
 
-Parameters:
-    initial       : Starting solution
-    objective_fn  : solution -> float (value to minimize)
-    neighbors     : solution -> new_solution (random neighbor generator)
-    minimize      : True for min, False for max (default: True)
-    temperature   : Starting temperature (default: 1000.0)
-    cooling       : Multiplicative cooling factor per iteration (default: 0.9995)
-    min_temp      : Stop when temperature falls below this (default: 1e-8)
-    max_iter      : Maximum iterations (default: 100,000)
+    from solvor.anneal import anneal
 
-Returns Result(solution, objective, iterations, evaluations, status)
+    result = anneal(start, cost_fn, neighbor_fn)
+    result = anneal(start, cost_fn, neighbor_fn, minimize=False)  # maximize
 
-Parameter impact:
-    temperature too low  -> trapped in local_optimum early
-    temperature too high -> random walk, slow convergence
-    cooling too fast     -> insufficient exploration
-    cooling too slow     -> wastes iterations at high temperature
+The neighbor function is the key part, good neighbors make small moves, not random
+jumps. Think "swap two cities" for TSP, not "shuffle everything". Small perturbations
+let the algorithm actually explore the neighborhood instead of teleporting randomly.
+
+If it's getting stuck: try higher starting temperature or slower cooling. If it's
+taking forever: cool faster. For serious tuning, look into adaptive cooling schedules
+or reheating strategies, this implementation keeps it simple with geometric cooling.
 """
 
 from collections.abc import Callable
@@ -47,7 +42,7 @@ def anneal[T](
     min_temp: float = 1e-8,
     max_iter: int = 100_000,
 ) -> Result:
-    """(initial, objective_fn, neighbors, opts) -> Result with best_solution found."""
+
     sign = 1 if minimize else -1
     evals = 0
 

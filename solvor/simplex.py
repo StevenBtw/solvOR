@@ -1,33 +1,26 @@
 """
-Simplex Solver - Two-Phase Linear Programming
+Simplex Solver, linear programming that aged like wine.
 
-Solves: minimize c @ x  subject to  A @ x <= b, x >= 0
+You're walking along edges of a giant crystal always uphill, until you hit a corner
+that's optimal. You can visualize it. Most algorithms are abstract symbol
+manipulation. Simplex is a journey through space.
 
-The simplex algorithm pivots through basic feasible solutions along edges
-of the feasible polytope. Phase I finds an initial feasible solution using
-artificial variables. Phase II optimizes the objective using Bland's rule
-to prevent cycling in degenerate cases.
+Use this for linear objectives with linear constraints and continuous variables.
+Resource allocation, blending, production planning, transportation. Unlike
+gradient descent which approximates, simplex finds the exact optimum for LP.
 
-Usage:
-    from solvor.simplex import solve_lp, Status
+    from solvor.simplex import solve_lp
+
+    # minimize c @ x, subject to A @ x <= b, x >= 0
     result = solve_lp(c, A, b)
     result = solve_lp(c, A, b, minimize=False)  # maximize
 
-Parameters:
-    c         : Objective weights (n,)
-    A         : Constraint matrix (m x n)
-    b         : Right-hand side (m,)
-    minimize  : True for min, False for max (default: True)
-    eps       : Numerical tolerance (default: 1e-10)
-    max_iter  : Maximum pivot iterations (default: 100,000)
+This is also doing the grunt work inside MILP, which is branch and bound that calls simplex
+repeatedly to solve LP relaxations.
 
-Returns Result(solution, objective, iterations, evaluations, status)
-
-Status values:
-    OPTIMAL    - Proven optimal solution found
-    INFEASIBLE - No feasible solution exists
-    UNBOUNDED  - Objective can improve infinitely
-    MAX_ITER   - Iteration limit reached
+Don't use this for: integer constraints (use MILP), non-linear objectives
+(use gradient or anneal), or problems with poor numerical scaling (simplex
+can struggle with badly scaled coefficients).
 """
 
 from array import array
@@ -45,7 +38,7 @@ def solve_lp(
     eps: float = 1e-10,
     max_iter: int = 100_000,
 ) -> Result:
-    """(c, A, b, opts) -> Result with optimal solution or status."""
+    
     m, n = len(b), len(c)
     weights = list(c) if minimize else [-ci for ci in c]
 
@@ -80,7 +73,6 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
     n_total = n + m
     art_cols = []
 
-    # Save original objective BEFORE inserting artificial columns
     orig_obj = array('d', matrix[-1])
 
     for i in range(m):

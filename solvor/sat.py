@@ -1,31 +1,28 @@
 """
-SAT Solver - DPLL with Unit Propagation and Clause Learning
+SAT Solver, boolean satisfiability with clause learning.
 
-Solves boolean satisfiability: find assignment where all clauses are true.
-Uses DPLL (Davis-Putnam-Logemann-Loveland) with unit propagation and basic
-conflict-driven clause learning (CDCL).
+Use this for "is this configuration valid?" problems. Logic puzzles with
+implications, dependencies, exclusions. Anything that boils down to: given
+these boolean constraints, is there an assignment that satisfies all of them?
 
-Usage:
-    from solvor.sat import solve_sat, Status
-    result = solve_sat([[1, 2], [-1, 3], [-2, -3]])  # (x1 OR x2) AND (NOT x1 OR x3) AND ...
-    result = solve_sat(clauses, assumptions=[1, -3])  # with assumed literals
+This is the engine behind CP, constraint programming encodes integer variables
+as booleans and feeds them here. For exact cover problems specifically, DLX is
+more efficient than encoding to SAT.
 
-Parameters:
-    clauses     : List of clauses, each clause is list of integers (positive = var, negative = NOT var)
-    assumptions : Literals that must be true (default: [])
-    max_conflicts: Maximum conflicts before restart (default: 100)
-    max_restarts : Maximum restarts (default: 100)
+    from solvor.sat import solve_sat
 
-Returns Result(solution, objective, iterations, evaluations, status)
-    solution = dict mapping variable -> bool, or None if UNSAT
-    objective = number of variables (SAT) or 0 (UNSAT)
-    iterations = number of decisions made
-    evaluations = number of propagations
+    # Clauses in CNF: each clause is a list of literals (OR'd together)
+    # Positive int = variable is true, negative = variable is false
+    # All clauses must be satisfied (AND'd together)
+    result = solve_sat([[1, 2], [-1, 3], [-2, -3]])
+    # Reads as: (x1 OR x2) AND (NOT x1 OR x3) AND (NOT x2 OR NOT x3)
 
-Status values:
-    OPTIMAL    - Satisfying assignment found
-    INFEASIBLE - Proven unsatisfiable
-    MAX_ITER   - Resource limit reached
+CNF (conjunctive normal form) is standard because any boolean formula can be
+converted to it, and the algorithms are well documented. The integer encoding is
+compact and fast to process.
+
+Don't use this for: optimization problems (use MILP), or when integer variables
+are more natural than booleans (use CP, which handles the encoding for you).
 """
 
 from collections import defaultdict
@@ -41,7 +38,7 @@ def solve_sat(
     max_conflicts: int = 100,
     max_restarts: int = 100,
 ) -> Result:
-    """(clauses, opts) -> Result with satisfying assignment or UNSAT."""
+
     if not clauses:
         return Result({}, 0, 0, 0, Status.OPTIMAL)
 
@@ -118,7 +115,6 @@ def solve_sat(
                 ci = watches[i]
                 clause = clauses[ci] if ci < len(clauses) else learned[ci - len(clauses)]
 
-                # Unit clauses: if the only literal is false, it's a conflict
                 if len(clause) == 1:
                     if value(clause[0]) is False:
                         conflicts += 1
