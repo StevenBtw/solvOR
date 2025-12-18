@@ -53,7 +53,7 @@ def evolve[T](
     tournament_k: int = 3,
     seed: int | None = None,
 ) -> Result:
-    """(objective_fn, population, crossover, mutate, opts) -> Result with best solution."""
+   
     rng = Random(seed)
     sign = 1 if minimize else -1
     pop_size = len(population)

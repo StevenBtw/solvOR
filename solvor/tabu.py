@@ -40,7 +40,7 @@ def tabu_search[T, M](
     max_iter: int = 1000,
     max_no_improve: int = 100,
 ) -> Result:
-    """(initial, objective_fn, neighbors, opts) -> Result with best_solution found."""
+
     sign = 1 if minimize else -1
     evals = 0
 
@@ -93,7 +93,7 @@ def solve_tsp(
     minimize: bool = True,
     **kwargs,
 ) -> Result:
-    """(distance_matrix, opts) -> Result with optimal tour as solution."""
+
     n = len(matrix)
 
     if n < 4:

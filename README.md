@@ -16,6 +16,7 @@ Solvor your optimization needs..
 | **Continuous** | `gradient_descent`, `momentum`, `adam` | ML, curve fitting |
 | **Black-box** | `bayesian_opt` | Hyperparameter tuning, expensive functions |
 | **Graph** | `max_flow`, `min_cost_flow`, `solve_assignment` | Matching, transportation |
+| **Exact Cover** | `solve_exact_cover` | Sudoku, N-Queens, tiling puzzles |
 
 ---
 
@@ -55,7 +56,7 @@ print(result.solution)  # {'x': 3, 'y': 7}
 <summary><strong>Linear & Integer Programming</strong></summary>
 
 ### solve_lp
-Two-phase simplex for linear programming.
+For resource allocation, blending, production planning. Finds the exact optimum for linear objectives with linear constraints.
 
 ```python
 # minimize 2x + 3y subject to x + y >= 4, x <= 3
@@ -67,7 +68,7 @@ result = solve_lp(
 ```
 
 ### solve_milp
-Branch and bound for mixed-integer problems.
+When some variables must be integers. Diet problems, scheduling with discrete slots, set covering.
 
 ```python
 # same as above, but x must be integer
@@ -80,7 +81,7 @@ result = solve_milp(c=[2, 3], A=[[-1, -1], [1, 0]], b=[-4, 3], integers=[0])
 <summary><strong>Constraint Programming</strong></summary>
 
 ### solve_sat
-DPLL with unit propagation and clause learning.
+For "is this configuration valid?" problems. Dependencies, exclusions, implications - anything that boils down to boolean constraints.
 
 ```python
 # (x1 OR x2) AND (NOT x1 OR x3) AND (NOT x2 OR NOT x3)
@@ -89,7 +90,7 @@ print(result.solution)  # {1: True, 2: False, 3: True}
 ```
 
 ### Model (CP-SAT)
-Constraint programming via SAT encoding.
+For puzzles and scheduling with "all different", arithmetic, and logical constraints. Sudoku, N-Queens, timetabling.
 
 ```python
 m = Model()
@@ -108,7 +109,7 @@ result = m.solve()
 <summary><strong>Metaheuristics</strong></summary>
 
 ### anneal
-Simulated annealing, accepts worse solutions probabilistically.
+Black-box optimization that handles local optima well. Fast to prototype when you have an objective and can generate neighbors.
 
 ```python
 result = anneal(
@@ -121,7 +122,7 @@ result = anneal(
 ```
 
 ### tabu_search
-Maintains a "tabu list" of recent moves to escape local optima.
+Greedy local search with memory. Prevents cycling back to recent solutions, forcing exploration of new territory. More deterministic than anneal.
 
 ```python
 result = tabu_search(
@@ -133,7 +134,7 @@ result = tabu_search(
 ```
 
 ### evolve
-Genetic algorithm with selection, crossover, mutation.
+Population-based search. More overhead than anneal/tabu, but better diversity and parallelizable.
 
 ```python
 result = evolve(
@@ -151,7 +152,7 @@ result = evolve(
 <summary><strong>Continuous Optimization</strong></summary>
 
 ### gradient_descent / momentum / adam
-First-order methods for differentiable functions.
+Follow the slope downhill. Great for polishing solutions from other methods if your objective is differentiable. Adam adapts learning rates per parameter - usually the default choice.
 
 ```python
 def grad_fn(x):
@@ -162,7 +163,7 @@ print(result.solution)  # [~0, ~0]
 ```
 
 ### bayesian_opt
-Gaussian process surrogate for expensive black-box functions.
+When each evaluation is expensive (think hyperparameter tuning, simulations). Builds a surrogate model to guess where to sample next instead of brute-forcing.
 
 ```python
 def expensive_fn(x):
@@ -178,7 +179,7 @@ result = bayesian_opt(expensive_fn, bounds=[(0, 1), (0, 1)], max_iter=30)
 <summary><strong>Network Flow</strong></summary>
 
 ### max_flow
-Ford-Fulkerson with BFS (Edmonds-Karp).
+"How much can I push through this network?" Assigning workers to tasks, finding bottlenecks. The max-flow min-cut theorem gives you bottleneck analysis for free.
 
 ```python
 graph = {
@@ -193,7 +194,7 @@ print(result.solution)   # edge flows dict
 ```
 
 ### min_cost_flow / solve_assignment
-Successive shortest paths for minimum cost flow.
+"What's the cheapest way to route X units?" Transportation, logistics, matching with costs.
 
 ```python
 # Assignment problem: 3 workers, 3 tasks
@@ -205,6 +206,26 @@ costs = [
 result = solve_assignment(costs)
 # result.solution[i] = task assigned to worker i
 # result.objective = total cost
+```
+
+</details>
+
+<details>
+<summary><strong>Exact Cover</strong></summary>
+
+### solve_exact_cover
+For "place these pieces without overlap" or "fill this grid with exactly one of each" problems. Sudoku, pentomino tiling, scheduling where every slot must be filled exactly once.
+
+```python
+# Tiling problem: cover all columns with non-overlapping rows
+matrix = [
+    [1, 1, 0, 0],  # row 0 covers columns 0, 1
+    [0, 1, 1, 0],  # row 1 covers columns 1, 2
+    [0, 0, 1, 1],  # row 2 covers columns 2, 3
+    [1, 0, 0, 1],  # row 3 covers columns 0, 3
+]
+result = solve_exact_cover(matrix)
+# result.solution = (0, 2) or (1, 3) - rows that cover all columns exactly once
 ```
 
 </details>
@@ -240,6 +261,7 @@ Result(
 | Smooth, differentiable | `adam` |
 | Expensive black-box | `bayesian_opt` |
 | Assignment, matching, flow | `max_flow`, `solve_assignment` |
+| Exact cover, tiling, N-Queens | `solve_exact_cover` |
 
 ---
 

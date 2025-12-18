@@ -42,31 +42,40 @@ Example: tiling a 2x3 board with 3 dominoes:
 """
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from solvor.types import Status, Result
 
 __all__ = ["solve_exact_cover", "Status", "Result"]
 
-
+@dataclass(slots=True)
 class _Node:
-    __slots__ = ('left', 'right', 'up', 'down', 'column', 'row')
+    column: '_Column | None' = None
+    row: int = -1
+    left: '_Node | None' = field(default=None, init=False, repr=False)
+    right: '_Node | None' = field(default=None, init=False, repr=False)
+    up: '_Node | None' = field(default=None, init=False, repr=False)
+    down: '_Node | None' = field(default=None, init=False, repr=False)
 
-    def __init__(self, column=None, row: int = -1):
+    def __post_init__(self):
         self.left = self
         self.right = self
         self.up = self
         self.down = self
-        self.column = column
-        self.row = row
 
+@dataclass(slots=True)
+class _Column:
+    name: object
+    size: int = field(default=0, init=False)
+    left: '_Column | None' = field(default=None, init=False, repr=False)
+    right: '_Column | None' = field(default=None, init=False, repr=False)
+    up: '_Node | None' = field(default=None, init=False, repr=False)
+    down: '_Node | None' = field(default=None, init=False, repr=False)
 
-class _Column(_Node):
-    __slots__ = ('size', 'name')
-
-    def __init__(self, name):
-        super().__init__(column=self, row=-1)
-        self.size = 0
-        self.name = name
-
+    def __post_init__(self):
+        self.left = self
+        self.right = self
+        self.up = self
+        self.down = self
 
 def _build_links(matrix, columns=None):
     if not matrix or not matrix[0]:
@@ -116,7 +125,6 @@ def _build_links(matrix, columns=None):
 
     return root, col_headers
 
-
 def _cover(col):
     col.right.left = col.left
     col.left.right = col.right
@@ -131,7 +139,6 @@ def _cover(col):
             row_node = row_node.right
         node = node.down
 
-
 def _uncover(col):
     node = col.up
     while node is not col:
@@ -145,7 +152,6 @@ def _uncover(col):
 
     col.right.left = col
     col.left.right = col
-
 
 def solve_exact_cover(
     matrix: Sequence[Sequence[int]],
@@ -164,12 +170,13 @@ def solve_exact_cover(
 
     solutions = []
     current = []
-    iterations = [0]
-    covers = [0]
+    iterations = 0
+    covers = 0
 
     def search():
-        iterations[0] += 1
-        if iterations[0] > max_iter:
+        nonlocal iterations, covers
+        iterations += 1
+        if iterations > max_iter:
             return False
         
         if root.right is root:
@@ -195,7 +202,7 @@ def solve_exact_cover(
             return False
 
         _cover(min_col)
-        covers[0] += 1
+        covers += 1
 
         row_node = min_col.down
         while row_node is not min_col:
@@ -204,7 +211,7 @@ def solve_exact_cover(
             node = row_node.right
             while node is not row_node:
                 _cover(node.column)
-                covers[0] += 1
+                covers += 1
                 node = node.right
 
             if search():
@@ -226,17 +233,17 @@ def solve_exact_cover(
 
     search()
 
-    if iterations[0] > max_iter:
+    if iterations > max_iter:
         if solutions:
             sol = solutions if find_all else solutions[0]
-            return Result(sol, len(solutions) if find_all else len(sol), iterations[0], covers[0], Status.MAX_ITER)
-        return Result(None, 0, iterations[0], covers[0], Status.MAX_ITER)
+            return Result(sol, len(solutions) if find_all else len(sol), iterations, covers, Status.MAX_ITER)
+        return Result(None, 0, iterations, covers, Status.MAX_ITER)
 
     if not solutions:
-        return Result(None, 0, iterations[0], covers[0], Status.INFEASIBLE)
+        return Result(None, 0, iterations, covers, Status.INFEASIBLE)
 
     if find_all:
         status = Status.FEASIBLE if max_solutions and len(solutions) >= max_solutions else Status.OPTIMAL
-        return Result(solutions, len(solutions), iterations[0], covers[0], status)
+        return Result(solutions, len(solutions), iterations, covers, status)
 
-    return Result(solutions[0], len(solutions[0]), iterations[0], covers[0], Status.OPTIMAL)
+    return Result(solutions[0], len(solutions[0]), iterations, covers, Status.OPTIMAL)
