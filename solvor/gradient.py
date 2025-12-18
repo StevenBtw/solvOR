@@ -1,34 +1,31 @@
 """
-Gradient Descent - First-Order Continuous Optimization
+Gradient Descent, for smooth continuous optimization.
 
-Minimizes differentiable functions by iteratively moving in the direction
-of steepest descent. Supports vanilla GD, momentum, and Adam variants.
+The idea is simple: compute the slope at your current position, take a step
+downhill, repeat. The gradient tells you which direction is steepest, the
+learning rate controls how big a step you take. Momentum and Adam add memory
+of previous steps to avoid oscillation and adapt step sizes per dimension.
 
-Usage:
-    from solvor.gradient import gradient_descent, adam, Status
+Great for refining solutions from other methods. Found a rough solution with
+genetic or anneal? Use gradient descent to polish it if your objective is
+differentiable. Also useful for smoothing out noisy landscapes.
+
+    from solvor.gradient import gradient_descent, adam
+
     result = gradient_descent(grad_fn, x0, lr=0.01)
-    result = adam(grad_fn, x0)
+    result = adam(grad_fn, x0)  # adaptive learning rates, often works better
 
-Parameters:
-    grad_fn       : x -> gradient (function returning gradient at x)
-    x0            : Initial point (list of floats)
-    minimize      : True for min, False for max (default: True)
-    lr            : Learning rate (default: 0.01)
-    max_iter      : Maximum iterations (default: 1000)
-    tol           : Stop when gradient norm < tol (default: 1e-6)
+Variants:
+    gradient_descent : vanilla, just follows the gradient
+    momentum         : remembers previous direction, smoother convergence
+    adam             : adapts learning rate per parameter, usually the default choice
 
-Adam additional parameters:
-    beta1         : Exponential decay for first moment (default: 0.9)
-    beta2         : Exponential decay for second moment (default: 0.999)
-    eps           : Numerical stability (default: 1e-8)
+Warning: gradient descent finds local minima, not global ones. For non-convex
+problems, your starting point matters a lot. If you suspect multiple optima,
+use anneal or genetic to explore first, then refine with gradient descent.
 
-Returns Result(solution, objective, iterations, evaluations, status)
-    solution = final point (list of floats)
-    objective = gradient norm at solution (0 = stationary point)
-    evaluations = number of gradient evaluations
-
-Note: For objective value, evaluate your objective function on result.solution.
-These methods only use gradients, not function values.
+Don't use this for: non-differentiable functions, discrete problems, or when
+you don't have access to gradients.
 """
 
 from collections.abc import Callable, Sequence
@@ -46,7 +43,7 @@ def gradient_descent(
     max_iter: int = 1000,
     tol: float = 1e-6,
 ) -> Result:
-    """(grad_fn, x0, opts) -> Result with stationary point."""
+
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)
@@ -76,7 +73,7 @@ def momentum(
     max_iter: int = 1000,
     tol: float = 1e-6,
 ) -> Result:
-    """(grad_fn, x0, opts) -> Result with stationary point using momentum."""
+
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)
@@ -110,7 +107,7 @@ def adam(
     max_iter: int = 1000,
     tol: float = 1e-6,
 ) -> Result:
-    """(grad_fn, x0, opts) -> Result with stationary point using Adam."""
+    
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)

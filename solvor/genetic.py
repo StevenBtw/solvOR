@@ -1,39 +1,33 @@
 """
-Genetic Algorithm - Population-based Evolutionary Optimization
+Genetic Algorithm, population-based search that excels at multi-objective problems.
 
-Evolves a population of solutions through selection, crossover, and mutation.
-Good for combinatorial optimization where the solution space is discrete
-and the fitness landscape may have many local optima.
+Slower than modern solvers for single-objective problems, and gradients will beat
+it on continuous optimization. But genetic algorithms are king at multi-objective
+optimization where objectives compete (Pareto fronts). Great at exploration when
+you're searching in the dark without structure to exploit. And they parallelize
+beautifully while most solvers don't.
 
-Usage:
-    from solvor.genetic import evolve, Status
-    result = evolve(objective_fn, population, crossover, mutate)
-    result = evolve(f, pop, cross, mut, minimize=False)  # maximize
+Unlike anneal/tabu (single solution), this evolves a whole population. More
+overhead, but better diversity and less likely to get trapped.
+
+    from solvor.genetic import evolve
+
+    result = evolve(cost_fn, population, crossover_fn, mutate_fn)
+    result = evolve(cost_fn, pop, cross, mut, minimize=False)  # maximize
 
 Parameters:
-    objective_fn  : solution -> float (fitness function)
-    population    : Initial population (list of solutions)
-    crossover     : (parent1, parent2) -> child (recombination operator)
-    mutate        : solution -> solution (mutation operator)
-    minimize      : True for min, False for max (default: True)
-    elite_size    : Number of best solutions to preserve (default: 2)
-    mutation_rate : Probability of mutation per child (default: 0.1)
-    max_gen       : Maximum generations (default: 100)
-    tournament_k  : Tournament selection size (default: 3)
-    seed          : Random seed (default: None)
+    objective_fn  : solution -> float, your fitness function
+    population    : list of starting solutions, bigger = more diversity but slower
+    crossover     : (parent1, parent2) -> child, how solutions combine - this matters
+                    a lot, bad crossover = expensive random search
+    mutate        : solution -> solution, small random changes - keep it subtle
+    elite_size    : survivors per generation, too high = stagnation (default: 2)
+    mutation_rate : how often to mutate, too low = premature convergence (default: 0.1)
+    max_gen       : generations to run (default: 100)
+    tournament_k  : selection pressure, higher = greedier (default: 3)
 
-Returns Result(solution, objective, iterations, evaluations, status)
-    solution = best solution found
-    iterations = generations completed
-    evaluations = total fitness evaluations
-
-Example (TSP):
-    def crossover(p1, p2):  # Order crossover
-        ...
-    def mutate(tour):  # 2-opt swap
-        i, j = random pair
-        return tour[:i] + tour[i:j][::-1] + tour[j:]
-    result = evolve(tour_length, initial_pop, crossover, mutate)
+Don't use this for: problems with gradient info (use gradient descent), convex
+problems (use simplex), or discrete structured problems (use CP/SAT).
 """
 
 from collections import namedtuple
@@ -59,7 +53,7 @@ def evolve[T](
     tournament_k: int = 3,
     seed: int | None = None,
 ) -> Result:
-    """(objective_fn, population, crossover, mutate, opts) -> Result with best solution."""
+   
     rng = Random(seed)
     sign = 1 if minimize else -1
     pop_size = len(population)

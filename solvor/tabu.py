@@ -1,30 +1,26 @@
 """
-Tabu Search - Metaheuristic for Combinatorial Optimization
+Tabu Search, local search with memory to escape cycles.
 
-Iteratively moves to the best neighbor while maintaining a tabu list of
-recently visited moves to escape local optima. Uses aspiration criteria
-to override tabu status when a move improves the best_solution.
+Like anneal, this explores neighbors. Unlike anneal, it's greedy: always pick
+the best neighbor. The trick is the tabu list, a memory of recent moves that
+are temporarily forbidden. This prevents cycling back to solutions you just
+left, forcing the search to explore new territory.
 
-Usage:
-    from solvor.tabu import tabu_search, solve_tsp, Status
-    result = tabu_search(initial, objective_fn, neighbors)
-    result = solve_tsp(distance_matrix)
+Use this for routing (traveling salesmen probelm), scheduling, or when you want more control than
+anneal. Tabu is deterministic where anneal is probabilistic, so results are
+more reproducible and easier to debug.
 
-Parameters:
-    initial       : Starting solution
-    objective_fn  : solution -> float (value to minimize)
-    neighbors     : solution -> [(move, new_solution), ...] where move is hashable
-    minimize      : True for min, False for max (default: True)
-    cooldown      : How many iterations a move stays forbidden (default: 10)
-    max_iter      : Maximum iterations (default: 1000)
-    max_no_improve: Stop if no improvement for this many iterations (default: 100)
+    from solvor.tabu import tabu_search, solve_tsp
 
-Returns Result(solution, objective, iterations, evaluations, status)
+    result = tabu_search(start, cost_fn, neighbors_fn)
+    result = solve_tsp(distance_matrix)  # built-in TSP helper
 
-Parameter impact:
-    cooldown too low  -> may cycle between solutions
-    cooldown too high -> over-constrained, slow exploration
-    max_no_improve    -> controls diversification vs early termination
+The neighbor function is different from anneal: it must return a list of
+(move, new_solution) pairs, where move is hashable (so it can go in the tabu
+list). Think (i, j) for "swap cities i and j" rather than just the new tour.
+
+Genetic is population-based (more overhead, better diversity), anneal is
+probabilistic (simpler setup), tabu is greedy with memory (more predictable).
 """
 
 from collections import deque
@@ -44,7 +40,7 @@ def tabu_search[T, M](
     max_iter: int = 1000,
     max_no_improve: int = 100,
 ) -> Result:
-    """(initial, objective_fn, neighbors, opts) -> Result with best_solution found."""
+
     sign = 1 if minimize else -1
     evals = 0
 
@@ -97,7 +93,7 @@ def solve_tsp(
     minimize: bool = True,
     **kwargs,
 ) -> Result:
-    """(distance_matrix, opts) -> Result with optimal tour as solution."""
+
     n = len(matrix)
 
     if n < 4:

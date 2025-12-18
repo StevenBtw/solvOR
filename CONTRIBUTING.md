@@ -16,7 +16,7 @@ uv sync --extra dev
 uv run pytest
 
 # Run linter
-uv run ruff check src/
+uv run ruff check solvor/
 ```
 
 ## Code Style
