@@ -1,6 +1,5 @@
 """Tests for all solvor solvers."""
 
-import pytest
 from solvor.simplex import solve_lp, Status as LPStatus
 from solvor.milp import solve_milp, Status as MILPStatus
 from solvor.anneal import anneal, Status as AnnealStatus
@@ -121,7 +120,7 @@ class TestSAT:
         # Satisfiable: x2=True
         result = solve_sat([[1, 2], [-1, 2]])
         assert result.status == SATStatus.OPTIMAL
-        assert result.solution[2] == True
+        assert result.solution[2] is True
 
     def test_unsatisfiable(self):
         # x AND NOT x
