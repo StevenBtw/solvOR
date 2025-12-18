@@ -1,5 +1,8 @@
 # Solvor
 
+![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)
+![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+
 Pure Python optimization solvers. No dependencies, no nonsense.
 
 ## What's in the box?
@@ -249,6 +252,10 @@ Result(
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
 ## License
 
-MIT
+[MIT License](LICENSE) - free for personal and commercial use.
