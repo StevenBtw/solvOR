@@ -1,6 +1,6 @@
-# Contributing to Solvor
+# Contributing to solvOR
 
-Thanks for your interest in contributing to Solvor!
+Thanks for your interest in contributing to solvor!
 
 ## Development Setup
 
@@ -33,7 +33,7 @@ Follow the project's style:
 
 ## Terminology
 
-Use consistent naming across all solvers:
+Use consistent naming across all solvors:
 
 | Term | Usage |
 |------|-------|
@@ -44,7 +44,7 @@ Use consistent naming across all solvers:
 | `neighbors` | Adjacent solutions (metaheuristics) |
 | `minimize` | Boolean flag (default `True`) |
 
-## Adding a New Solver
+## Adding a New Solvor
 
 1. Create `src/solvor/<solver_name>.py`
 2. Import shared types: `from solvor.types import Status, Result`
