@@ -1,8 +1,8 @@
 """Tests for the simulated annealing solver."""
 
-import pytest
 from random import gauss, seed
-from solvor.anneal import anneal, Status
+from solvor.anneal import anneal
+from solvor.types import Status, Progress
 
 
 def make_neighbor_fn(std=0.5):
@@ -103,7 +103,84 @@ class TestParameters:
             cooling=0.99,
             max_iter=100000
         )
-        assert result.status == Status.FEASIBLE  # Stopped by min_temp, not max_iter
+        assert result.status == Status.FEASIBLE
+        # Must have stopped early due to min_temp, not max_iter
+        assert result.iterations < 100000
+
+
+class TestAnnealingBehavior:
+    def test_high_temp_accepts_worse_solutions(self):
+        # At high temperature, should accept worse moves more often
+        seed(42)
+        accepted_worse = 0
+        total_worse = 0
+
+        def tracking_neighbor(x):
+            nonlocal accepted_worse, total_worse
+            # Always propose a worse solution
+            return [x[0] + 1.0]  # Increases x^2
+
+        def objective(x):
+            return x[0] ** 2
+
+        # High temperature - should accept many worse moves
+        anneal(
+            [0.0],
+            objective,
+            tracking_neighbor,
+            temperature=10000.0,
+            cooling=0.999,
+            max_iter=100
+        )
+        # At very high temp, exp(-delta/T) ≈ 1, so most worse moves accepted
+
+    def test_low_temp_rejects_worse_solutions(self):
+        # At low temperature, should rarely accept worse moves
+        seed(42)
+
+        def objective(x):
+            return x[0] ** 2
+
+        # Track how much the solution drifts from optimal at low temp
+        result = anneal(
+            [0.0],  # Start at optimal
+            objective,
+            make_neighbor_fn(1.0),  # Large perturbations
+            temperature=0.001,  # Very low temp
+            cooling=0.999,
+            max_iter=100
+        )
+        # Should stay very close to optimal since worse moves rejected
+        assert abs(result.solution[0]) < 0.5
+
+    def test_temperature_affects_exploration(self):
+        # Higher temperature should explore more (larger variance in solutions)
+        seed(42)
+        high_temp_solutions = []
+        low_temp_solutions = []
+
+        def collect_high(x):
+            high_temp_solutions.append(x[0])
+            return [x[0] + gauss(0, 0.5)]
+
+        def collect_low(x):
+            low_temp_solutions.append(x[0])
+            return [x[0] + gauss(0, 0.5)]
+
+        # High temperature run
+        anneal([0.0], lambda x: x[0] ** 2, collect_high, temperature=1000.0, max_iter=200)
+
+        # Low temperature run
+        seed(42)  # Same seed for fair comparison
+        anneal([0.0], lambda x: x[0] ** 2, collect_low, temperature=0.01, max_iter=200)
+
+        # High temp should have more variance (explored more)
+        high_var = sum((s - sum(high_temp_solutions) / len(high_temp_solutions)) ** 2
+                       for s in high_temp_solutions) / len(high_temp_solutions)
+        low_var = sum((s - sum(low_temp_solutions) / len(low_temp_solutions)) ** 2
+                      for s in low_temp_solutions) / len(low_temp_solutions)
+
+        assert high_var > low_var  # High temp explores more
 
 
 class TestEdgeCases:
@@ -175,3 +252,83 @@ class TestStress:
         )
         # Should have at least initial + max_iter evaluations
         assert result.evaluations >= 100
+
+
+class TestProgressCallback:
+    def test_callback_called_at_interval(self):
+        seed(42)
+        calls = []
+
+        def on_progress(p: Progress):
+            calls.append(p.iteration)
+
+        anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            max_iter=100,
+            on_progress=on_progress,
+            progress_interval=10,
+        )
+        # Should be called at iterations 10, 20, 30, ...
+        assert len(calls) >= 5
+        assert all(i % 10 == 0 for i in calls)
+
+    def test_callback_early_stop(self):
+        seed(42)
+        calls = []
+
+        def on_progress(p: Progress):
+            calls.append(p.iteration)
+            if p.iteration >= 30:
+                return True  # stop early
+
+        result = anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            max_iter=1000,
+            on_progress=on_progress,
+            progress_interval=10,
+        )
+        # Should stop early around iteration 30
+        assert result.iterations <= 40
+        assert result.status == Status.FEASIBLE
+
+    def test_callback_disabled_by_default(self):
+        seed(42)
+        calls = []
+
+        def on_progress(p: Progress):
+            calls.append(p)
+
+        anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            max_iter=100,
+            on_progress=on_progress,
+            progress_interval=0,  # disabled
+        )
+        assert len(calls) == 0
+
+    def test_callback_receives_progress_data(self):
+        seed(42)
+        progress_data = []
+
+        def on_progress(p: Progress):
+            progress_data.append(p)
+
+        anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            max_iter=100,
+            on_progress=on_progress,
+            progress_interval=50,
+        )
+        assert len(progress_data) >= 1
+        p = progress_data[0]
+        assert p.iteration == 50
+        assert isinstance(p.objective, float)
+        assert p.evaluations > 0

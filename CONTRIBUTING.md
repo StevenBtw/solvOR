@@ -41,8 +41,12 @@ Use consistent naming across all solvors:
 | `best_solution` | Best found so far |
 | `objective` | Value being optimized |
 | `objective_fn` | Function computing objective |
-| `neighbors` | Adjacent solutions (metaheuristics) |
+| `neighbors` | Adjacent solutions/states |
 | `minimize` | Boolean flag (default `True`) |
+| `start` / `goal` | Pathfinding endpoints |
+| `cost` / `weight` | Edge weights in graphs |
+| `n_nodes` | Graph size |
+| `edges` / `arcs` | Graph connections |
 
 ## Adding a New Solvor
 
@@ -52,7 +56,29 @@ Use consistent naming across all solvors:
 4. Add exports to `solvor/__init__.py`
 5. Create `tests/test_<solver_name>.py` with comprehensive tests
 6. Update `README.md` with usage examples
-7. Add the solver to `.github/workflows/ci.yml` path filters
+7. Add the solver to `.github/workflows/ci.yml`:
+   - Add output: `<solver_name>: ${{ steps.filter.outputs.<solver_name> }}`
+   - Add path filter under `filters:`:
+
+     ```yaml
+     <solver_name>:
+       - 'solvor/<solver_name>.py'
+       - 'tests/test_<solver_name>.py'
+     ```
+
+   - Add test job:
+
+     ```yaml
+     test-<solver_name>:
+       needs: changes
+       if: ${{ needs.changes.outputs.<solver_name> == 'true' || needs.changes.outputs.types == 'true' }}
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - uses: astral-sh/setup-uv@v4
+         - run: uv sync --extra dev
+         - run: uv run pytest tests/test_<solver_name>.py -v
+     ```
 
 ## Testing
 
@@ -71,7 +97,7 @@ uv run pytest tests/ -v
 uv run pytest tests/test_simplex.py -v
 ```
 
-The CI runs tests selectively based on which files changed - only the affected solver's tests run.
+The CI runs tests selectively based on which files changed, only the affected solver's tests run.
 
 ## Pull Requests
 
@@ -83,7 +109,12 @@ The CI runs tests selectively based on which files changed - only the affected s
 
 ## Philosophy
 
-1. Usable > perfect
+1. Working > perfect
 2. Readable > clever
 3. Simple > general
-4. Fast, but understandable
+Any performance optimization is welcome, but not at the cost of significant complexity.
+
+```python
+model.maximize(readability + performance)
+model.add(complexity <= maintainable)
+```

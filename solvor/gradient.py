@@ -30,9 +30,9 @@ you don't have access to gradients.
 
 from collections.abc import Callable, Sequence
 from math import sqrt
-from solvor.types import Status, Result
+from solvor.types import Status, Result, Progress, ProgressCallback
 
-__all__ = ["gradient_descent", "momentum", "adam", "Status", "Result"]
+__all__ = ["gradient_descent", "momentum", "adam"]
 
 def gradient_descent(
     grad_fn: Callable[[Sequence[float]], Sequence[float]],
@@ -42,6 +42,8 @@ def gradient_descent(
     lr: float = 0.01,
     max_iter: int = 1000,
     tol: float = 1e-6,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
 ) -> Result:
 
     sign = 1 if minimize else -1
@@ -55,10 +57,15 @@ def gradient_descent(
 
         grad_norm = sqrt(sum(g * g for g in grad))
         if grad_norm < tol:
-            return Result(x, grad_norm, iteration, evals, Status.OPTIMAL)
+            return Result(x, grad_norm, iteration, evals)
 
         for i in range(n):
             x[i] -= sign * lr * grad[i]
+
+        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
+            progress = Progress(iteration + 1, grad_norm, None, evals)
+            if on_progress(progress) is True:
+                return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
@@ -72,6 +79,8 @@ def momentum(
     beta: float = 0.9,
     max_iter: int = 1000,
     tol: float = 1e-6,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
 ) -> Result:
 
     sign = 1 if minimize else -1
@@ -86,11 +95,16 @@ def momentum(
 
         grad_norm = sqrt(sum(g * g for g in grad))
         if grad_norm < tol:
-            return Result(x, grad_norm, iteration, evals, Status.OPTIMAL)
+            return Result(x, grad_norm, iteration, evals)
 
         for i in range(n):
             v[i] = beta * v[i] + sign * grad[i]
             x[i] -= lr * v[i]
+
+        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
+            progress = Progress(iteration + 1, grad_norm, None, evals)
+            if on_progress(progress) is True:
+                return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
@@ -106,6 +120,8 @@ def adam(
     eps: float = 1e-8,
     max_iter: int = 1000,
     tol: float = 1e-6,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
 ) -> Result:
     
     sign = 1 if minimize else -1
@@ -121,7 +137,7 @@ def adam(
 
         grad_norm = sqrt(sum(g * g for g in grad))
         if grad_norm < tol:
-            return Result(x, grad_norm, iteration, evals, Status.OPTIMAL)
+            return Result(x, grad_norm, iteration, evals)
 
         for i in range(n):
             g = sign * grad[i]
@@ -132,6 +148,11 @@ def adam(
             v_hat = v[i] / (1 - beta2 ** iteration)
 
             x[i] -= lr * m_hat / (sqrt(v_hat) + eps)
+
+        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
+            progress = Progress(iteration, grad_norm, None, evals)
+            if on_progress(progress) is True:
+                return Result(x, grad_norm, iteration, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)

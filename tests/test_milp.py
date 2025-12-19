@@ -1,7 +1,7 @@
 """Tests for the MILP (mixed-integer linear programming) solver."""
 
-import pytest
-from solvor.milp import solve_milp, Status
+from solvor.milp import solve_milp
+from solvor.types import Status
 
 
 class TestBasicMILP:

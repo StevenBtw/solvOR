@@ -45,7 +45,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from solvor.types import Status, Result
 
-__all__ = ["solve_exact_cover", "Status", "Result"]
+__all__ = ["solve_exact_cover"]
 
 @dataclass(slots=True)
 class _Node:
@@ -162,11 +162,11 @@ def solve_exact_cover(
     max_iter: int = 10_000_000,
 ) -> Result:
     if not matrix:
-        return Result((), 0, 0, 0, Status.OPTIMAL)
+        return Result((), 0, 0, 0)
 
     root, col_headers = _build_links(matrix, columns)
     if root is None:
-        return Result((), 0, 0, 0, Status.OPTIMAL)
+        return Result((), 0, 0, 0)
 
     solutions = []
     current = []
@@ -246,4 +246,4 @@ def solve_exact_cover(
         status = Status.FEASIBLE if max_solutions and len(solutions) >= max_solutions else Status.OPTIMAL
         return Result(solutions, len(solutions), iterations, covers, status)
 
-    return Result(solutions[0], len(solutions[0]), iterations, covers, Status.OPTIMAL)
+    return Result(solutions[0], len(solutions[0]), iterations, covers)

@@ -1,8 +1,7 @@
 """Tests for the gradient descent solvers."""
 
-import pytest
-from math import sqrt
-from solvor.gradient import gradient_descent, momentum, adam, Status
+from solvor.gradient import gradient_descent, momentum, adam
+from solvor.types import Status, Progress
 
 
 class TestGradientDescentBasic:
@@ -59,6 +58,14 @@ class TestMomentum:
         assert abs(result.solution[0]) < 0.5
         assert abs(result.solution[1]) < 0.5
 
+    def test_maximize(self):
+        # Maximize -x^2
+        def grad(x):
+            return [-2 * x[0]]
+
+        result = momentum(grad, [5.0], minimize=False, max_iter=1000)
+        assert abs(result.solution[0]) < 0.1
+
 
 class TestAdam:
     def test_basic_adam(self):
@@ -84,6 +91,14 @@ class TestAdam:
         result = adam(grad, [5.0, 5.0], lr=0.1, max_iter=1000)
         assert abs(result.solution[0]) < 0.5
         assert abs(result.solution[1]) < 0.5
+
+    def test_maximize(self):
+        # Maximize -x^2
+        def grad(x):
+            return [-2 * x[0]]
+
+        result = adam(grad, [5.0], minimize=False, lr=0.1, max_iter=1000)
+        assert abs(result.solution[0]) < 0.1
 
 
 class TestLearningRate:
@@ -205,3 +220,69 @@ class TestStress:
         assert all(abs(xi) < 0.5 for xi in r1.solution)
         assert all(abs(xi) < 0.5 for xi in r2.solution)
         assert all(abs(xi) < 0.5 for xi in r3.solution)
+
+
+class TestProgressCallback:
+    def test_gradient_descent_callback(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        calls = []
+
+        def callback(progress):
+            calls.append(progress.iteration)
+
+        gradient_descent(grad, [10.0], max_iter=50, on_progress=callback, progress_interval=10)
+        assert calls == [10, 20, 30, 40, 50]
+
+    def test_momentum_callback(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        calls = []
+
+        def callback(progress):
+            calls.append(progress.iteration)
+
+        momentum(grad, [10.0], max_iter=50, on_progress=callback, progress_interval=10)
+        assert calls == [10, 20, 30, 40, 50]
+
+    def test_adam_callback(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        calls = []
+
+        def callback(progress):
+            calls.append(progress.iteration)
+
+        adam(grad, [10.0], max_iter=50, on_progress=callback, progress_interval=10)
+        assert calls == [10, 20, 30, 40, 50]
+
+    def test_callback_early_stop(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        def stop_at_20(progress):
+            if progress.iteration >= 20:
+                return True
+
+        result = gradient_descent(grad, [100.0], max_iter=100, on_progress=stop_at_20, progress_interval=5)
+        assert result.iterations == 20
+
+    def test_callback_receives_progress_data(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        received = []
+
+        def callback(progress):
+            received.append(progress)
+
+        gradient_descent(grad, [5.0], max_iter=20, on_progress=callback, progress_interval=5)
+        assert len(received) > 0
+        p = received[0]
+        assert isinstance(p, Progress)
+        assert p.iteration == 5
+        assert p.objective is not None
+        assert p.evaluations > 0

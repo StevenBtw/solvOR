@@ -12,8 +12,8 @@ or discrete/categorical parameters without encoding tricks.
 
     from solvor.bayesian import bayesian_opt
 
-    result = bayesian_opt(cost_fn, bounds=[(0, 1), (-5, 5)])
-    result = bayesian_opt(cost_fn, bounds, minimize=False)  # maximize
+    result = bayesian_opt(objective_fn, bounds=[(0, 1), (-5, 5)])
+    result = bayesian_opt(objective_fn, bounds, minimize=False)  # maximize
 
 If you're doing serious ML hyperparameter tuning, consider scikit-optimize or
 Optuna, they handle the edge cases and integrations this implementation doesn't.
@@ -24,7 +24,7 @@ from math import sqrt, exp, pi, erf
 from random import Random
 from solvor.types import Status, Result
 
-__all__ = ["bayesian_opt", "Status", "Result"]
+__all__ = ["bayesian_opt"]
 
 def bayesian_opt(
     objective_fn: Callable[[Sequence[float]], float],

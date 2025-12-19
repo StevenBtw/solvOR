@@ -1,22 +1,24 @@
 # solvOR
 
-![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)
+![Python 3.13+ | 3.14 compatible](https://img.shields.io/badge/python-3.13%2B%20%7C%203.14%20compatible-blue.svg)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) 
 
-Solvor your optimization needs..
+Solvor your optimization needs.
 
 ## What's in the box?
 
 | Category | Solvors | Use Case |
 |----------|---------|----------|
 | **Linear/Integer** | `solve_lp`, `solve_milp` | Resource allocation, scheduling |
-| **Constraint** | `solve_sat` | Sudoku, configuration, puzzles |
+| **Constraint** | `solve_sat`, `Model` | Sudoku, configuration, puzzles |
 | **Local Search** | `anneal`, `tabu_search` | TSP, combinatorial optimization |
 | **Population** | `evolve` | When you want nature to do the work |
 | **Continuous** | `gradient_descent`, `momentum`, `adam` | ML, curve fitting |
 | **Black-box** | `bayesian_opt` | Hyperparameter tuning, expensive functions |
-| **Graph** | `max_flow`, `min_cost_flow`, `solve_assignment` | Matching, transportation |
-| **Exact Cover** | `solve_exact_cover` | Sudoku, N-Queens, tiling puzzles |
+| **Pathfinding** | `bfs`, `dfs`, `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | Shortest paths, graph traversal |
+| **Graph** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | Flow, MST, connectivity |
+| **Assignment** | `solve_assignment`, `hungarian`, `network_simplex` | Matching, min-cost flow |
+| **Exact Cover** | `solve_exact_cover` | N-Queens, tiling puzzles |
 
 ---
 
@@ -27,7 +29,7 @@ uv add solvor
 ```
 
 ```python
-from solvor import solve_lp, solve_tsp, anneal, Model
+from solvor import solve_lp, solve_tsp, dijkstra, hungarian
 
 # Linear Programming
 result = solve_lp(c=[1, 2], A=[[1, 1], [2, 1]], b=[4, 5])
@@ -38,14 +40,15 @@ distances = [[0, 10, 15], [10, 0, 20], [15, 20, 0]]
 result = solve_tsp(distances)
 print(result.solution)  # best tour found
 
-# Constraint satisfaction
-m = Model()
-x = m.int_var(1, 9, 'x')
-y = m.int_var(1, 9, 'y')
-m.add(m.all_different([x, y]))
-m.add(m.sum_eq([x, y], 10))
-result = m.solve()
-print(result.solution)  # {'x': 3, 'y': 7}
+# Shortest path
+graph = {'A': [('B', 1), ('C', 4)], 'B': [('C', 2)], 'C': []}
+result = dijkstra('A', 'C', lambda n: graph.get(n, []))
+print(result.solution)  # ['A', 'B', 'C']
+
+# Assignment
+costs = [[10, 5], [3, 9]]
+result = hungarian(costs)
+print(result.solution)  # [1, 0] - row 0 gets col 1, row 1 gets col 0
 ```
 
 ---
@@ -176,10 +179,62 @@ result = bayesian_opt(expensive_fn, bounds=[(0, 1), (0, 1)], max_iter=30)
 </details>
 
 <details>
-<summary><strong>Network Flow</strong></summary>
+<summary><strong>Pathfinding</strong></summary>
+
+### bfs / dfs
+Unweighted graph traversal. BFS finds shortest paths (fewest edges), DFS explores depth-first. Both work with any state type and neighbor function.
+
+```python
+# Find shortest path in a grid
+def neighbors(pos):
+    x, y = pos
+    return [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+
+result = bfs(start=(0, 0), goal=(5, 5), neighbors=neighbors)
+print(result.solution)  # path from start to goal
+```
+
+### dijkstra
+Weighted shortest paths. Classic algorithm for when edges have costs. Stops early when goal is found.
+
+```python
+def neighbors(node):
+    return graph[node]  # returns [(neighbor, cost), ...]
+
+result = dijkstra(start='A', goal='Z', neighbors=neighbors)
+```
+
+### astar / astar_grid
+A* with heuristics. Faster than Dijkstra when you have a good distance estimate. `astar_grid` handles 2D grids with built-in heuristics.
+
+```python
+# Grid pathfinding with obstacles
+grid = [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0]]
+result = astar_grid(grid, start=(0, 0), goal=(2, 3))
+```
+
+### bellman_ford
+Handles negative edge weights. Slower than Dijkstra but detects negative cycles.
+
+```python
+result = bellman_ford(start=0, edges=[(0, 1, 5), (1, 2, -3), ...], n_nodes=4)
+```
+
+### floyd_warshall
+All-pairs shortest paths. O(n³) but gives you every shortest path at once.
+
+```python
+result = floyd_warshall(n_nodes=4, edges=[(0, 1, 3), (1, 2, 1), ...])
+# result.solution[i][j] = shortest distance from i to j
+```
+
+</details>
+
+<details>
+<summary><strong>Network Flow & MST</strong></summary>
 
 ### max_flow
-"How much can I push through this network?" Assigning workers to tasks, finding bottlenecks. The max-flow min-cut theorem gives you bottleneck analysis for free.
+"How much can I push through this network?" Assigning workers to tasks, finding bottlenecks.
 
 ```python
 graph = {
@@ -189,23 +244,47 @@ graph = {
     't': []
 }
 result = max_flow(graph, 's', 't')
-print(result.objective)  # total flow
-print(result.solution)   # edge flows dict
 ```
 
-### min_cost_flow / solve_assignment
-"What's the cheapest way to route X units?" Transportation, logistics, matching with costs.
+### min_cost_flow / network_simplex
+"What's the cheapest way to route X units?" Use `min_cost_flow` for simplicity, `network_simplex` for large instances.
 
 ```python
-# Assignment problem: 3 workers, 3 tasks
+# network_simplex for large min-cost flow
+arcs = [(0, 1, 10, 2), (0, 2, 5, 3), (1, 2, 15, 1)]  # (from, to, cap, cost)
+supplies = [10, 0, -10]  # positive = source, negative = sink
+result = network_simplex(n_nodes=3, arcs=arcs, supplies=supplies)
+```
+
+### kruskal / prim
+Minimum spanning tree. Connect all nodes with minimum total edge weight. Kruskal sorts edges, Prim grows from a start node.
+
+```python
+edges = [(0, 1, 4), (0, 2, 3), (1, 2, 2)]  # (u, v, weight)
+result = kruskal(n_nodes=3, edges=edges)
+# result.solution = [(1, 2, 2), (0, 2, 3)] - MST edges
+```
+
+</details>
+
+<details>
+<summary><strong>Assignment</strong></summary>
+
+### solve_assignment / hungarian
+Optimal one-to-one matching. `hungarian` is O(n³), direct algorithm for assignment problems.
+
+```python
 costs = [
     [10, 5, 13],
     [3, 9, 18],
     [10, 6, 12]
 ]
-result = solve_assignment(costs)
-# result.solution[i] = task assigned to worker i
+result = hungarian(costs)
+# result.solution[i] = column assigned to row i
 # result.objective = total cost
+
+# For maximization
+result = hungarian(costs, minimize=False)
 ```
 
 </details>
@@ -260,8 +339,16 @@ Result(
 | Combinatorial, no clue where to start | `evolve` |
 | Smooth, differentiable | `adam` |
 | Expensive black-box | `bayesian_opt` |
-| Assignment, matching, flow | `max_flow`, `solve_assignment` |
-| Exact cover, tiling, N-Queens | `solve_exact_cover` |
+| Shortest path, unweighted | `bfs`, `dfs` |
+| Shortest path, weighted | `dijkstra`, `astar` |
+| Shortest path, negative weights | `bellman_ford` |
+| All-pairs shortest paths | `floyd_warshall` |
+| Minimum spanning tree | `kruskal`, `prim` |
+| Maximum flow | `max_flow` |
+| Min-cost flow, small | `min_cost_flow` |
+| Min-cost flow, large | `network_simplex` |
+| Assignment, matching | `hungarian`, `solve_assignment` |
+| Exact cover, tiling | `solve_exact_cover` |
 
 ---
 
@@ -281,3 +368,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 ## License
 
 [Apache 2.0 License](LICENSE) - free for personal and commercial use.
+
+## Background of solvOR
+<details>
+<summary><strong>A little bit of history..</strong></summary>
+I learned about solvers back in 2011, working with some great minds. I started writing python myself around 2018, always as a hobby, and in 2024 I got back into solvers for an energy management system (EMS) and wrote a few tools (simplex, milp, genetic) myself mainly to improve my understanding.
+
+Over time this toolbox got larger and larger, so I decided to publish it on GitHub so others can use it and improve it even further. Since I am learning Rust, I will eventually replace some performance critical operatons with a high performance Rust implementation. But since I work on this project (and others) in my spare time, what and when is uncertain. The name solvOR is a mix of solver(s) and OR (Operations Research).
+
+Disclaimer; I am not a professional software engineer, so there are probably some obvious improvements possible. If so let me know, or create a PR!
+
+</details>

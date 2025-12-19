@@ -36,6 +36,15 @@ jobs:
       flow: ${{ steps.filter.outputs.flow }}
       gradient: ${{ steps.filter.outputs.gradient }}
       dlx: ${{ steps.filter.outputs.dlx }}
+      bfs: ${{ steps.filter.outputs.bfs }}
+      dijkstra: ${{ steps.filter.outputs.dijkstra }}
+      a_star: ${{ steps.filter.outputs.a_star }}
+      bellman_ford: ${{ steps.filter.outputs.bellman_ford }}
+      floyd_warshall: ${{ steps.filter.outputs.floyd_warshall }}
+      mst: ${{ steps.filter.outputs.mst }}
+      network_simplex: ${{ steps.filter.outputs.network_simplex }}
+      hungarian: ${{ steps.filter.outputs.hungarian }}
+      utils: ${{ steps.filter.outputs.utils }}
       types: ${{ steps.filter.outputs.types }}
       tests: ${{ steps.filter.outputs.tests }}
     steps:
@@ -79,6 +88,33 @@ jobs:
             dlx:
               - 'solvor/dlx.py'
               - 'tests/test_dlx.py'
+            bfs:
+              - 'solvor/bfs.py'
+              - 'tests/test_bfs.py'
+            dijkstra:
+              - 'solvor/dijkstra.py'
+              - 'tests/test_dijkstra.py'
+            a_star:
+              - 'solvor/a_star.py'
+              - 'tests/test_a_star.py'
+            bellman_ford:
+              - 'solvor/bellman_ford.py'
+              - 'tests/test_bellman_ford.py'
+            floyd_warshall:
+              - 'solvor/floyd_warshall.py'
+              - 'tests/test_floyd_warshall.py'
+            mst:
+              - 'solvor/mst.py'
+              - 'tests/test_mst.py'
+            network_simplex:
+              - 'solvor/network_simplex.py'
+              - 'tests/test_network_simplex.py'
+            hungarian:
+              - 'solvor/hungarian.py'
+              - 'tests/test_hungarian.py'
+            utils:
+              - 'solvor/utils.py'
+              - 'tests/test_utils.py'
             types:
               - 'solvor/types.py'
               - 'solvor/__init__.py'
@@ -196,6 +232,96 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --extra dev
       - run: uv run pytest tests/test_dlx.py -v
+
+  test-bfs:
+    needs: changes
+    if: ${{ needs.changes.outputs.bfs == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_bfs.py -v
+
+  test-dijkstra:
+    needs: changes
+    if: ${{ needs.changes.outputs.dijkstra == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_dijkstra.py -v
+
+  test-a_star:
+    needs: changes
+    if: ${{ needs.changes.outputs.a_star == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_a_star.py -v
+
+  test-bellman_ford:
+    needs: changes
+    if: ${{ needs.changes.outputs.bellman_ford == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_bellman_ford.py -v
+
+  test-floyd_warshall:
+    needs: changes
+    if: ${{ needs.changes.outputs.floyd_warshall == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_floyd_warshall.py -v
+
+  test-mst:
+    needs: changes
+    if: ${{ needs.changes.outputs.mst == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_mst.py -v
+
+  test-network_simplex:
+    needs: changes
+    if: ${{ needs.changes.outputs.network_simplex == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_network_simplex.py -v
+
+  test-hungarian:
+    needs: changes
+    if: ${{ needs.changes.outputs.hungarian == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_hungarian.py -v
+
+  test-utils:
+    needs: changes
+    if: ${{ needs.changes.outputs.utils == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_utils.py -v
 
   # Full test suite on main branch or when test infrastructure changes
   test-all:

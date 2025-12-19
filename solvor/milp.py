@@ -25,16 +25,21 @@ when you have a clear linear objective and need the optimal value.
 If your problem is purely continuous (no integers), just use simplex (directly).
 """
 
-from collections import namedtuple
 from collections.abc import Sequence
 from heapq import heappush, heappop
 from math import floor, ceil
+from typing import NamedTuple
 from solvor.simplex import solve_lp, Status as LPStatus
 from solvor.types import Status, Result
 
-__all__ = ["solve_milp", "Status", "Result"]
+__all__ = ["solve_milp"]
 
-Node = namedtuple('Node', ['bound', 'lower', 'upper', 'depth'])
+# I deliberatly picked NamedTuple over dataclass for performance
+class Node(NamedTuple):
+    bound: float
+    lower: tuple[float, ...]
+    upper: tuple[float, ...]
+    depth: int
 
 def solve_milp(
     c: Sequence[float],
@@ -71,7 +76,7 @@ def solve_milp(
     frac_var = _most_fractional(root_result.solution, int_set, eps)
 
     if frac_var is None:
-        return Result(root_result.solution, root_result.objective, 1, total_iters, Status.OPTIMAL)
+        return Result(root_result.solution, root_result.objective, 1, total_iters)
 
     tree = []
     counter = 0
@@ -106,7 +111,7 @@ def solve_milp(
                     gap = _compute_gap(best_obj, node_bound / sign if node_bound != 0 else 0, minimize)
 
                     if gap < gap_tol:
-                        return Result(best_solution, best_obj, nodes_explored, total_iters, Status.OPTIMAL)
+                        return Result(best_solution, best_obj, nodes_explored, total_iters)
 
             continue
 

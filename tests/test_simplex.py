@@ -1,7 +1,7 @@
 """Tests for the simplex (linear programming) solver."""
 
-import pytest
-from solvor.simplex import solve_lp, Status
+from solvor.simplex import solve_lp
+from solvor.types import Status
 
 
 class TestBasicLP:

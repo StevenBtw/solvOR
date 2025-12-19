@@ -29,7 +29,7 @@ from collections import defaultdict
 from collections.abc import Sequence
 from solvor.types import Status, Result
 
-__all__ = ["solve_sat", "Status", "Result"]
+__all__ = ["solve_sat"]
 
 def solve_sat(
     clauses: Sequence[Sequence[int]],
@@ -40,7 +40,7 @@ def solve_sat(
 ) -> Result:
 
     if not clauses:
-        return Result({}, 0, 0, 0, Status.OPTIMAL)
+        return Result({}, 0, 0, 0)
 
     assumptions = assumptions or []
     clauses = [list(c) for c in clauses]
@@ -263,7 +263,7 @@ def solve_sat(
         var = decide()
         if var is None:
             sol = {v: assignment[v] for v in range(1, n_vars + 1) if v in assignment}
-            return Result(sol, len(sol), decisions, propagations, Status.OPTIMAL)
+            return Result(sol, len(sol), decisions, propagations)
 
         decisions += 1
         dec_level += 1

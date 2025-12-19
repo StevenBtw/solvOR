@@ -1,7 +1,7 @@
 """Tests for the network flow solvers."""
 
-import pytest
-from solvor.flow import max_flow, min_cost_flow, solve_assignment, Status
+from solvor.flow import max_flow, min_cost_flow, solve_assignment
+from solvor.types import Status
 
 
 class TestMaxFlowBasic:

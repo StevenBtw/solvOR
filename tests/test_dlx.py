@@ -1,7 +1,7 @@
 """Tests for the DLX (Dancing Links / Algorithm X) exact cover solver."""
 
-import pytest
-from solvor.dlx import solve_exact_cover, Status
+from solvor.dlx import solve_exact_cover
+from solvor.types import Status
 
 
 class TestBasicExactCover:

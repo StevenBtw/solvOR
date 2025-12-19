@@ -1,8 +1,8 @@
 """Tests for the genetic algorithm solver."""
 
-import pytest
 from random import randint, seed as set_seed
-from solvor.genetic import evolve, Status
+from solvor.genetic import evolve
+from solvor.types import Status, Progress
 
 
 def simple_crossover(p1, p2):
@@ -205,3 +205,83 @@ class TestStress:
         result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=200, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective < 3
+
+
+class TestProgressCallback:
+    def test_callback_called_at_interval(self):
+        def objective(bits):
+            return sum(bits)
+
+        population = [tuple([1] * 10) for _ in range(20)]
+        calls = []
+
+        def callback(progress):
+            calls.append(progress.iteration)
+
+        evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42, on_progress=callback, progress_interval=10)
+        assert calls == [10, 20, 30, 40, 50]
+
+    def test_callback_early_stop(self):
+        def objective(bits):
+            return sum(bits)
+
+        population = [tuple([1] * 10) for _ in range(20)]
+
+        def stop_at_20(progress):
+            if progress.iteration >= 20:
+                return True
+
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=100, seed=42, on_progress=stop_at_20, progress_interval=5)
+        assert result.iterations == 20
+
+    def test_callback_receives_progress_data(self):
+        def objective(bits):
+            return sum(bits)
+
+        population = [tuple([1] * 10) for _ in range(20)]
+        received = []
+
+        def callback(progress):
+            received.append(progress)
+
+        evolve(objective, population, simple_crossover, bit_mutate, max_gen=20, seed=42, on_progress=callback, progress_interval=5)
+        assert len(received) > 0
+        p = received[0]
+        assert isinstance(p, Progress)
+        assert p.iteration == 5
+        assert p.objective is not None
+        assert p.evaluations > 0
+
+
+class TestTournamentK:
+    def test_high_tournament_pressure(self):
+        # High tournament_k = more selection pressure
+        def objective(bits):
+            return sum(bits)
+
+        population = [tuple([1] * 10) for _ in range(20)]
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42, tournament_k=10)
+        assert result.status == Status.FEASIBLE
+
+    def test_low_tournament_pressure(self):
+        # Low tournament_k = less selection pressure, more diversity
+        def objective(bits):
+            return sum(bits)
+
+        population = [tuple([1] * 10) for _ in range(20)]
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42, tournament_k=2)
+        assert result.status == Status.FEASIBLE
+
+    def test_tournament_k_comparison(self):
+        # Higher tournament_k should converge faster (more greedy)
+        def objective(bits):
+            return sum(bits)
+
+        population_high = [tuple([1] * 15) for _ in range(30)]
+        population_low = [tuple([1] * 15) for _ in range(30)]
+
+        result_high = evolve(objective, population_high, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=15)
+        result_low = evolve(objective, population_low, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=2)
+        # Both should work, but high k typically converges faster
+        assert result_high.status == Status.FEASIBLE
+        assert result_low.status == Status.FEASIBLE

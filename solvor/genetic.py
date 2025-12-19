@@ -12,8 +12,8 @@ overhead, but better diversity and less likely to get trapped.
 
     from solvor.genetic import evolve
 
-    result = evolve(cost_fn, population, crossover_fn, mutate_fn)
-    result = evolve(cost_fn, pop, cross, mut, minimize=False)  # maximize
+    result = evolve(objective_fn, population, crossover_fn, mutate_fn)
+    result = evolve(objective_fn, pop, cross, mut, minimize=False)  # maximize
 
 Parameters:
     objective_fn  : solution -> float, your fitness function
@@ -34,9 +34,9 @@ from collections import namedtuple
 from collections.abc import Callable, Sequence
 from operator import attrgetter
 from random import Random
-from solvor.types import Status, Result
+from solvor.types import Status, Result, Progress, ProgressCallback
 
-__all__ = ["evolve", "Status", "Result"]
+__all__ = ["evolve"]
 
 Individual = namedtuple('Individual', ['solution', 'fitness'])
 
@@ -52,6 +52,8 @@ def evolve[T](
     max_gen: int = 100,
     tournament_k: int = 3,
     seed: int | None = None,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
 ) -> Result:
    
     rng = Random(seed)
@@ -90,6 +92,13 @@ def evolve[T](
 
         if pop[0].fitness < best.fitness:
             best = pop[0]
+
+        if on_progress and progress_interval > 0 and (gen + 1) % progress_interval == 0:
+            current_obj = pop[0].fitness * sign
+            best_so_far = best.fitness * sign
+            progress = Progress(gen + 1, current_obj, best_so_far if best_so_far != current_obj else None, evals)
+            if on_progress(progress) is True:
+                return Result(best.solution, best_so_far, gen + 1, evals, Status.FEASIBLE)
 
     final_obj = best.fitness * sign
     return Result(best.solution, final_obj, max_gen, evals, Status.FEASIBLE)
