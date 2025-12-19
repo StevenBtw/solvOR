@@ -1,7 +1,7 @@
 """Tests for the SAT solver."""
 
-import pytest
-from solvor.sat import solve_sat, Status
+from solvor.sat import solve_sat
+from solvor.types import Status
 
 
 class TestBasicSAT:

@@ -12,7 +12,7 @@ more reproducible and easier to debug.
 
     from solvor.tabu import tabu_search, solve_tsp
 
-    result = tabu_search(start, cost_fn, neighbors_fn)
+    result = tabu_search(start, objective_fn, neighbors_fn)
     result = solve_tsp(distance_matrix)  # built-in TSP helper
 
 The neighbor function is different from anneal: it must return a list of
@@ -26,9 +26,9 @@ probabilistic (simpler setup), tabu is greedy with memory (more predictable).
 from collections import deque
 from collections.abc import Callable, Sequence
 from itertools import pairwise
-from solvor.types import Status, Result
+from solvor.types import Status, Result, Progress, ProgressCallback
 
-__all__ = ["tabu_search", "solve_tsp", "Status", "Result"]
+__all__ = ["tabu_search", "solve_tsp"]
 
 def tabu_search[T, M](
     initial: T,
@@ -39,6 +39,8 @@ def tabu_search[T, M](
     cooldown: int = 10,
     max_iter: int = 1000,
     max_no_improve: int = 100,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
 ) -> Result:
 
     sign = 1 if minimize else -1
@@ -81,6 +83,13 @@ def tabu_search[T, M](
         if obj < best_obj:
             best_solution, best_obj, best_iter = solution, obj, iteration
 
+        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
+            current_obj = obj * sign
+            best_so_far = best_obj * sign
+            progress = Progress(iteration, current_obj, best_so_far if best_so_far != current_obj else None, evals)
+            if on_progress(progress) is True:
+                return Result(best_solution, best_so_far, iteration, evals, Status.FEASIBLE)
+
         if iteration - best_iter >= max_no_improve:
             break
 
@@ -91,6 +100,8 @@ def solve_tsp(
     matrix: Sequence[Sequence[float]],
     *,
     minimize: bool = True,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
     **kwargs,
 ) -> Result:
 
@@ -123,4 +134,4 @@ def solve_tsp(
         tour.append(nearest)
         remaining.remove(nearest)
 
-    return tabu_search(tour, objective_fn, neighbors, minimize=minimize, **kwargs)
+    return tabu_search(tour, objective_fn, neighbors, minimize=minimize, on_progress=on_progress, progress_interval=progress_interval, **kwargs)

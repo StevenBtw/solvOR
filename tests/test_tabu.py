@@ -1,7 +1,7 @@
 """Tests for the tabu search solver."""
 
-import pytest
-from solvor.tabu import tabu_search, solve_tsp, Status
+from solvor.tabu import tabu_search, solve_tsp
+from solvor.types import Status, Progress
 
 
 class TestBasicTabu:
@@ -189,3 +189,102 @@ class TestStress:
 
         result = tabu_search(0, objective, neighbors, max_iter=20)
         assert result.solution == 5
+
+
+class TestProgressCallback:
+    def test_callback_called_at_interval(self):
+        # Use a large target so we don't reach optimum early
+        def objective(x):
+            return abs(x - 100)
+
+        def neighbors(x):
+            return [('dec', x - 1), ('inc', x + 1)]
+
+        calls = []
+
+        def callback(progress):
+            calls.append(progress.iteration)
+
+        tabu_search(0, objective, neighbors, max_iter=50, on_progress=callback, progress_interval=10)
+        assert calls == [10, 20, 30, 40, 50]
+
+    def test_callback_early_stop(self):
+        def objective(x):
+            return abs(x - 100)
+
+        def neighbors(x):
+            return [('dec', x - 1), ('inc', x + 1)]
+
+        def stop_at_20(progress):
+            if progress.iteration >= 20:
+                return True
+
+        result = tabu_search(0, objective, neighbors, max_iter=100, on_progress=stop_at_20, progress_interval=5)
+        assert result.iterations == 20
+
+    def test_callback_receives_progress_data(self):
+        def objective(x):
+            return abs(x - 10)
+
+        def neighbors(x):
+            return [('dec', x - 1), ('inc', x + 1)]
+
+        received = []
+
+        def callback(progress):
+            received.append(progress)
+
+        tabu_search(0, objective, neighbors, max_iter=20, on_progress=callback, progress_interval=5)
+        assert len(received) > 0
+        p = received[0]
+        assert isinstance(p, Progress)
+        assert p.iteration == 5
+        assert p.objective is not None
+        assert p.evaluations > 0
+
+
+class TestMaximize:
+    def test_maximize_simple(self):
+        def objective(x):
+            return -abs(x - 10)  # Maximum at x=10
+
+        def neighbors(x):
+            return [('dec', x - 1), ('inc', x + 1)]
+
+        result = tabu_search(0, objective, neighbors, minimize=False, max_iter=50)
+        assert result.solution == 10
+        assert result.objective == 0
+
+    def test_maximize_tsp(self):
+        # For TSP, maximize means longest path
+        dist = [[0, 1, 2], [1, 0, 3], [2, 3, 0]]
+        result_min = solve_tsp(dist, minimize=True)
+        result_max = solve_tsp(dist, minimize=False)
+        # Longest tour should have larger objective
+        assert result_max.objective >= result_min.objective
+
+
+class TestMaxNoImprove:
+    def test_early_stop_on_no_improve(self):
+        # Objective that plateaus - no improvement possible after reaching 0
+        def objective(x):
+            return max(0, 10 - x)  # Stays at 0 for x >= 10
+
+        def neighbors(x):
+            return [('dec', x - 1), ('inc', x + 1)]
+
+        result = tabu_search(0, objective, neighbors, max_iter=1000, max_no_improve=20)
+        # Should stop early due to no improvement
+        assert result.iterations < 1000
+
+    def test_continues_with_improvement(self):
+        # Should not stop early if still improving
+        def objective(x):
+            return abs(x - 30)
+
+        def neighbors(x):
+            return [('dec', x - 1), ('inc', x + 1)]
+
+        result = tabu_search(0, objective, neighbors, max_iter=100, max_no_improve=50)
+        # Should reach the optimum
+        assert result.solution == 30

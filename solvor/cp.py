@@ -28,7 +28,7 @@ from itertools import combinations
 from solvor.sat import solve_sat, Status as SATStatus
 from solvor.types import Status, Result
 
-__all__ = ["Model", "Status", "Result"]
+__all__ = ["Model"]
 
 class IntVar:
     def __init__(self, model, lb, ub, name):
@@ -274,4 +274,4 @@ class Model:
                     solution[name] = val
                     break
 
-        return Result(solution, 0, sat_result.iterations, sat_result.evaluations, Status.OPTIMAL)
+        return Result(solution, 0, sat_result.iterations, sat_result.evaluations)

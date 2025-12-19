@@ -27,7 +27,7 @@ from array import array
 from collections.abc import Sequence
 from solvor.types import Status, Result
 
-__all__ = ["solve_lp", "Status", "Result"]
+__all__ = ["solve_lp"]
 
 def solve_lp(
     c: Sequence[float],

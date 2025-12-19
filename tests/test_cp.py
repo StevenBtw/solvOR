@@ -1,7 +1,7 @@
 """Tests for the constraint programming solver."""
 
-import pytest
-from solvor.cp import Model, Status
+from solvor.cp import Model
+from solvor.types import Status
 
 
 class TestBasicCP:
@@ -111,7 +111,7 @@ class TestArithmetic:
 class TestEdgeCases:
     def test_single_variable(self):
         m = Model()
-        x = m.int_var(5, 5, 'x')  # Domain of size 1
+        m.int_var(5, 5, 'x')  # Domain of size 1
         result = m.solve()
         assert result.status == Status.OPTIMAL
         assert result.solution['x'] == 5

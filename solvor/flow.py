@@ -33,7 +33,7 @@ from collections import defaultdict, deque
 from collections.abc import Sequence
 from solvor.types import Status, Result
 
-__all__ = ["max_flow", "min_cost_flow", "solve_assignment", "Status", "Result"]
+__all__ = ["max_flow", "min_cost_flow", "solve_assignment"]
 
 def max_flow[Node](
     graph: dict[Node, list[tuple[Node, int, ...]]],
@@ -83,7 +83,7 @@ def max_flow[Node](
         total_flow += path_flow
 
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
-    return Result(flows, total_flow, 0, 0, Status.OPTIMAL)
+    return Result(flows, total_flow, 0, 0)
 
 def min_cost_flow[Node](
     graph: dict[Node, list[tuple[Node, int, int]]],
@@ -164,7 +164,7 @@ def min_cost_flow[Node](
         total_flow += path_flow
 
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
-    return Result(flows, total_cost, 0, 0, Status.OPTIMAL)
+    return Result(flows, total_cost, 0, 0)
 
 def solve_assignment(
     cost_matrix: Sequence[Sequence[float]],
