@@ -1,6 +1,6 @@
 [project]
 name = "solvor"
-version = "0.3.3"
+version = "0.3.4"
 description = "Solvor your optimization needs."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -15,11 +15,12 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.14",
-    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Operations Research :: Scientific/Engineering :: Mathematics",
 ]
 
 [project.urls]
 Repository = "https://github.com/StevenBtw/solvor"
+PyPI = "https://pypi.org/project/solvor" 
 
 [project.optional-dependencies]
 dev = [

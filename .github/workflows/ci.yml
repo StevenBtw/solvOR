@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,5 +21,189 @@ jobs:
       - name: Run linter
         run: uv run ruff check solvor/
 
-      - name: Run tests
-        run: uv run pytest tests/ -v
+  # Detect which solvers have changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      simplex: ${{ steps.filter.outputs.simplex }}
+      milp: ${{ steps.filter.outputs.milp }}
+      anneal: ${{ steps.filter.outputs.anneal }}
+      tabu: ${{ steps.filter.outputs.tabu }}
+      sat: ${{ steps.filter.outputs.sat }}
+      cp: ${{ steps.filter.outputs.cp }}
+      bayesian: ${{ steps.filter.outputs.bayesian }}
+      genetic: ${{ steps.filter.outputs.genetic }}
+      flow: ${{ steps.filter.outputs.flow }}
+      gradient: ${{ steps.filter.outputs.gradient }}
+      dlx: ${{ steps.filter.outputs.dlx }}
+      types: ${{ steps.filter.outputs.types }}
+      tests: ${{ steps.filter.outputs.tests }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            simplex:
+              - 'solvor/simplex.py'
+              - 'tests/test_simplex.py'
+            milp:
+              - 'solvor/milp.py'
+              - 'solvor/simplex.py'
+              - 'tests/test_milp.py'
+            anneal:
+              - 'solvor/anneal.py'
+              - 'tests/test_anneal.py'
+            tabu:
+              - 'solvor/tabu.py'
+              - 'tests/test_tabu.py'
+            sat:
+              - 'solvor/sat.py'
+              - 'tests/test_sat.py'
+            cp:
+              - 'solvor/cp.py'
+              - 'solvor/sat.py'
+              - 'tests/test_cp.py'
+            bayesian:
+              - 'solvor/bayesian.py'
+              - 'tests/test_bayesian.py'
+            genetic:
+              - 'solvor/genetic.py'
+              - 'tests/test_genetic.py'
+            flow:
+              - 'solvor/flow.py'
+              - 'tests/test_flow.py'
+            gradient:
+              - 'solvor/gradient.py'
+              - 'tests/test_gradient.py'
+            dlx:
+              - 'solvor/dlx.py'
+              - 'tests/test_dlx.py'
+            types:
+              - 'solvor/types.py'
+              - 'solvor/__init__.py'
+            tests:
+              - 'tests/**'
+              - 'pyproject.toml'
+
+  # Run tests for changed solvers only
+  test-simplex:
+    needs: changes
+    if: ${{ needs.changes.outputs.simplex == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_simplex.py -v
+
+  test-milp:
+    needs: changes
+    if: ${{ needs.changes.outputs.milp == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_milp.py -v
+
+  test-anneal:
+    needs: changes
+    if: ${{ needs.changes.outputs.anneal == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_anneal.py -v
+
+  test-tabu:
+    needs: changes
+    if: ${{ needs.changes.outputs.tabu == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_tabu.py -v
+
+  test-sat:
+    needs: changes
+    if: ${{ needs.changes.outputs.sat == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_sat.py -v
+
+  test-cp:
+    needs: changes
+    if: ${{ needs.changes.outputs.cp == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_cp.py -v
+
+  test-bayesian:
+    needs: changes
+    if: ${{ needs.changes.outputs.bayesian == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_bayesian.py -v
+
+  test-genetic:
+    needs: changes
+    if: ${{ needs.changes.outputs.genetic == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_genetic.py -v
+
+  test-flow:
+    needs: changes
+    if: ${{ needs.changes.outputs.flow == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_flow.py -v
+
+  test-gradient:
+    needs: changes
+    if: ${{ needs.changes.outputs.gradient == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_gradient.py -v
+
+  test-dlx:
+    needs: changes
+    if: ${{ needs.changes.outputs.dlx == 'true' || needs.changes.outputs.types == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_dlx.py -v
+
+  # Full test suite on main branch or when test infrastructure changes
+  test-all:
+    needs: changes
+    if: ${{ github.ref == 'refs/heads/main' || needs.changes.outputs.tests == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/ -v
