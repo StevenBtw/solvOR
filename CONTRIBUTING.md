@@ -46,23 +46,32 @@ Use consistent naming across all solvors:
 
 ## Adding a New Solvor
 
-1. Create `src/solvor/<solver_name>.py`
+1. Create `solvor/<solver_name>.py`
 2. Import shared types: `from solvor.types import Status, Result`
 3. Export `Status`, `Result`, and main solver function in `__all__`
-4. Add exports to `src/solvor/__init__.py`
-5. Add tests to `tests/test_solvers.py`
+4. Add exports to `solvor/__init__.py`
+5. Create `tests/test_<solver_name>.py` with comprehensive tests
 6. Update `README.md` with usage examples
+7. Add the solver to `.github/workflows/ci.yml` path filters
 
 ## Testing
 
-All solvers must have tests covering:
+Each solver has its own test file (`tests/test_<solver_name>.py`). Tests should cover:
 - Basic functionality
-- Edge cases (empty input, infeasible, etc.)
+- Edge cases (empty input, infeasible, single variable, etc.)
 - Minimize and maximize modes
+- Parameter variations
+- Stress tests with larger inputs
 
 ```bash
+# Run all tests
 uv run pytest tests/ -v
+
+# Run tests for a specific solver
+uv run pytest tests/test_simplex.py -v
 ```
+
+The CI runs tests selectively based on which files changed - only the affected solver's tests run.
 
 ## Pull Requests
 
