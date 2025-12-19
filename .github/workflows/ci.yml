@@ -136,207 +136,6 @@ jobs:
               - 'tests/**'
               - 'pyproject.toml'
 
-  # Run tests for changed solvers only
-  test-simplex:
-    needs: changes
-    if: ${{ needs.changes.outputs.simplex == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_simplex.py -v
-
-  test-milp:
-    needs: changes
-    if: ${{ needs.changes.outputs.milp == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_milp.py -v
-
-  test-anneal:
-    needs: changes
-    if: ${{ needs.changes.outputs.anneal == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_anneal.py -v
-
-  test-tabu:
-    needs: changes
-    if: ${{ needs.changes.outputs.tabu == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_tabu.py -v
-
-  test-sat:
-    needs: changes
-    if: ${{ needs.changes.outputs.sat == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_sat.py -v
-
-  test-cp:
-    needs: changes
-    if: ${{ needs.changes.outputs.cp == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_cp.py -v
-
-  test-bayesian:
-    needs: changes
-    if: ${{ needs.changes.outputs.bayesian == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_bayesian.py -v
-
-  test-genetic:
-    needs: changes
-    if: ${{ needs.changes.outputs.genetic == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_genetic.py -v
-
-  test-flow:
-    needs: changes
-    if: ${{ needs.changes.outputs.flow == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_flow.py -v
-
-  test-gradient:
-    needs: changes
-    if: ${{ needs.changes.outputs.gradient == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_gradient.py -v
-
-  test-dlx:
-    needs: changes
-    if: ${{ needs.changes.outputs.dlx == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_dlx.py -v
-
-  test-bfs:
-    needs: changes
-    if: ${{ needs.changes.outputs.bfs == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_bfs.py -v
-
-  test-dijkstra:
-    needs: changes
-    if: ${{ needs.changes.outputs.dijkstra == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_dijkstra.py -v
-
-  test-a_star:
-    needs: changes
-    if: ${{ needs.changes.outputs.a_star == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_a_star.py -v
-
-  test-bellman_ford:
-    needs: changes
-    if: ${{ needs.changes.outputs.bellman_ford == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_bellman_ford.py -v
-
-  test-floyd_warshall:
-    needs: changes
-    if: ${{ needs.changes.outputs.floyd_warshall == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_floyd_warshall.py -v
-
-  test-mst:
-    needs: changes
-    if: ${{ needs.changes.outputs.mst == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_mst.py -v
-
-  test-network_simplex:
-    needs: changes
-    if: ${{ needs.changes.outputs.network_simplex == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_network_simplex.py -v
-
-  test-hungarian:
-    needs: changes
-    if: ${{ needs.changes.outputs.hungarian == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_hungarian.py -v
-
-  test-utils:
-    needs: changes
-    if: ${{ needs.changes.outputs.utils == 'true' || needs.changes.outputs.types == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uv sync --extra dev
-      - run: uv run pytest tests/test_utils.py -v
-
   # Full test suite with coverage on main branch or when test infrastructure changes
   test-all:
     needs: changes
@@ -347,4 +146,205 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --extra dev
       - name: Run tests with coverage
-        run: uv run pytest tests/ -v --cov=solvor --cov-report=term-missing --cov-fail-under=80
+        run: uv run pytest tests/ -v --cov=solvor --cov-report=term-missing --cov-fail-under=88
+
+  # Run tests for changed solvers only (skipped when test-all runs)
+  test-simplex:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.simplex == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_simplex.py -v
+
+  test-milp:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.milp == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_milp.py -v
+
+  test-anneal:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.anneal == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_anneal.py -v
+
+  test-tabu:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.tabu == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_tabu.py -v
+
+  test-sat:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.sat == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_sat.py -v
+
+  test-cp:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.cp == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_cp.py -v
+
+  test-bayesian:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bayesian == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_bayesian.py -v
+
+  test-genetic:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.genetic == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_genetic.py -v
+
+  test-flow:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.flow == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_flow.py -v
+
+  test-gradient:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.gradient == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_gradient.py -v
+
+  test-dlx:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.dlx == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_dlx.py -v
+
+  test-bfs:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bfs == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_bfs.py -v
+
+  test-dijkstra:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.dijkstra == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_dijkstra.py -v
+
+  test-a_star:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.a_star == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_a_star.py -v
+
+  test-bellman_ford:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bellman_ford == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_bellman_ford.py -v
+
+  test-floyd_warshall:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.floyd_warshall == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_floyd_warshall.py -v
+
+  test-mst:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.mst == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_mst.py -v
+
+  test-network_simplex:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.network_simplex == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_network_simplex.py -v
+
+  test-hungarian:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.hungarian == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_hungarian.py -v
+
+  test-utils:
+    needs: changes
+    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.utils == 'true' || needs.changes.outputs.types == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv sync --extra dev
+      - run: uv run pytest tests/test_utils.py -v
