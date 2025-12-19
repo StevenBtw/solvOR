@@ -1,6 +1,6 @@
 # solvOR
 
-![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)
+![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) 
 
 Solvor your optimization needs..
