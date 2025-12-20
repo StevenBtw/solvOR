@@ -357,7 +357,7 @@ Result(
 1. **Pure Python:**  no numpy, no scipy, no compiled extensions
 2. **Readable:**  each solvor fits in one file you can actually read
 3. **Consistent:**  same Result format, same minimize/maximize convention
-4. **Practical:**  solves real problems, or AoC puzzles
+4. **Practical:**  solves real problems (or AoC puzzles) 
 
 ---
 
