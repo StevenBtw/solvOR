@@ -354,10 +354,10 @@ Result(
 
 ## Philosophy
 
-1. **Pure Python:**  no numpy, no scipy, no compiled extensions
-2. **Readable:**  each solvor fits in one file you can actually read
-3. **Consistent:**  same Result format, same minimize/maximize convention
-4. **Practical:**  solves real problems (or AoC puzzles) 
+1. **Pure Python:** no numpy, no scipy, no compiled extensions
+2. **Readable:** each solvor fits in one file you can actually read
+3. **Consistent:** same Result format, same minimize/maximize convention
+4. **Practical:** solves real problems (or AoC puzzles) 
 
 ---
 
@@ -374,7 +374,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 <summary><strong>A little bit of history..</strong></summary>
 I learned about solvers back in 2011, working with some great minds. I started writing python myself around 2018, always as a hobby, and in 2024 I got back into solvers for an energy management system (EMS) and wrote a few tools (simplex, milp, genetic) myself mainly to improve my understanding.
 
-Over time this toolbox got larger and larger, so I decided to publish it on GitHub so others can use it and improve it even further. Since I am learning Rust, I will eventually replace some performance critical operatons with a high performance Rust implementation. But since I work on this project (and others) in my spare time, what and when is uncertain. The name solvOR is a mix of solver(s) and OR (Operations Research).
+Over time this toolbox got larger and larger, so I decided to publish it on GitHub so others can use it and improve it even further. Since I am learning Rust, I will eventually replace some performance critical operations with a high performance Rust implementation. But since I work on this project (and others) in my spare time, what and when is uncertain. The name solvOR is a mix of solver(s) and OR (Operations Research).
 
 Disclaimer; I am not a professional software engineer, so there are probably some obvious improvements possible. If so let me know, or create a PR!
 
