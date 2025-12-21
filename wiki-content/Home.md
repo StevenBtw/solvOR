@@ -1,4 +1,4 @@
-# Welcome to solvOR
+# Welcome to the solvOR wiki
 
 **Solvor all your optimization needs.**
 
