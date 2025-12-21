@@ -1,6 +1,6 @@
 # network_simplex
 
-**Network simplex - specialized simplex for flow networks.**
+**Network simplex, specialized simplex for flow networks.**
 
 ## At a Glance
 
@@ -8,7 +8,7 @@
 - **Problem Type:** Min-cost flow (large scale)
 - **Complexity:** O(V²E) typical
 
-Simplex on a diet - exploits flow network structure.
+Simplex on a diet, exploits flow network structure.
 
 ## Quick Example
 
