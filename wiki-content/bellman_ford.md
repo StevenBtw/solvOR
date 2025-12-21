@@ -1,6 +1,6 @@
 # bellman_ford
 
-**Shortest paths with negative edges - the true edgelord.**
+**Shortest paths with negative edges, the true edgelord.**
 
 ## Summary 
 
