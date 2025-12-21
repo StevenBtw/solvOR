@@ -1,6 +1,6 @@
 # Network Flow & MST
 
-Graphs aren't just about finding paths - sometimes you need to push stuff through them (flow) or connect them all at minimum cost (spanning trees). These algorithms handle resource routing, bottleneck analysis, and network design.
+Graphs aren't just about finding paths, sometimes you need to push stuff through them (flow) or connect them all at minimum cost (spanning trees). These algorithms handle resource routing, bottleneck analysis, and network design.
 
 ## Solvers in this Category
 
@@ -116,19 +116,19 @@ print(result.objective)  # 9 (total weight)
 ## Tips & Tricks
 
 ### Max Flow
-- **Max-flow = min-cut** - The maximum flow equals the minimum capacity cut
-- **Finding bottlenecks** - Look at saturated edges in the solution
-- **Bipartite matching** - Model as flow: source → left nodes → right nodes → sink
+- **Max-flow = min-cut**, the maximum flow equals the minimum capacity cut
+- **Finding bottlenecks**, look at saturated edges in the solution
+- **Bipartite matching**, model as flow: source → left nodes → right nodes → sink
 
 ### Min Cost Flow
-- **Supply/demand formulation** - Nodes can produce or consume flow (see network_simplex)
-- **Not just point-to-point** - Can model multiple sources/sinks
-- **Successive shortest paths** - The algorithm finds cheapest augmenting paths
+- **Supply/demand formulation**, nodes can produce or consume flow (see network_simplex)
+- **Not just point-to-point**, can model multiple sources/sinks
+- **Successive shortest paths**, the algorithm finds cheapest augmenting paths
 
 ### Network Simplex
-- **Balanced flow required** - Sum of supplies must equal sum of demands
-- **Scales better** - Use this for large networks instead of min_cost_flow
-- **Artificial arcs** - The algorithm adds high-cost artificial arcs to get an initial feasible tree
+- **Balanced flow required**, sum of supplies must equal sum of demands
+- **Scales better**, use this for large networks instead of min_cost_flow
+- **Artificial arcs**, the algorithm adds high-cost artificial arcs to get an initial feasible tree
 
 ### Kruskal vs Prim
 - **Kruskal:** Sort all edges first, pick cheapest that don't create cycles
