@@ -2,7 +2,7 @@
 
 **Adam optimizer - momentum + RMSprop, the default choice.**
 
-## At a Glance
+## Summary
 
 - **Category:** [Continuous Optimization](Continuous-Optimization)
 - **Problem Type:** General continuous optimization
