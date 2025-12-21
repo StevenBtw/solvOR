@@ -1,8 +1,8 @@
 # solve_lp
 
-**Simplex solver for linear programming - walks along crystal edges to find optimal corners.**
+**Simplex solver for linear programming, walks along crystal edges to find optimal corners.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Linear & Integer Programming](Linear-&-Integer-Programming)
 - **Problem Type:** Linear optimization with continuous variables
