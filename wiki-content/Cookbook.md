@@ -1,6 +1,6 @@
 # Cookbook
 
-Complete working examples solving real problems with solvOR.
+Working examples solving real problems with solvOR.
 
 ## Problem Categories
 
