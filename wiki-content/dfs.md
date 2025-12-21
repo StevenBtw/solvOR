@@ -1,8 +1,8 @@
 # dfs
 
-**Depth-first search - finds *a* path, not necessarily shortest.**
+**Depth-first search, finds *a* path, not necessarily shortest.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Pathfinding](Pathfinding)
 - **Problem Type:** Reachability, connectivity
