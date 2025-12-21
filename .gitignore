@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.egg-info/
+dist/
+.venv/
+.cl*/*
+
+# VS Code
+.vscode/
+
+# Tools
+.python-version
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.cov
+uv.lock
