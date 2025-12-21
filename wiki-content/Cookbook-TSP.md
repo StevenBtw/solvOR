@@ -6,13 +6,13 @@ Find the shortest tour visiting all cities exactly once and returning to start.
 
 Given N cities and distances between them, find the shortest possible route that visits each city exactly once and returns to the starting city.
 
-This is the classic TSP - NP-hard, but small instances (< 100 cities) are very solvable with tabu search.
+This is the classic TSP, NP-hard, but small instances (< 100 cities) are very solvable with tabu search.
 
 ## Why It's Hard
 
-With N cities, there are (N-1)!/2 possible tours. For 10 cities that's 181,440 tours. For 20 cities it's 60 quintillion. Brute force isn't an option.
+With N cities, there are (N-1)!/2 possible tours. For 10 cities that's 181,440 tours. For 20 cities it's like 60 quintillion. Brute force isn't an option without a quantum computer.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import solve_tsp
