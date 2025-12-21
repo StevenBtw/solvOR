@@ -154,9 +154,9 @@ print(result.solution)  # Path like [(0,0), (0,1), (1,1), ...]
 - **Chebyshev:** max(|dx|, |dy|) - For 8-directional when diagonal = horizontal cost
 
 **General Graphs:**
-- **Straight-line distance** - If you have coordinates
-- **Landmark distances** - Precompute distances to a few "landmark" nodes
-- **Zero heuristic** - Degrades to Dijkstra (still optimal, just slower)
+- **Straight-line distance**, if you have coordinates
+- **Landmark distances**, precompute distances to a few "landmark" nodes
+- **Zero heuristic**, degrades to Dijkstra (still optimal, just slower)
 
 ## Real-World Applications
 
