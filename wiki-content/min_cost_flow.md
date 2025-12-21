@@ -1,8 +1,8 @@
 # min_cost_flow
 
-**Minimum cost flow - route flow at minimum cost.**
+**Minimum cost flow, route flow at minimum cost.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Network Flow & MST](Network-Flow-&-MST)
 - **Problem Type:** Min-cost routing
