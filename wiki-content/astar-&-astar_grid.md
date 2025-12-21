@@ -2,7 +2,7 @@
 
 **A* search - Dijkstra with a heuristic compass.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Pathfinding](Pathfinding)
 - **Problem Type:** Goal-directed shortest path
