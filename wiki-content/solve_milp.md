@@ -1,8 +1,8 @@
 # solve_milp
 
-**Mixed-Integer Linear Programming - LP with integer constraints via branch and bound.**
+**Mixed-Integer Linear Programming, LP with integer constraints via branch and bound.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Linear & Integer Programming](Linear-&-Integer-Programming)
 - **Problem Type:** Linear optimization with integer variables
