@@ -65,7 +65,7 @@ jobs:
       hungarian: ${{ steps.filter.outputs.hungarian }}
       utils: ${{ steps.filter.outputs.utils }}
       types: ${{ steps.filter.outputs.types }}
-      tests: ${{ steps.filter.outputs.tests }}
+      infra: ${{ steps.filter.outputs.infra }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -137,14 +137,14 @@ jobs:
             types:
               - 'solvor/types.py'
               - 'solvor/__init__.py'
-            tests:
-              - 'tests/**'
+            infra:
               - 'pyproject.toml'
+              - 'tests/conftest.py'
 
   # Full test suite with coverage on main branch or when test infrastructure changes
   test-all:
     needs: changes
-    if: ${{ github.ref == 'refs/heads/main' || needs.changes.outputs.tests == 'true' }}
+    if: ${{ github.ref == 'refs/heads/main' || needs.changes.outputs.infra == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -175,7 +175,7 @@ jobs:
   # Run tests for changed solvers only (skipped when test-all runs)
   test-simplex:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.simplex == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.simplex == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -185,7 +185,7 @@ jobs:
 
   test-milp:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.milp == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.milp == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -195,7 +195,7 @@ jobs:
 
   test-anneal:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.anneal == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.anneal == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -205,7 +205,7 @@ jobs:
 
   test-tabu:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.tabu == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.tabu == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -215,7 +215,7 @@ jobs:
 
   test-sat:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.sat == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.sat == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -225,7 +225,7 @@ jobs:
 
   test-cp:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.cp == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.cp == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -235,7 +235,7 @@ jobs:
 
   test-bayesian:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bayesian == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bayesian == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -245,7 +245,7 @@ jobs:
 
   test-genetic:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.genetic == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.genetic == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -255,7 +255,7 @@ jobs:
 
   test-flow:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.flow == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.flow == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -265,7 +265,7 @@ jobs:
 
   test-gradient:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.gradient == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.gradient == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -275,7 +275,7 @@ jobs:
 
   test-dlx:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.dlx == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.dlx == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -285,7 +285,7 @@ jobs:
 
   test-bfs:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bfs == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bfs == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -295,7 +295,7 @@ jobs:
 
   test-dijkstra:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.dijkstra == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.dijkstra == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -305,7 +305,7 @@ jobs:
 
   test-a_star:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.a_star == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.a_star == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -315,7 +315,7 @@ jobs:
 
   test-bellman_ford:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bellman_ford == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.bellman_ford == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -325,7 +325,7 @@ jobs:
 
   test-floyd_warshall:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.floyd_warshall == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.floyd_warshall == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -335,7 +335,7 @@ jobs:
 
   test-mst:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.mst == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.mst == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -345,7 +345,7 @@ jobs:
 
   test-network_simplex:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.network_simplex == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.network_simplex == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -355,7 +355,7 @@ jobs:
 
   test-hungarian:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.hungarian == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.hungarian == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -365,7 +365,7 @@ jobs:
 
   test-utils:
     needs: changes
-    if: ${{ needs.changes.outputs.tests != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.utils == 'true' || needs.changes.outputs.types == 'true') }}
+    if: ${{ needs.changes.outputs.infra != 'true' && github.ref != 'refs/heads/main' && (needs.changes.outputs.utils == 'true' || needs.changes.outputs.types == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
