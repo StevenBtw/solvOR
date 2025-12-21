@@ -1,6 +1,6 @@
 # Cookbook: Shortest Path in a Grid
 
-Navigate a 2D grid maze from start to goal using A*.
+Navigate a 2D grid maze from start to goal using A* (astar_grid.py).
 
 ## Example
 
