@@ -1,6 +1,6 @@
 # max_flow
 
-**Maximum flow from source to sink - find the bottleneck.**
+**Maximum flow from source to sink, find the bottleneck.**
 
 ## At a Glance
 
