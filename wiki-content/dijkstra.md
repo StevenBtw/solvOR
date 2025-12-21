@@ -1,8 +1,8 @@
 # dijkstra
 
-**Dijkstra's algorithm - weighted shortest paths.**
+**Dijkstra's algorithm, weighted shortest paths.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Pathfinding](Pathfinding)
 - **Problem Type:** Weighted shortest path (non-negative)
