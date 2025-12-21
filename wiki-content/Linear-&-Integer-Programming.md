@@ -61,13 +61,13 @@ print(result.solution)  # (4, 0), objective = 12
 
 ## Tips & Tricks
 
-1. **Start with LP relaxation** - Solve without integer constraints first. If the solution is already integer, you're done! If not, you know an upper bound on the optimal value.
+1. **Start with LP relaxation**, solve without integer constraints first. If the solution is already integer, you're done! If not, you know an upper bound on the optimal value.
 
-2. **Scaling matters** - Keep coefficients in similar ranges. Coefficients like `[1e-8, 1e8]` will cause numerical issues.
+2. **Scaling matters**, keep coefficients in similar ranges. Coefficients like `[1e-8, 1e8]` will cause numerical issues.
 
-3. **Tight formulations** - Add redundant constraints that tighten the LP relaxation. Better bounds = faster MILP solving.
+3. **Tight formulations**, add redundant constraints that tighten the LP relaxation. Better bounds = faster MILP solving.
 
-4. **Warm starting** - For similar problems, the optimal basis from one LP often helps solve the next.
+4. **Warm starting**, for similar problems, the optimal basis from one LP often helps solve the next.
 
 ## Real-World Applications
 
