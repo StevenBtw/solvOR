@@ -2,7 +2,7 @@
 
 Allocate limited resources to tasks to maximize value using MILP.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import solve_milp
