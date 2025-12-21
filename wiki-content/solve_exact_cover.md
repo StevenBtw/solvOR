@@ -1,8 +1,8 @@
 # solve_exact_cover
 
-**Dancing Links (DLX) - Knuth's Algorithm X for exact cover.**
+**Dancing Links (DLX), Knuth's Algorithm X for exact cover.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Exact Cover](Exact-Cover)
 - **Problem Type:** Exact cover satisfaction
