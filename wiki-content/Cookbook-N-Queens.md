@@ -2,7 +2,7 @@
 
 Place N queens on an N×N chessboard with no conflicts (no two queens attack each other).
 
-## Complete Example
+## Example
 
 ```python
 from solvor import Model
