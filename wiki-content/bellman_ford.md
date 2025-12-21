@@ -2,7 +2,7 @@
 
 **Shortest paths with negative edges - the true edgelord.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Pathfinding](Pathfinding)
 - **Problem Type:** Shortest path with negative weights
