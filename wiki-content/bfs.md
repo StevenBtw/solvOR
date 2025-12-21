@@ -1,8 +1,8 @@
 # bfs
 
-**Breadth-first search - shortest path in unweighted graphs.**
+**Breadth-first search, shortest path in unweighted graphs.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Pathfinding](Pathfinding)
 - **Problem Type:** Unweighted shortest path
