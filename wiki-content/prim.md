@@ -1,8 +1,8 @@
 # prim
 
-**Minimum spanning tree - grow tree from a start node.**
+**Minimum spanning tree, grow tree from a start node.**
 
-## At a Glance
+## Summary
 
 - **Category:** [Network Flow & MST](Network-Flow-&-MST)
 - **Problem Type:** MST
