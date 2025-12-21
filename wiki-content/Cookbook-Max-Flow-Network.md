@@ -2,7 +2,7 @@
 
 Find the maximum flow through a network from source to sink.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import max_flow
