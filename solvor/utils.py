@@ -32,7 +32,7 @@ def debug(*args, **kwargs) -> None:
 def assignment_cost(matrix: list[list[float]], assignment: list[int]) -> float:
     total = 0.0
     for i, j in enumerate(assignment):
-        if j != -1 and i < len(matrix) and j < len(matrix[i]):
+        if j != -1 and i < len(matrix) and 0 <= j < len(matrix[i]):
             total += matrix[i][j]
     return total
 
@@ -43,7 +43,7 @@ def is_feasible(
     tol: float = 1e-9,
 ) -> bool:
     for i, row in enumerate(A):
-        lhs = sum(row[j] * x[j] for j in range(len(x)))
+        lhs = sum(row[j] * x[j] for j in range(min(len(row), len(x))))
         if lhs > b[i] + tol:
             return False
     return True
