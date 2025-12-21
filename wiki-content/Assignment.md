@@ -90,7 +90,7 @@ For rectangular matrices (m workers, n tasks where m ≠ n):
 ### Problem Formulation
 - **Rows = workers, Columns = tasks** (the convention)
 - **Minimize costs or maximize profits** - Just flip the flag
-- **Rectangular matrices work** - Algorithm handles m ≠ n gracefully
+- **Rectangular matrices work** - m and n don't need to be equal 
 - **Large costs for infeasibility** - Set cost[i][j] = 1e9 if worker i can't do task j
 
 ### Maximization Trick
