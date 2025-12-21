@@ -50,7 +50,7 @@ def bfs[S](
 
         if is_goal and is_goal(current):
             path = _reconstruct(parent, current)
-            return Result(path, len(path) - 1, iterations, len(visited))
+            return Result(path, len(path) - 1, iterations, len(visited), Status.OPTIMAL)
 
         for neighbor in neighbors(current):
             if neighbor not in visited:

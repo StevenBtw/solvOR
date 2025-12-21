@@ -24,6 +24,14 @@ class TestAssignmentCost:
     def test_empty(self):
         assert assignment_cost([], []) == 0
 
+    def test_negative_index_ignored(self):
+        matrix = [[1, 2], [3, 4]]
+        assert assignment_cost(matrix, [-2, 0]) == 3  # -2 ignored, only [1][0]=3 counted
+
+    def test_out_of_bounds(self):
+        matrix = [[1, 2]]
+        assert assignment_cost(matrix, [0, 5]) == 1  # row 1 doesn't exist, row 0 col 5 doesn't exist
+
 
 class TestIsFeasible:
     def test_feasible(self):
@@ -43,6 +51,13 @@ class TestIsFeasible:
         b = [5]
         x = [5, 0]
         assert is_feasible(A, b, x) is True
+
+    def test_dimension_mismatch(self):
+        A = [[1, 2, 3]]  # expects 3 variables
+        b = [10]
+        x = [1, 2]  # only 2 variables provided
+        assert is_feasible(A, b, x) is True  # 1*1 + 2*2 = 5 <= 10
+
 
 class TestRandomPermutation:
     def test_length(self):
