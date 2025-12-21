@@ -2,7 +2,7 @@
 
 Color graph nodes so no adjacent nodes share a color.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import Model
