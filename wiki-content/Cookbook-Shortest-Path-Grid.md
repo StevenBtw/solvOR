@@ -2,7 +2,7 @@
 
 Navigate a 2D grid maze from start to goal using A*.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import astar_grid
