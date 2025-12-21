@@ -1,6 +1,6 @@
 # evolve
 
-**Genetic algorithm - population-based search with crossover and mutation.**
+**Genetic algorithm, population-based search with crossover and mutation.**
 
 ## At a Glance
 
