@@ -103,14 +103,14 @@ print(result.solution)  # Close to [2, -1] with only 30 evaluations
 - **Helps with ravines** - Long, narrow valleys where vanilla GD oscillates
 
 ### Adam
-- **Default hyperparameters usually work** - (lr=0.001, beta1=0.9, beta2=0.999)
-- **Bias correction matters early** - Adam corrects for zero initialization
-- **Works across scales** - Adapts to each parameter's gradient history
+- **Default hyperparameters usually work**, (lr=0.001, beta1=0.9, beta2=0.999)
+- **Bias correction matters early**, Adam corrects for zero initialization
+- **Works across scales**, Adapts to each parameter's gradient history
 
 ### Bayesian Optimization
-- **10-100 evaluations sweet spot** - Below 10, just use random search. Above 100, other methods catch up.
-- **Low dimensions (< 20)** - Gaussian processes struggle in high dimensions
-- **Initial random samples** - Start with 5-10 random points to seed the model
+- **10-100 evaluations sweet spot**, Below 10, just use random search. Above 100, other methods catch up.
+- **Low dimensions (< 20)**, Gaussian processes struggle in high dimensions
+- **Initial random samples**, Start with 5-10 random points to seed the model
 
 ## Local vs Global Minima
 
@@ -136,7 +136,7 @@ This library focuses on pure Python implementations. For production ML:
 - **Nadam:** Adam + Nesterov momentum, marginal improvements
 - **Heavy ball:** Classical momentum variant
 
-Adam covers 80% of use cases. For the other 20%, consider specialized libraries like PyTorch or JAX.
+Adam probably covers 80% of use cases. For the other 20%, consider specialized libraries like PyTorch or JAX.
 
 ## See Also
 
