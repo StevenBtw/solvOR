@@ -2,7 +2,7 @@
 
 **Greedy local search with memory to prevent cycling.**
 
-## At a Glance
+## Summary
 
 - **Category:** [Metaheuristics](Metaheuristics)
 - **Problem Type:** Combinatorial optimization
