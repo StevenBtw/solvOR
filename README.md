@@ -1,7 +1,10 @@
 # solvOR
 
-![Python 3.13+ | 3.14 compatible](https://img.shields.io/badge/python-3.13%2B%20%7C%203.14%20compatible-blue.svg)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE) 
+[![PyPI](https://img.shields.io/pypi/v/solvor)](https://pypi.org/project/solvor/)
+[![Python 3.13 | 3.14](https://img.shields.io/badge/python-3.13%20%7C%203.14-blue.svg)](https://pypi.org/project/solvor/)
+[![Tests](https://github.com/StevenBtw/solvor/actions/workflows/tests.yml/badge.svg)](https://github.com/StevenBtw/solvor/actions/workflows/tests.yml)
+[![Codecov](https://codecov.io/gh/StevenBtw/solvor/branch/main/graph/badge.svg)](https://codecov.io/gh/StevenBtw/solvor)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 Solvor all your optimization needs.
 
