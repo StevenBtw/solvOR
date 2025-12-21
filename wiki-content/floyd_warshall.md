@@ -1,8 +1,8 @@
 # floyd_warshall
 
-**All-pairs shortest paths - O(V³) but gets everything at once.**
+**All-pairs shortest paths, O(V³) but gets everything at once.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Pathfinding](Pathfinding)
 - **Problem Type:** All-pairs shortest paths
