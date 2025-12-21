@@ -1,6 +1,6 @@
 # kruskal
 
-**Minimum spanning tree - greedy edge selection with union-find.**
+**Minimum spanning tree, greedy edge selection with union-find.**
 
 ## At a Glance
 
