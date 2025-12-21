@@ -2,7 +2,7 @@
 
 **Traveling Salesman Problem solver using tabu search with 2-opt.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Metaheuristics](Metaheuristics)
 - **Problem Type:** TSP
