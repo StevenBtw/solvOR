@@ -1,6 +1,6 @@
 # Model (CP-SAT)
 
-**Constraint programming with integer variables - natural modeling compiled to SAT.**
+**Constraint programming with integer variables, natural modeling compiled to SAT.**
 
 ## Summary
 
