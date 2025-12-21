@@ -146,7 +146,20 @@ jobs:
       - uses: astral-sh/setup-uv@v4
       - run: uv sync --extra dev
       - name: Run tests with coverage
-        run: uv run pytest tests/ -v --cov=solvor --cov-report=term-missing --cov-fail-under=88
+        run: uv run pytest tests/ -v --cov=solvor --cov-report=xml --cov-report=term-missing --cov-fail-under=88
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: true
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # Run tests for changed solvers only (skipped when test-all runs)
   test-simplex:
