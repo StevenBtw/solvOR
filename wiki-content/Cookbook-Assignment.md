@@ -2,7 +2,7 @@
 
 Optimally assign workers to tasks minimizing total cost.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import hungarian
