@@ -91,7 +91,7 @@ print(result.solution)  # {'x': 3, 'y': 5, 'z': 7} or similar
 **Use CP-SAT when:**
 - You have integer variables (1-9, not just true/false)
 - You want readable constraint modeling
-- You value development speed over squeezing out last 10% performance
+- You value development speed over squeezing out last few % of performance
 
 ## See Also
 
