@@ -2,7 +2,7 @@
 
 Select items to maximize value within weight constraint.
 
-## Complete Example
+## Example
 
 ```python
 from solvor import solve_milp
