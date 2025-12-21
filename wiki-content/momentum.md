@@ -1,6 +1,6 @@
 # momentum
 
-**Gradient descent with velocity - smooths oscillations.**
+**Gradient descent with velocity, smooths oscillations.**
 
 ## At a Glance
 
