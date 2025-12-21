@@ -1,6 +1,6 @@
 # gradient_descent
 
-**Vanilla gradient descent - follow the slope downhill.**
+**Vanilla gradient descent, follow the slope downhill.**
 
 ## At a Glance
 
