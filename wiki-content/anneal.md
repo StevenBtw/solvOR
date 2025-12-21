@@ -2,7 +2,7 @@
 
 **Simulated annealing - probabilistic hill climbing that escapes local optima.**
 
-## At a Glance
+## Summary
 
 - **Category:** [Metaheuristics](Metaheuristics)
 - **Problem Type:** Black-box optimization
