@@ -44,7 +44,6 @@ class TestIsFeasible:
         x = [5, 0]
         assert is_feasible(A, b, x) is True
 
-
 class TestRandomPermutation:
     def test_length(self):
         perm = random_permutation(10)
@@ -59,7 +58,6 @@ class TestRandomPermutation:
 
     def test_single(self):
         assert random_permutation(1) == [0]
-
 
 class TestPairwiseSwapNeighbors:
     def test_count(self):
@@ -78,7 +76,6 @@ class TestPairwiseSwapNeighbors:
         perm = [0, 1, 2]
         list(pairwise_swap_neighbors(perm))
         assert perm == [0, 1, 2]
-
 
 class TestFenwick:
     def test_build_and_prefix(self):

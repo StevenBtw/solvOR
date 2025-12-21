@@ -1,5 +1,5 @@
 """
-Utility functions for optimization tasks.
+Utility functions for optimization tasks, debugging, and evaluation.
 
 Small, stable helpers that don't change often. Use these for common operations
 across solvers or for debugging and evaluation.

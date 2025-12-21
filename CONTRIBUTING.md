@@ -2,6 +2,8 @@
 
 Thanks for your interest in contributing to solvor!
 
+**Python 3.12+** is required. The project is tested on Python 3.12, 3.13, and 3.14.
+
 ## Development Setup
 
 ```bash
@@ -90,14 +92,48 @@ Each solver has its own test file (`tests/test_<solver_name>.py`). Tests should 
 - Stress tests with larger inputs
 
 ```bash
-# Run all tests
-uv run pytest tests/ -v
+# Run all tests with coverage
+uv run pytest
 
-# Run tests for a specific solver
-uv run pytest tests/test_simplex.py -v
+# Run tests for a specific solver (no coverage)
+uv run pytest tests/test_simplex.py -v --no-cov
 ```
 
 The CI runs tests selectively based on which files changed, only the affected solver's tests run.
+
+## Code Coverage
+
+We maintain **88% minimum coverage** enforced by CI. Coverage runs automatically with pytest.
+
+```bash
+# Run tests with coverage (default)
+uv run pytest
+
+# Generate HTML report for detailed view
+uv run pytest --cov-report=html
+# Open htmlcov/index.html in browser
+
+# Skip coverage for quick iteration
+uv run pytest tests/test_simplex.py --no-cov
+```
+
+Coverage is configured in `pyproject.toml`:
+
+- Source: `solvor/` (excludes `__init__.py`)
+- Excludes: `TYPE_CHECKING` blocks, `NotImplementedError`, `pragma: no cover`
+
+The full test suite with coverage runs on `main` branch and uploads to [Codecov](https://codecov.io).
+
+## Type Checking
+
+We use mypy for static type checking, enforced by CI.
+
+```bash
+# Run type checker
+uv run mypy solvor/
+```
+
+Type hints are required on public APIs but optional for internal helpers. Some solvers have relaxed type checking rules configured in `pyproject.toml`.
 
 ## Pull Requests
 
