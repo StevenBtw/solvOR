@@ -155,6 +155,12 @@ jobs:
           files: ./coverage.xml
           fail_ci_if_error: true
 
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
   # Run tests for changed solvers only (skipped when test-all runs)
   test-simplex:
     needs: changes
