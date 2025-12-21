@@ -1,8 +1,8 @@
 # solve_sat
 
-**Boolean satisfiability with clause learning - the engine behind modern constraint solvers.**
+**Boolean satisfiability with clause learning, the engine behind modern constraint solvers.**
 
-## At a Glance
+## Summary 
 
 - **Category:** [Constraint Programming](Constraint-Programming)
 - **Problem Type:** Boolean satisfiability (SAT)
