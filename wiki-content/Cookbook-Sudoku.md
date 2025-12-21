@@ -80,7 +80,7 @@ else:
 ## How It Works
 
 **Encoding to CP-SAT:**
-1. **Variables:** Each cell is an integer variable ∈ {1,2,...,9}
+1. **Variables:** Each cell is an integer variable in {1,2,...,9}
 2. **Constraints:**
    - `all_different` for each row (9 constraints)
    - `all_different` for each column (9 constraints)
