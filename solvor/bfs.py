@@ -26,6 +26,7 @@ from solvor.types import Result, Status
 
 __all__ = ["bfs", "dfs"]
 
+
 def bfs[S](
     start: S,
     goal: S | Callable[[S], bool] | None,
@@ -33,11 +34,7 @@ def bfs[S](
     *,
     max_iter: int = 1_000_000,
 ) -> Result:
-
-    is_goal = (
-        (lambda s: s == goal) if not callable(goal) and goal is not None
-        else goal
-    )
+    is_goal = (lambda s: s == goal) if not callable(goal) and goal is not None else goal
 
     parent: dict[S, S] = {}
     visited: set[S] = {start}
@@ -60,10 +57,11 @@ def bfs[S](
 
     if is_goal:
         if iterations >= max_iter:
-            return Result(None, float('inf'), iterations, len(visited), Status.MAX_ITER)
-        return Result(None, float('inf'), iterations, len(visited), Status.INFEASIBLE)
+            return Result(None, float("inf"), iterations, len(visited), Status.MAX_ITER)
+        return Result(None, float("inf"), iterations, len(visited), Status.INFEASIBLE)
 
     return Result(visited, len(visited), iterations, len(visited))
+
 
 def dfs[S](
     start: S,
@@ -72,11 +70,7 @@ def dfs[S](
     *,
     max_iter: int = 1_000_000,
 ) -> Result:
-
-    is_goal = (
-        (lambda s: s == goal) if not callable(goal) and goal is not None
-        else goal
-    )
+    is_goal = (lambda s: s == goal) if not callable(goal) and goal is not None else goal
 
     parent: dict[S, S] = {}
     visited: set[S] = {start}
@@ -99,10 +93,11 @@ def dfs[S](
 
     if is_goal:
         if iterations >= max_iter:
-            return Result(None, float('inf'), iterations, len(visited), Status.MAX_ITER)
-        return Result(None, float('inf'), iterations, len(visited), Status.INFEASIBLE)
+            return Result(None, float("inf"), iterations, len(visited), Status.MAX_ITER)
+        return Result(None, float("inf"), iterations, len(visited), Status.INFEASIBLE)
 
     return Result(visited, len(visited), iterations, len(visited))
+
 
 def _reconstruct(parent, current):
     path = [current]

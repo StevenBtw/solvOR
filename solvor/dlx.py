@@ -43,40 +43,48 @@ Example: tiling a 2x3 board with 3 dominoes:
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 from solvor.types import Result, Status
 
 __all__ = ["solve_exact_cover"]
 
+# DLX uses circular doubly-linked lists where _Node and _Column link to each other.
+# Using Any for link types since the self-referential structure doesn't type-check cleanly.
+_Link = Any
+
+
 @dataclass(slots=True)
 class _Node:
-    column: '_Column | None' = None
+    column: "_Column | None" = None
     row: int = -1
-    left: '_Node | None' = field(default=None, init=False, repr=False)
-    right: '_Node | None' = field(default=None, init=False, repr=False)
-    up: '_Node | None' = field(default=None, init=False, repr=False)
-    down: '_Node | None' = field(default=None, init=False, repr=False)
+    left: _Link = field(default=None, init=False, repr=False)
+    right: _Link = field(default=None, init=False, repr=False)
+    up: _Link = field(default=None, init=False, repr=False)
+    down: _Link = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
         self.left = self
         self.right = self
         self.up = self
         self.down = self
+
 
 @dataclass(slots=True)
 class _Column:
     name: object
     size: int = field(default=0, init=False)
-    left: '_Column | None' = field(default=None, init=False, repr=False)
-    right: '_Column | None' = field(default=None, init=False, repr=False)
-    up: '_Node | None' = field(default=None, init=False, repr=False)
-    down: '_Node | None' = field(default=None, init=False, repr=False)
+    left: _Link = field(default=None, init=False, repr=False)
+    right: _Link = field(default=None, init=False, repr=False)
+    up: _Link = field(default=None, init=False, repr=False)
+    down: _Link = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
         self.left = self
         self.right = self
         self.up = self
         self.down = self
+
 
 def _build_links(matrix, columns=None):
     if not matrix or not matrix[0]:
@@ -86,7 +94,7 @@ def _build_links(matrix, columns=None):
     col_names = columns if columns else list(range(n_cols))
     root = _Node()
     col_headers = []
-    
+
     prev = root
     for name in col_names:
         col = _Column(name)
@@ -119,12 +127,13 @@ def _build_links(matrix, columns=None):
                     node.left = prev_node
                     prev_node.right = node
                     prev_node = node
-                    
-        if first is not None:
+
+        if first is not None and prev_node is not None:
             first.left = prev_node
             prev_node.right = first
 
     return root, col_headers
+
 
 def _cover(col):
     col.right.left = col.left
@@ -140,6 +149,7 @@ def _cover(col):
             row_node = row_node.right
         node = node.down
 
+
 def _uncover(col):
     node = col.up
     while node is not col:
@@ -153,6 +163,7 @@ def _uncover(col):
 
     col.right.left = col
     col.left.right = col
+
 
 def solve_exact_cover(
     matrix: Sequence[Sequence[int]],
@@ -179,7 +190,7 @@ def solve_exact_cover(
         iterations += 1
         if iterations > max_iter:
             return False
-        
+
         if root.right is root:
             solutions.append(tuple(current))
             if not find_all:
@@ -189,7 +200,7 @@ def solve_exact_cover(
             return False
 
         min_col = None
-        min_size = float('inf')
+        min_size = float("inf")
         col = root.right
         while col is not root:
             if col.size < min_size:
@@ -199,7 +210,7 @@ def solve_exact_cover(
                     break
             col = col.right
 
-        if min_size == 0:
+        if min_size == 0 or min_col is None:
             return False
 
         _cover(min_col)
@@ -220,7 +231,7 @@ def solve_exact_cover(
                     return True
                 if max_solutions and len(solutions) >= max_solutions:
                     return True
-                
+
             current.pop()
             node = row_node.left
             while node is not row_node:

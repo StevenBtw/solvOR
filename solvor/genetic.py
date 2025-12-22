@@ -39,7 +39,8 @@ from solvor.types import Progress, ProgressCallback, Result, Status
 
 __all__ = ["evolve"]
 
-Individual = namedtuple('Individual', ['solution', 'fitness'])
+Individual = namedtuple("Individual", ["solution", "fitness"])
+
 
 def evolve[T](
     objective_fn: Callable[[T], float],
@@ -56,7 +57,6 @@ def evolve[T](
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-   
     rng = Random(seed)
     sign = 1 if minimize else -1
     pop_size = len(population)
@@ -68,12 +68,12 @@ def evolve[T](
         return sign * objective_fn(sol)
 
     pop = [Individual(sol, evaluate(sol)) for sol in population]
-    pop.sort(key=attrgetter('fitness'))
+    pop.sort(key=attrgetter("fitness"))
     best = pop[0]
 
     def tournament():
         contestants = rng.sample(pop, min(tournament_k, len(pop)))
-        return min(contestants, key=attrgetter('fitness'))
+        return min(contestants, key=attrgetter("fitness"))
 
     for gen in range(max_gen):
         new_pop = pop[:elite_size]
@@ -89,7 +89,7 @@ def evolve[T](
             child = Individual(child_sol, evaluate(child_sol))
             new_pop.append(child)
 
-        pop = sorted(new_pop, key=attrgetter('fitness'))[:pop_size]
+        pop = sorted(new_pop, key=attrgetter("fitness"))[:pop_size]
 
         if pop[0].fitness < best.fitness:
             best = pop[0]

@@ -36,6 +36,7 @@ _DIRS_8 = tuple((dx, dy) for dx, dy in product((-1, 0, 1), repeat=2) if (dx, dy)
 # 4-directions: N, S, E, W only
 _DIRS_4 = tuple((dx, dy) for dx, dy in _DIRS_8 if dx == 0 or dy == 0)
 
+
 def astar[S](
     start: S,
     goal: S | Callable[[S], bool],
@@ -46,7 +47,6 @@ def astar[S](
     max_iter: int = 1_000_000,
     max_cost: float | None = None,
 ) -> Result:
-
     is_goal = goal if callable(goal) else lambda s: s == goal
 
     g: dict[S, float] = {start: 0.0}
@@ -82,7 +82,7 @@ def astar[S](
 
             tentative_g = g[current] + edge_cost
 
-            if tentative_g < g.get(neighbor, float('inf')):
+            if tentative_g < g.get(neighbor, float("inf")):
                 g[neighbor] = tentative_g
                 parent[neighbor] = current
                 f_new = tentative_g + weight * heuristic(neighbor)
@@ -91,8 +91,9 @@ def astar[S](
                 evaluations += 1
 
     if iterations >= max_iter:
-        return Result(None, float('inf'), iterations, evaluations, Status.MAX_ITER)
-    return Result(None, float('inf'), iterations, evaluations, Status.INFEASIBLE)
+        return Result(None, float("inf"), iterations, evaluations, Status.MAX_ITER)
+    return Result(None, float("inf"), iterations, evaluations, Status.INFEASIBLE)
+
 
 def astar_grid(
     grid: Sequence[Sequence[int]],
@@ -106,7 +107,6 @@ def astar_grid(
     weight: float = 1.0,
     max_iter: int = 1_000_000,
 ) -> Result:
-
     rows = len(grid)
     cols = len(grid[0]) if rows else 0
     blocked_set = {blocked} if isinstance(blocked, int) else set(blocked)
@@ -120,19 +120,24 @@ def astar_grid(
 
     match h_name:
         case "manhattan":
+
             def h(s):
                 return abs(s[0] - gr) + abs(s[1] - gc)
         case "euclidean":
+
             def h(s):
                 return ((s[0] - gr) ** 2 + (s[1] - gc) ** 2) ** 0.5
         case "octile":
+
             def h(s):
                 dr, dc = abs(s[0] - gr), abs(s[1] - gc)
                 return max(dr, dc) + _SQRT2_MINUS_1 * min(dr, dc)
         case "chebyshev":
+
             def h(s):
                 return max(abs(s[0] - gr), abs(s[1] - gc))
         case _:
+
             def h(s):
                 return abs(s[0] - gr) + abs(s[1] - gc)
 
@@ -149,6 +154,7 @@ def astar_grid(
                     yield (nr, nc), base
 
     return astar(start, goal, neighbors, h, weight=weight, max_iter=max_iter)
+
 
 def _reconstruct(parent, current):
     path = [current]

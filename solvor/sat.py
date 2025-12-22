@@ -32,6 +32,7 @@ from solvor.types import Result, Status
 
 __all__ = ["solve_sat"]
 
+
 def solve_sat(
     clauses: Sequence[Sequence[int]],
     *,
@@ -39,7 +40,6 @@ def solve_sat(
     max_conflicts: int = 100,
     max_restarts: int = 100,
 ) -> Result:
-
     if not clauses:
         return Result({}, 0, 0, 0)
 

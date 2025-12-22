@@ -36,12 +36,14 @@ from solvor.types import Result, Status
 
 __all__ = ["solve_milp"]
 
+
 # I deliberately picked NamedTuple over dataclass for performance
 class Node(NamedTuple):
     bound: float
     lower: tuple[float, ...]
     upper: tuple[float, ...]
     depth: int
+
 
 def solve_milp(
     c: Sequence[float],
@@ -55,24 +57,23 @@ def solve_milp(
     max_nodes: int = 100_000,
     gap_tol: float = 1e-6,
 ) -> Result:
-   
     n = len(c)
     int_set = set(integers)
     total_iters = 0
 
     lower = [0.0] * n
-    upper = [float('inf')] * n
+    upper = [float("inf")] * n
 
     root_result = _solve_node(c, A, b, lower, upper, minimize, eps, max_iter)
     total_iters += root_result.iterations
 
     if root_result.status == LPStatus.INFEASIBLE:
-        return Result(None, float('inf') if minimize else float('-inf'), 0, total_iters, Status.INFEASIBLE)
+        return Result(None, float("inf") if minimize else float("-inf"), 0, total_iters, Status.INFEASIBLE)
 
     if root_result.status == LPStatus.UNBOUNDED:
-        return Result(None, float('-inf') if minimize else float('inf'), 0, total_iters, Status.UNBOUNDED)
+        return Result(None, float("-inf") if minimize else float("inf"), 0, total_iters, Status.UNBOUNDED)
 
-    best_solution, best_obj = None, float('inf') if minimize else float('-inf')
+    best_solution, best_obj = None, float("inf") if minimize else float("-inf")
     sign = 1 if minimize else -1
 
     frac_var = _most_fractional(root_result.solution, int_set, eps)
@@ -133,10 +134,11 @@ def solve_milp(
         counter += 1
 
     if best_solution is None:
-        return Result(None, float('inf') if minimize else float('-inf'), nodes_explored, total_iters, Status.INFEASIBLE)
+        return Result(None, float("inf") if minimize else float("-inf"), nodes_explored, total_iters, Status.INFEASIBLE)
 
     status = Status.OPTIMAL if not tree else Status.FEASIBLE
     return Result(best_solution, best_obj, nodes_explored, total_iters, status)
+
 
 def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
     n = len(c)
@@ -151,7 +153,7 @@ def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
             bound_rows.append(row)
             bound_rhs.append(-lower[j])
 
-        if upper[j] < float('inf'):
+        if upper[j] < float("inf"):
             row = [0.0] * n
             row[j] = 1.0
             bound_rows.append(row)
@@ -165,6 +167,7 @@ def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
 
     return solve_lp(c, A_ext, b_ext, minimize=minimize, eps=eps, max_iter=max_iter)
 
+
 def _most_fractional(solution, int_set, eps):
     best_var, best_frac = None, 0.0
 
@@ -176,6 +179,7 @@ def _most_fractional(solution, int_set, eps):
             best_var, best_frac = j, frac
 
     return best_var
+
 
 def _compute_gap(best_obj, bound, minimize):
     if abs(best_obj) < 1e-10:

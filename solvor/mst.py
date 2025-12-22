@@ -30,11 +30,11 @@ from solvor.types import Result, Status
 
 __all__ = ["kruskal", "prim"]
 
+
 def kruskal(
     n_nodes: int,
     edges: list[tuple[int, int, float]],
 ) -> Result:
-
     parent = list(range(n_nodes))
     rank = [0] * n_nodes
 
@@ -68,16 +68,16 @@ def kruskal(
                 break
 
     if len(mst_edges) < n_nodes - 1:
-        return Result(None, float('inf'), iterations, len(edges), Status.INFEASIBLE)
+        return Result(None, float("inf"), iterations, len(edges), Status.INFEASIBLE)
 
     return Result(mst_edges, total_weight, iterations, len(edges))
+
 
 def prim[Node](
     graph: dict[Node, Iterable[tuple[Node, float]]],
     *,
     start: Node | None = None,
 ) -> Result:
-
     if not graph:
         return Result([], 0.0, 0, 0)
 
@@ -120,6 +120,6 @@ def prim[Node](
                 evaluations += 1
 
     if len(in_mst) < len(nodes):
-        return Result(None, float('inf'), iterations, evaluations, Status.INFEASIBLE)
+        return Result(None, float("inf"), iterations, evaluations, Status.INFEASIBLE)
 
     return Result(mst_edges, total_weight, iterations, evaluations)

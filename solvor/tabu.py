@@ -32,6 +32,7 @@ from solvor.types import Progress, ProgressCallback, Result, Status
 
 __all__ = ["tabu_search", "solve_tsp"]
 
+
 def tabu_search[T, M](
     initial: T,
     objective_fn: Callable[[T], float],
@@ -45,7 +46,6 @@ def tabu_search[T, M](
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-
     rng = Random(seed)
     sign = 1 if minimize else -1
     evals = 0
@@ -65,7 +65,7 @@ def tabu_search[T, M](
             break
 
         rng.shuffle(candidates)
-        best_move, best_neighbor, best_neighbor_obj = None, None, float('inf')
+        best_move, best_neighbor, best_neighbor_obj = None, None, float("inf")
 
         for move, neighbor in candidates:
             neighbor_obj = evaluate(neighbor)
@@ -101,6 +101,7 @@ def tabu_search[T, M](
     final_obj = best_obj * sign
     return Result(best_solution, final_obj, iteration, evals, Status.FEASIBLE)
 
+
 def solve_tsp(
     matrix: Sequence[Sequence[float]],
     *,
@@ -110,7 +111,6 @@ def solve_tsp(
     progress_interval: int = 0,
     **kwargs,
 ) -> Result:
-
     n = len(matrix)
 
     if n < 4:
@@ -128,7 +128,7 @@ def solve_tsp(
             for j in range(i + 2, n):
                 if i == 0 and j == n - 1:
                     continue
-                new_tour = tour[:i + 1] + tour[i + 1:j + 1][::-1] + tour[j + 1:]
+                new_tour = tour[: i + 1] + tour[i + 1 : j + 1][::-1] + tour[j + 1 :]
                 moves.append(((i, j), new_tour))
 
         return moves
@@ -141,6 +141,12 @@ def solve_tsp(
         remaining.remove(nearest)
 
     return tabu_search(
-        tour, objective_fn, neighbors, minimize=minimize, seed=seed,
-        on_progress=on_progress, progress_interval=progress_interval, **kwargs
+        tour,
+        objective_fn,
+        neighbors,
+        minimize=minimize,
+        seed=seed,
+        on_progress=on_progress,
+        progress_interval=progress_interval,
+        **kwargs,
     )

@@ -37,6 +37,7 @@ from solvor.types import Progress, ProgressCallback, Result, Status
 
 __all__ = ["gradient_descent", "momentum", "rmsprop", "adam"]
 
+
 def _armijo_line_search(
     x: list[float],
     grad: Sequence[float],
@@ -47,7 +48,6 @@ def _armijo_line_search(
     rho: float = 0.5,
     max_backtracks: int = 20,
 ) -> tuple[float, int]:
-
     f_x = objective_fn(x)
     grad_norm_sq = sum(g * g for g in grad)
     evals = 1
@@ -57,13 +57,14 @@ def _armijo_line_search(
         x_new = [x[i] - sign * lr * grad[i] for i in range(len(x))]
         f_new = objective_fn(x_new)
         evals += 1
-        
+
         if f_new <= f_x - c * lr * grad_norm_sq:
             return lr, evals
 
         lr *= rho
 
     return lr, evals
+
 
 def gradient_descent(
     grad_fn: Callable[[Sequence[float]], Sequence[float]],
@@ -78,7 +79,6 @@ def gradient_descent(
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-
     if line_search and objective_fn is None:
         raise ValueError("line_search=True requires objective_fn to be provided")
 
@@ -112,6 +112,7 @@ def gradient_descent(
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
 
+
 def momentum(
     grad_fn: Callable[[Sequence[float]], Sequence[float]],
     x0: Sequence[float],
@@ -124,7 +125,6 @@ def momentum(
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)
@@ -151,6 +151,7 @@ def momentum(
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
 
+
 def rmsprop(
     grad_fn: Callable[[Sequence[float]], Sequence[float]],
     x0: Sequence[float],
@@ -164,7 +165,6 @@ def rmsprop(
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)
@@ -192,6 +192,7 @@ def rmsprop(
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
 
+
 def adam(
     grad_fn: Callable[[Sequence[float]], Sequence[float]],
     x0: Sequence[float],
@@ -206,7 +207,6 @@ def adam(
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)
@@ -227,8 +227,8 @@ def adam(
             m[i] = beta1 * m[i] + (1 - beta1) * g
             v[i] = beta2 * v[i] + (1 - beta2) * g * g
 
-            m_hat = m[i] / (1 - beta1 ** iteration)
-            v_hat = v[i] / (1 - beta2 ** iteration)
+            m_hat = m[i] / (1 - beta1**iteration)
+            v_hat = v[i] / (1 - beta2**iteration)
 
             x[i] -= lr * m_hat / (sqrt(v_hat) + eps)
 
