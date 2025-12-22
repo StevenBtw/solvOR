@@ -148,6 +148,7 @@ Type hints are required on public APIs but optional for internal helpers. Some s
 1. Working > perfect
 2. Readable > clever
 3. Simple > general
+
 Any performance optimization is welcome, but not at the cost of significant complexity.
 
 ```python
