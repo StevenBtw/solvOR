@@ -179,3 +179,89 @@ class TestStress:
         assert result.status == Status.OPTIMAL
         vals = [result.solution[f"x{i}"] for i in range(5)]
         assert set(vals) == {1, 2, 3, 4, 5}
+
+
+class TestVariableEquality:
+    def test_two_vars_equal(self):
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(x == y)
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+        assert result.solution["x"] == result.solution["y"]
+
+    def test_two_vars_equal_with_sum(self):
+        m = Model()
+        x = m.int_var(1, 9, "x")
+        y = m.int_var(1, 9, "y")
+        m.add(x == y)
+        m.add(m.sum_eq([x, y], 10))
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+        assert result.solution["x"] == result.solution["y"] == 5
+
+    def test_two_vars_not_equal(self):
+        m = Model()
+        x = m.int_var(1, 2, "x")
+        y = m.int_var(1, 2, "y")
+        m.add(x != y)
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+        assert result.solution["x"] != result.solution["y"]
+
+    def test_ne_const(self):
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        m.add(x != 3)
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+        assert result.solution["x"] != 3
+
+    def test_vars_disjoint_domains_equal(self):
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(5, 7, "y")
+        m.add(x == y)
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
+
+
+class TestSumConstraints:
+    def test_sum_eq_infeasible_too_small(self):
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_eq([x, y], 1))
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
+
+    def test_sum_eq_infeasible_too_large(self):
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_eq([x, y], 20))
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
+
+    def test_sum_single_var(self):
+        m = Model()
+        x = m.int_var(1, 10, "x")
+        m.add(m.sum_eq([x], 7))
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+        assert result.solution["x"] == 7
+
+    def test_sum_empty(self):
+        m = Model()
+        m.int_var(1, 5, "x")
+        m.add(m.sum_eq([], 0))
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+
+    def test_sum_empty_nonzero(self):
+        m = Model()
+        m.int_var(1, 5, "x")
+        m.add(m.sum_eq([], 5))
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
