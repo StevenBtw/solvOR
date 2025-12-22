@@ -272,3 +272,48 @@ class TestProgressCallback:
         assert p.iteration == 50
         assert isinstance(p.objective, float)
         assert p.evaluations > 0
+
+
+class TestCoolingSchedules:
+    def test_linear_cooling(self):
+        from solvor.anneal import linear_cooling
+
+        seed(42)
+        schedule = linear_cooling(min_temp=0.01)
+        result = anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            cooling=schedule,
+            max_iter=1000,
+        )
+        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
+
+    def test_logarithmic_cooling(self):
+        from solvor.anneal import logarithmic_cooling
+
+        seed(42)
+        schedule = logarithmic_cooling(c=2.0)
+        result = anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            cooling=schedule,
+            max_iter=1000,
+        )
+        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
+
+    def test_callable_cooling(self):
+        seed(42)
+
+        def custom_schedule(initial_temp, iteration, max_iter):
+            return initial_temp * (0.99**iteration)
+
+        result = anneal(
+            [5.0],
+            lambda x: x[0] ** 2,
+            make_neighbor_fn(0.5),
+            cooling=custom_schedule,
+            max_iter=1000,
+        )
+        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
