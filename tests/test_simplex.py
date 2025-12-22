@@ -60,11 +60,7 @@ class TestEdgeCases:
     def test_multiple_constraints(self):
         # Multiple upper bound constraints
         # minimize -x - y (maximize x + y), x <= 3, y <= 4, x + y <= 5
-        result = solve_lp(
-            c=[-1, -1],
-            A=[[1, 0], [0, 1], [1, 1]],
-            b=[3, 4, 5]
-        )
+        result = solve_lp(c=[-1, -1], A=[[1, 0], [0, 1], [1, 1]], b=[3, 4, 5])
         assert result.status == Status.OPTIMAL
         # Optimal at x + y = 5
         assert result.solution[0] + result.solution[1] <= 5 + 1e-6
@@ -72,11 +68,7 @@ class TestEdgeCases:
     def test_tight_constraints(self):
         # All constraints should be tight at optimum
         # minimize x + y, x + y >= 5, x >= 2, y >= 2
-        result = solve_lp(
-            c=[1, 1],
-            A=[[-1, -1], [-1, 0], [0, -1]],
-            b=[-5, -2, -2]
-        )
+        result = solve_lp(c=[1, 1], A=[[-1, -1], [-1, 0], [0, -1]], b=[-5, -2, -2])
         assert result.status == Status.OPTIMAL
         # Optimal is x=2.5, y=2.5 or x=3, y=2 etc, obj=5
         assert abs(result.objective - 5.0) < 1e-6

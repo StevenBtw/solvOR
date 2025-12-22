@@ -140,7 +140,7 @@ class TestColumnNames:
             [0, 1, 0],
             [0, 0, 1],
         ]
-        result = solve_exact_cover(matrix, columns=['A', 'B', 'C'])
+        result = solve_exact_cover(matrix, columns=["A", "B", "C"])
         assert result.status == Status.OPTIMAL
         assert set(result.solution) == {0, 1, 2}
 
@@ -151,7 +151,7 @@ class TestColumnNames:
             [0, 0, 1],
         ]
         result1 = solve_exact_cover(matrix)
-        result2 = solve_exact_cover(matrix, columns=['X', 'Y', 'Z'])
+        result2 = solve_exact_cover(matrix, columns=["X", "Y", "Z"])
         assert result1.solution == result2.solution
 
 
@@ -241,6 +241,7 @@ class TestStress:
         n_rows = 20
         n_cols = 5
         import random
+
         random.seed(42)
 
         # Ensure at least one solution exists

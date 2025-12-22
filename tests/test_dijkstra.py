@@ -6,34 +6,29 @@ from solvor.types import Status
 
 class TestBasic:
     def test_direct_path(self):
-        graph = {'A': [('B', 1)], 'B': [('C', 2)], 'C': []}
-        result = dijkstra('A', 'C', lambda n: graph.get(n, []))
+        graph = {"A": [("B", 1)], "B": [("C", 2)], "C": []}
+        result = dijkstra("A", "C", lambda n: graph.get(n, []))
         assert result.status == Status.OPTIMAL
-        assert result.solution == ['A', 'B', 'C']
+        assert result.solution == ["A", "B", "C"]
         assert result.objective == 3
 
     def test_shortest_weighted(self):
-        graph = {
-            'A': [('B', 1), ('C', 4)],
-            'B': [('C', 2), ('D', 5)],
-            'C': [('D', 1)],
-            'D': []
-        }
-        result = dijkstra('A', 'D', lambda n: graph.get(n, []))
+        graph = {"A": [("B", 1), ("C", 4)], "B": [("C", 2), ("D", 5)], "C": [("D", 1)], "D": []}
+        result = dijkstra("A", "D", lambda n: graph.get(n, []))
         assert result.status == Status.OPTIMAL
         assert result.objective == 4
-        assert result.solution == ['A', 'B', 'C', 'D']
+        assert result.solution == ["A", "B", "C", "D"]
 
     def test_start_is_goal(self):
-        graph = {'A': [('B', 1)]}
-        result = dijkstra('A', 'A', lambda n: graph.get(n, []))
+        graph = {"A": [("B", 1)]}
+        result = dijkstra("A", "A", lambda n: graph.get(n, []))
         assert result.status == Status.OPTIMAL
-        assert result.solution == ['A']
+        assert result.solution == ["A"]
         assert result.objective == 0
 
     def test_no_path(self):
-        graph = {'A': [('B', 1)], 'B': [], 'C': []}
-        result = dijkstra('A', 'C', lambda n: graph.get(n, []))
+        graph = {"A": [("B", 1)], "B": [], "C": []}
+        result = dijkstra("A", "C", lambda n: graph.get(n, []))
         assert result.status == Status.INFEASIBLE
 
 
@@ -53,35 +48,31 @@ class TestGoalPredicate:
 
 class TestMaxCost:
     def test_within_budget(self):
-        graph = {'A': [('B', 2)], 'B': [('C', 2)], 'C': []}
-        result = dijkstra('A', 'C', lambda n: graph.get(n, []), max_cost=10)
+        graph = {"A": [("B", 2)], "B": [("C", 2)], "C": []}
+        result = dijkstra("A", "C", lambda n: graph.get(n, []), max_cost=10)
         assert result.status == Status.OPTIMAL
         assert result.objective == 4
 
     def test_pruned_by_max_cost(self):
-        graph = {
-            'A': [('B', 10)],
-            'B': [('C', 1)],
-            'C': []
-        }
-        result = dijkstra('A', 'C', lambda n: graph.get(n, []), max_cost=5)
+        graph = {"A": [("B", 10)], "B": [("C", 1)], "C": []}
+        result = dijkstra("A", "C", lambda n: graph.get(n, []), max_cost=5)
         assert result.status == Status.INFEASIBLE
 
 
 class TestEdgeCases:
     def test_single_node(self):
-        result = dijkstra('A', 'A', lambda n: [])
-        assert result.solution == ['A']
+        result = dijkstra("A", "A", lambda n: [])
+        assert result.solution == ["A"]
         assert result.objective == 0
 
     def test_parallel_edges(self):
-        graph = {'A': [('B', 5), ('B', 3)], 'B': []}
-        result = dijkstra('A', 'B', lambda n: graph.get(n, []))
+        graph = {"A": [("B", 5), ("B", 3)], "B": []}
+        result = dijkstra("A", "B", lambda n: graph.get(n, []))
         assert result.objective == 3
 
     def test_zero_weight_edges(self):
-        graph = {'A': [('B', 0)], 'B': [('C', 0)], 'C': []}
-        result = dijkstra('A', 'C', lambda n: graph.get(n, []))
+        graph = {"A": [("B", 0)], "B": [("C", 0)], "C": []}
+        result = dijkstra("A", "C", lambda n: graph.get(n, []))
         assert result.objective == 0
 
     def test_max_iter_limit(self):
@@ -94,16 +85,11 @@ class TestEdgeCases:
 
 class TestComplex:
     def test_diamond_graph(self):
-        graph = {
-            'S': [('A', 1), ('B', 4)],
-            'A': [('B', 2), ('T', 5)],
-            'B': [('T', 1)],
-            'T': []
-        }
-        result = dijkstra('S', 'T', lambda n: graph.get(n, []))
+        graph = {"S": [("A", 1), ("B", 4)], "A": [("B", 2), ("T", 5)], "B": [("T", 1)], "T": []}
+        result = dijkstra("S", "T", lambda n: graph.get(n, []))
         assert result.status == Status.OPTIMAL
         assert result.objective == 4
-        assert result.solution == ['S', 'A', 'B', 'T']
+        assert result.solution == ["S", "A", "B", "T"]
 
     def test_grid_navigation(self):
         grid = {}

@@ -1,8 +1,10 @@
 """Tests for the genetic algorithm solver."""
 
-from random import randint, seed as set_seed
+from random import randint
+from random import seed as set_seed
+
 from solvor.genetic import evolve
-from solvor.types import Status, Progress
+from solvor.types import Progress, Status
 
 
 def simple_crossover(p1, p2):
@@ -36,10 +38,7 @@ class TestBasicGA:
             return sum(bits)
 
         population = [tuple([0] * 10) for _ in range(20)]
-        result = evolve(
-            objective, population, simple_crossover, bit_mutate,
-            max_gen=50, minimize=False, seed=42
-        )
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, minimize=False, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective > 5  # Should find mostly ones
 
@@ -121,10 +120,7 @@ class TestParameters:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(
-            objective, population, simple_crossover, bit_mutate,
-            max_gen=30, elite_size=5, seed=42
-        )
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=30, elite_size=5, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_mutation_rate(self):
@@ -132,10 +128,7 @@ class TestParameters:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(
-            objective, population, simple_crossover, bit_mutate,
-            max_gen=50, mutation_rate=0.5, seed=42
-        )
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, mutation_rate=0.5, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -148,10 +141,11 @@ class TestRealValuedGA:
 
         def float_mutate(x):
             from random import gauss
+
             return tuple(xi + gauss(0, 0.1) for xi in x)
 
         def objective(x):
-            return sum(xi ** 2 for xi in x)
+            return sum(xi**2 for xi in x)
 
         set_seed(42)
         population = [tuple(randint(-10, 10) for _ in range(3)) for _ in range(20)]
@@ -218,7 +212,16 @@ class TestProgressCallback:
         def callback(progress):
             calls.append(progress.iteration)
 
-        evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42, on_progress=callback, progress_interval=10)
+        evolve(
+            objective,
+            population,
+            simple_crossover,
+            bit_mutate,
+            max_gen=50,
+            seed=42,
+            on_progress=callback,
+            progress_interval=10,
+        )
         assert calls == [10, 20, 30, 40, 50]
 
     def test_callback_early_stop(self):
@@ -231,7 +234,16 @@ class TestProgressCallback:
             if progress.iteration >= 20:
                 return True
 
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=100, seed=42, on_progress=stop_at_20, progress_interval=5)
+        result = evolve(
+            objective,
+            population,
+            simple_crossover,
+            bit_mutate,
+            max_gen=100,
+            seed=42,
+            on_progress=stop_at_20,
+            progress_interval=5,
+        )
         assert result.iterations == 20
 
     def test_callback_receives_progress_data(self):
@@ -244,7 +256,16 @@ class TestProgressCallback:
         def callback(progress):
             received.append(progress)
 
-        evolve(objective, population, simple_crossover, bit_mutate, max_gen=20, seed=42, on_progress=callback, progress_interval=5)
+        evolve(
+            objective,
+            population,
+            simple_crossover,
+            bit_mutate,
+            max_gen=20,
+            seed=42,
+            on_progress=callback,
+            progress_interval=5,
+        )
         assert len(received) > 0
         p = received[0]
         assert isinstance(p, Progress)
@@ -280,8 +301,12 @@ class TestTournamentK:
         population_high = [tuple([1] * 15) for _ in range(30)]
         population_low = [tuple([1] * 15) for _ in range(30)]
 
-        result_high = evolve(objective, population_high, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=15)
-        result_low = evolve(objective, population_low, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=2)
+        result_high = evolve(
+            objective, population_high, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=15
+        )
+        result_low = evolve(
+            objective, population_low, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=2
+        )
         # Both should work, but high k typically converges faster
         assert result_high.status == Status.FEASIBLE
         assert result_low.status == Status.FEASIBLE

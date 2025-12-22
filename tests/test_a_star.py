@@ -6,33 +6,28 @@ from solvor.types import Status
 
 class TestAstarBasic:
     def test_direct_path(self):
-        graph = {'A': [('B', 1)], 'B': [('C', 1)], 'C': []}
-        result = astar('A', 'C', lambda n: graph.get(n, []), lambda s: 0)
+        graph = {"A": [("B", 1)], "B": [("C", 1)], "C": []}
+        result = astar("A", "C", lambda n: graph.get(n, []), lambda s: 0)
         assert result.status == Status.OPTIMAL
-        assert result.solution == ['A', 'B', 'C']
+        assert result.solution == ["A", "B", "C"]
         assert result.objective == 2
 
     def test_heuristic_guides_search(self):
-        graph = {
-            'A': [('B', 1), ('C', 1)],
-            'B': [('D', 10)],
-            'C': [('D', 1)],
-            'D': []
-        }
-        h = {'A': 2, 'B': 10, 'C': 1, 'D': 0}
-        result = astar('A', 'D', lambda n: graph.get(n, []), lambda s: h[s])
+        graph = {"A": [("B", 1), ("C", 1)], "B": [("D", 10)], "C": [("D", 1)], "D": []}
+        h = {"A": 2, "B": 10, "C": 1, "D": 0}
+        result = astar("A", "D", lambda n: graph.get(n, []), lambda s: h[s])
         assert result.status == Status.OPTIMAL
         assert result.objective == 2
-        assert result.solution == ['A', 'C', 'D']
+        assert result.solution == ["A", "C", "D"]
 
     def test_start_is_goal(self):
-        result = astar('A', 'A', lambda n: [], lambda s: 0)
-        assert result.solution == ['A']
+        result = astar("A", "A", lambda n: [], lambda s: 0)
+        assert result.solution == ["A"]
         assert result.objective == 0
 
     def test_no_path(self):
-        graph = {'A': [('B', 1)], 'B': [], 'C': []}
-        result = astar('A', 'C', lambda n: graph.get(n, []), lambda s: 0)
+        graph = {"A": [("B", 1)], "B": [], "C": []}
+        result = astar("A", "C", lambda n: graph.get(n, []), lambda s: 0)
         assert result.status == Status.INFEASIBLE
 
     def test_callable_goal(self):
@@ -50,15 +45,9 @@ class TestAstarBasic:
 
     def test_callable_goal_multiple_targets(self):
         # Goal is any of specific nodes
-        graph = {
-            'A': [('B', 1), ('C', 5)],
-            'B': [('D', 1)],
-            'C': [('E', 1)],
-            'D': [],
-            'E': []
-        }
-        targets = {'D', 'E'}
-        result = astar('A', lambda n: n in targets, lambda n: graph.get(n, []), lambda s: 0)
+        graph = {"A": [("B", 1), ("C", 5)], "B": [("D", 1)], "C": [("E", 1)], "D": [], "E": []}
+        targets = {"D", "E"}
+        result = astar("A", lambda n: n in targets, lambda n: graph.get(n, []), lambda s: 0)
         assert result.status == Status.OPTIMAL
         assert result.solution[-1] in targets
         assert result.objective == 2  # A -> B -> D is shortest
@@ -73,64 +62,39 @@ class TestWeightedAstar:
         assert result.solution[-1] == 10
 
     def test_weight_one_is_optimal(self):
-        graph = {
-            'A': [('B', 1), ('C', 2)],
-            'B': [('D', 3)],
-            'C': [('D', 1)],
-            'D': []
-        }
-        result = astar('A', 'D', lambda n: graph.get(n, []), lambda s: 0, weight=1.0)
+        graph = {"A": [("B", 1), ("C", 2)], "B": [("D", 3)], "C": [("D", 1)], "D": []}
+        result = astar("A", "D", lambda n: graph.get(n, []), lambda s: 0, weight=1.0)
         assert result.status == Status.OPTIMAL
 
 
 class TestAstarGrid:
     def test_simple_grid(self):
-        grid = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-        ]
+        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         result = astar_grid(grid, (0, 0), (2, 2))
         assert result.status == Status.OPTIMAL
         assert result.solution[0] == (0, 0)
         assert result.solution[-1] == (2, 2)
 
     def test_obstacle_avoidance(self):
-        grid = [
-            [0, 0, 0],
-            [1, 1, 0],
-            [0, 0, 0]
-        ]
+        grid = [[0, 0, 0], [1, 1, 0], [0, 0, 0]]
         result = astar_grid(grid, (0, 0), (2, 0))
         assert result.status == Status.OPTIMAL
         assert (1, 0) not in result.solution
         assert (1, 1) not in result.solution
 
     def test_blocked_goal(self):
-        grid = [
-            [0, 0, 0],
-            [1, 1, 1],
-            [0, 0, 0]
-        ]
+        grid = [[0, 0, 0], [1, 1, 1], [0, 0, 0]]
         result = astar_grid(grid, (0, 0), (2, 1))
         assert result.status == Status.INFEASIBLE
 
     def test_8_directions(self):
-        grid = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-        ]
+        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         result = astar_grid(grid, (0, 0), (2, 2), directions=8)
         assert result.status == Status.OPTIMAL
         assert len(result.solution) <= 3
 
     def test_4_directions(self):
-        grid = [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-        ]
+        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
         result = astar_grid(grid, (0, 0), (2, 2), directions=4)
         assert result.status == Status.OPTIMAL
         assert result.objective == 4
@@ -208,11 +172,7 @@ class TestGridCosts:
         assert result.objective == 2.5
 
     def test_blocked_set(self):
-        grid = [
-            [0, 1, 0],
-            [0, 2, 0],
-            [0, 0, 0]
-        ]
+        grid = [[0, 1, 0], [0, 2, 0], [0, 0, 0]]
         result = astar_grid(grid, (0, 0), (0, 2), blocked={1, 2})
         assert result.status == Status.OPTIMAL
         assert (0, 1) not in result.solution
@@ -241,28 +201,28 @@ class TestMaxCost:
         # max_cost prevents exploring expensive nodes, but goal is still reachable
         # via cheaper path if one exists
         graph = {
-            'A': [('B', 1), ('D', 10)],  # Two paths: A->B->C or A->D->C
-            'B': [('C', 1)],
-            'D': [('C', 1)],
-            'C': []
+            "A": [("B", 1), ("D", 10)],  # Two paths: A->B->C or A->D->C
+            "B": [("C", 1)],
+            "D": [("C", 1)],
+            "C": [],
         }
-        result = astar('A', 'C', lambda n: graph.get(n, []), lambda s: 0, max_cost=5)
+        result = astar("A", "C", lambda n: graph.get(n, []), lambda s: 0, max_cost=5)
         assert result.status == Status.OPTIMAL
-        assert result.solution == ['A', 'B', 'C']
+        assert result.solution == ["A", "B", "C"]
         assert result.objective == 2
 
     def test_max_cost_allows_close_goal(self):
         # Goal is within max_cost
-        graph = {'A': [('B', 1)], 'B': [('C', 1)], 'C': []}
-        result = astar('A', 'C', lambda n: graph.get(n, []), lambda s: 0, max_cost=5)
+        graph = {"A": [("B", 1)], "B": [("C", 1)], "C": []}
+        result = astar("A", "C", lambda n: graph.get(n, []), lambda s: 0, max_cost=5)
         assert result.status == Status.OPTIMAL
-        assert result.solution == ['A', 'B', 'C']
+        assert result.solution == ["A", "B", "C"]
         assert result.objective == 2
 
     def test_max_cost_equal_to_path(self):
         # max_cost exactly equals path cost
-        graph = {'A': [('B', 2)], 'B': [('C', 2)], 'C': []}
-        result = astar('A', 'C', lambda n: graph.get(n, []), lambda s: 0, max_cost=4)
+        graph = {"A": [("B", 2)], "B": [("C", 2)], "C": []}
+        result = astar("A", "C", lambda n: graph.get(n, []), lambda s: 0, max_cost=4)
         assert result.status == Status.OPTIMAL
         assert result.objective == 4
 
@@ -272,12 +232,12 @@ class TestMaxCost:
 
         def tracked_neighbors(n):
             expanded.append(n)
-            graph = {'A': [('B', 3)], 'B': [('C', 3)], 'C': [('D', 3)], 'D': []}
+            graph = {"A": [("B", 3)], "B": [("C", 3)], "C": [("D", 3)], "D": []}
             return graph.get(n, [])
 
-        astar('A', 'D', tracked_neighbors, lambda s: 0, max_cost=4)
+        astar("A", "D", tracked_neighbors, lambda s: 0, max_cost=4)
         # B (cost 3) should be expanded, C (cost 6) should not
-        assert 'B' in expanded
+        assert "B" in expanded
         # C might be added to frontier but shouldn't be expanded since g[C]=6 > 4
 
 
@@ -289,12 +249,6 @@ class TestStress:
         assert result.status == Status.OPTIMAL
 
     def test_maze(self):
-        grid = [
-            [0, 0, 0, 0, 0],
-            [1, 1, 1, 1, 0],
-            [0, 0, 0, 0, 0],
-            [0, 1, 1, 1, 1],
-            [0, 0, 0, 0, 0]
-        ]
+        grid = [[0, 0, 0, 0, 0], [1, 1, 1, 1, 0], [0, 0, 0, 0, 0], [0, 1, 1, 1, 1], [0, 0, 0, 0, 0]]
         result = astar_grid(grid, (0, 0), (4, 4))
         assert result.status == Status.OPTIMAL

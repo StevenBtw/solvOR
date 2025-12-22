@@ -2,12 +2,12 @@
 
 from solvor.utils import (
     assignment_cost,
-    is_feasible,
-    random_permutation,
-    pairwise_swap_neighbors,
     fenwick_build,
-    fenwick_update,
     fenwick_prefix,
+    fenwick_update,
+    is_feasible,
+    pairwise_swap_neighbors,
+    random_permutation,
 )
 
 
@@ -74,6 +74,7 @@ class TestRandomPermutation:
     def test_single(self):
         assert random_permutation(1) == [0]
 
+
 class TestPairwiseSwapNeighbors:
     def test_count(self):
         perm = [0, 1, 2]
@@ -91,6 +92,7 @@ class TestPairwiseSwapNeighbors:
         perm = [0, 1, 2]
         list(pairwise_swap_neighbors(perm))
         assert perm == [0, 1, 2]
+
 
 class TestFenwick:
     def test_build_and_prefix(self):

@@ -19,13 +19,7 @@ class TestBasicMILP:
 
     def test_maximize(self):
         # maximize x + y, x integer, x + y <= 5.5, x <= 3
-        result = solve_milp(
-            c=[1, 1],
-            A=[[1, 1], [1, 0]],
-            b=[5.5, 3],
-            integers=[0],
-            minimize=False
-        )
+        result = solve_milp(c=[1, 1], A=[[1, 1], [1, 0]], b=[5.5, 3], integers=[0], minimize=False)
         assert result.status in (Status.OPTIMAL, Status.FEASIBLE)
         assert result.solution[0] == round(result.solution[0])
 
@@ -33,12 +27,7 @@ class TestBasicMILP:
 class TestIntegerFeasibility:
     def test_integer_gap(self):
         # x integer, 1.5 <= x <= 1.9 -> infeasible (no integer in range)
-        result = solve_milp(
-            c=[1],
-            A=[[-1], [1]],
-            b=[-1.5, 1.9],
-            integers=[0]
-        )
+        result = solve_milp(c=[1], A=[[-1], [1]], b=[-1.5, 1.9], integers=[0])
         assert result.status == Status.INFEASIBLE
 
     def test_integer_bounds(self):
@@ -60,7 +49,7 @@ class TestKnapsackLike:
             A=[[2, 3, 4], [1, 0, 0], [0, 1, 0], [0, 0, 1]],  # weight + upper bounds
             b=[5, 1, 1, 1],
             integers=[0, 1, 2],
-            minimize=False
+            minimize=False,
         )
         assert result.status in (Status.OPTIMAL, Status.FEASIBLE)
         # Should select items to maximize value within weight
@@ -105,12 +94,7 @@ class TestStress:
 
     def test_tight_integer_problem(self):
         # Simple integer problem: maximize x + y (minimize -x - y), x + y <= 10
-        result = solve_milp(
-            c=[-1, -1],
-            A=[[1, 1]],
-            b=[10],
-            integers=[0, 1]
-        )
+        result = solve_milp(c=[-1, -1], A=[[1, 1]], b=[10], integers=[0, 1])
         assert result.status in (Status.OPTIMAL, Status.FEASIBLE)
         x, y = result.solution
         # All should be integers

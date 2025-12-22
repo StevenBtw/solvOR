@@ -13,24 +13,14 @@ class TestBasic:
         assert result.objective == 5
 
     def test_two_paths(self):
-        arcs = [
-            (0, 1, 10, 2),
-            (0, 2, 10, 1),
-            (1, 3, 10, 1),
-            (2, 3, 10, 2)
-        ]
+        arcs = [(0, 1, 10, 2), (0, 2, 10, 1), (1, 3, 10, 1), (2, 3, 10, 2)]
         supplies = [5, 0, 0, -5]
         result = network_simplex(4, arcs, supplies)
         assert result.status == Status.OPTIMAL
         assert result.objective == 15
 
     def test_choose_cheaper_path(self):
-        arcs = [
-            (0, 1, 10, 5),
-            (0, 2, 10, 1),
-            (1, 3, 10, 1),
-            (2, 3, 10, 1)
-        ]
+        arcs = [(0, 1, 10, 5), (0, 2, 10, 1), (1, 3, 10, 1), (2, 3, 10, 1)]
         supplies = [5, 0, 0, -5]
         result = network_simplex(4, arcs, supplies)
         assert result.status == Status.OPTIMAL
@@ -59,21 +49,14 @@ class TestInfeasible:
 
 class TestTransshipment:
     def test_transshipment_node(self):
-        arcs = [
-            (0, 1, 10, 1),
-            (1, 2, 10, 1)
-        ]
+        arcs = [(0, 1, 10, 1), (1, 2, 10, 1)]
         supplies = [5, 0, -5]
         result = network_simplex(3, arcs, supplies)
         assert result.status == Status.OPTIMAL
         assert result.objective == 10
 
     def test_multiple_transshipment(self):
-        arcs = [
-            (0, 1, 10, 1),
-            (1, 2, 10, 1),
-            (2, 3, 10, 1)
-        ]
+        arcs = [(0, 1, 10, 1), (1, 2, 10, 1), (2, 3, 10, 1)]
         supplies = [5, 0, 0, -5]
         result = network_simplex(4, arcs, supplies)
         assert result.status == Status.OPTIMAL
@@ -82,20 +65,14 @@ class TestTransshipment:
 
 class TestMultipleSourcesSinks:
     def test_two_sources(self):
-        arcs = [
-            (0, 2, 10, 1),
-            (1, 2, 10, 1)
-        ]
+        arcs = [(0, 2, 10, 1), (1, 2, 10, 1)]
         supplies = [3, 2, -5]
         result = network_simplex(3, arcs, supplies)
         assert result.status == Status.OPTIMAL
         assert result.objective == 5
 
     def test_two_sinks(self):
-        arcs = [
-            (0, 1, 10, 1),
-            (0, 2, 10, 2)
-        ]
+        arcs = [(0, 1, 10, 1), (0, 2, 10, 2)]
         supplies = [5, -3, -2]
         result = network_simplex(3, arcs, supplies)
         assert result.status == Status.OPTIMAL
@@ -137,11 +114,7 @@ class TestStress:
         assert result.objective == 10 * (n - 1)
 
     def test_parallel_arcs(self):
-        arcs = [
-            (0, 1, 5, 2),
-            (0, 1, 5, 3),
-            (0, 1, 5, 1)
-        ]
+        arcs = [(0, 1, 5, 2), (0, 1, 5, 3), (0, 1, 5, 1)]
         supplies = [10, -10]
         result = network_simplex(2, arcs, supplies)
         assert result.status == Status.OPTIMAL

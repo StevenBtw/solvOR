@@ -68,15 +68,15 @@ class TestDisconnected:
         result = floyd_warshall(3, edges)
         dist = result.solution
         assert dist[0][1] == 1
-        assert dist[0][2] == float('inf')
-        assert dist[2][0] == float('inf')
+        assert dist[0][2] == float("inf")
+        assert dist[2][0] == float("inf")
 
     def test_isolated_vertex(self):
         edges = [(0, 1, 1), (1, 2, 1)]
         result = floyd_warshall(4, edges)
         dist = result.solution
-        assert dist[3][0] == float('inf')
-        assert dist[0][3] == float('inf')
+        assert dist[3][0] == float("inf")
+        assert dist[0][3] == float("inf")
 
 
 class TestEdgeCases:
@@ -90,7 +90,7 @@ class TestEdgeCases:
         dist = result.solution
         assert dist[0][0] == 0
         assert dist[1][1] == 0
-        assert dist[0][1] == float('inf')
+        assert dist[0][1] == float("inf")
 
     def test_parallel_edges(self):
         edges = [(0, 1, 5), (0, 1, 3)]

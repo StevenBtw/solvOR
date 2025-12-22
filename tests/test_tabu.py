@@ -1,7 +1,7 @@
 """Tests for the tabu search solver."""
 
-from solvor.tabu import tabu_search, solve_tsp
-from solvor.types import Status, Progress
+from solvor.tabu import solve_tsp, tabu_search
+from solvor.types import Progress, Status
 
 
 class TestBasicTabu:
@@ -11,7 +11,7 @@ class TestBasicTabu:
             return abs(x - 10)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=100)
         assert result.status == Status.FEASIBLE
@@ -23,7 +23,7 @@ class TestBasicTabu:
             return abs(x - 5)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(20, objective, neighbors, max_iter=100)
         assert result.status == Status.FEASIBLE
@@ -43,8 +43,8 @@ class TestBasicTabu:
         def neighbors(x):
             moves = []
             if x > 0:
-                moves.append(('dec', x - 1))
-            moves.append(('inc', x + 1))
+                moves.append(("dec", x - 1))
+            moves.append(("inc", x + 1))
             return moves
 
         result = tabu_search(0, objective, neighbors, max_iter=50, cooldown=10)
@@ -112,10 +112,10 @@ class TestEdgeCases:
     def test_already_optimal(self):
         # Start at optimal
         def objective(x):
-            return x ** 2
+            return x**2
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=50)
         assert result.solution == 0
@@ -129,7 +129,7 @@ class TestEdgeCases:
             moves = []
             for delta in range(-5, 6):
                 if delta != 0:
-                    moves.append((f'd{delta}', x + delta))
+                    moves.append((f"d{delta}", x + delta))
             return moves
 
         result = tabu_search(0, objective, neighbors, max_iter=50)
@@ -143,7 +143,7 @@ class TestParameters:
             return abs(x - 20)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=100, cooldown=20)
         assert result.solution == 20
@@ -154,7 +154,7 @@ class TestParameters:
             return abs(x - 1000)  # Far target
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=10)
         assert result.iterations <= 10
@@ -164,6 +164,7 @@ class TestStress:
     def test_tsp_8city(self):
         # Larger TSP
         import random
+
         random.seed(42)
         n = 8
         # Random symmetric distance matrix
@@ -185,7 +186,7 @@ class TestStress:
             return (x - 5) ** 2
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=20)
         assert result.solution == 5
@@ -198,7 +199,7 @@ class TestProgressCallback:
             return abs(x - 100)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         calls = []
 
@@ -213,7 +214,7 @@ class TestProgressCallback:
             return abs(x - 100)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         def stop_at_20(progress):
             if progress.iteration >= 20:
@@ -227,7 +228,7 @@ class TestProgressCallback:
             return abs(x - 10)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         received = []
 
@@ -249,7 +250,7 @@ class TestMaximize:
             return -abs(x - 10)  # Maximum at x=10
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, minimize=False, max_iter=50)
         assert result.solution == 10
@@ -271,7 +272,7 @@ class TestMaxNoImprove:
             return max(0, 10 - x)  # Stays at 0 for x >= 10
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=1000, max_no_improve=20)
         # Should stop early due to no improvement
@@ -283,7 +284,7 @@ class TestMaxNoImprove:
             return abs(x - 30)
 
         def neighbors(x):
-            return [('dec', x - 1), ('inc', x + 1)]
+            return [("dec", x - 1), ("inc", x + 1)]
 
         result = tabu_search(0, objective, neighbors, max_iter=100, max_no_improve=50)
         # Should reach the optimum

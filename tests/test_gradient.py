@@ -1,7 +1,7 @@
 """Tests for the gradient descent solvers."""
 
-from solvor.gradient import gradient_descent, momentum, adam
-from solvor.types import Status, Progress
+from solvor.gradient import adam, gradient_descent, momentum
+from solvor.types import Progress, Status
 
 
 class TestGradientDescentBasic:

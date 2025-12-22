@@ -46,23 +46,14 @@ class TestKruskalDisconnected:
 
 class TestPrimBasic:
     def test_simple_triangle(self):
-        graph = {
-            0: [(1, 1), (2, 3)],
-            1: [(0, 1), (2, 2)],
-            2: [(0, 3), (1, 2)]
-        }
+        graph = {0: [(1, 1), (2, 3)], 1: [(0, 1), (2, 2)], 2: [(0, 3), (1, 2)]}
         result = prim(graph)
         assert result.status == Status.OPTIMAL
         assert result.objective == 3
         assert len(result.solution) == 2
 
     def test_line_graph(self):
-        graph = {
-            0: [(1, 1)],
-            1: [(0, 1), (2, 1)],
-            2: [(1, 1), (3, 1)],
-            3: [(2, 1)]
-        }
+        graph = {0: [(1, 1)], 1: [(0, 1), (2, 1)], 2: [(1, 1), (3, 1)], 3: [(2, 1)]}
         result = prim(graph, start=0)
         assert result.status == Status.OPTIMAL
         assert result.objective == 3
@@ -80,27 +71,19 @@ class TestPrimBasic:
 
 class TestPrimDisconnected:
     def test_disconnected_graph(self):
-        graph = {
-            0: [(1, 1)],
-            1: [(0, 1)],
-            2: [(3, 1)],
-            3: [(2, 1)]
-        }
+        graph = {0: [(1, 1)], 1: [(0, 1)], 2: [(3, 1)], 3: [(2, 1)]}
         result = prim(graph, start=0)
         assert result.status == Status.INFEASIBLE
 
 
 class TestBothAlgorithms:
     def test_same_result_square(self):
-        edges = [
-            (0, 1, 1), (1, 2, 2), (2, 3, 3), (3, 0, 4),
-            (0, 2, 5), (1, 3, 6)
-        ]
+        edges = [(0, 1, 1), (1, 2, 2), (2, 3, 3), (3, 0, 4), (0, 2, 5), (1, 3, 6)]
         graph = {
             0: [(1, 1), (3, 4), (2, 5)],
             1: [(0, 1), (2, 2), (3, 6)],
             2: [(1, 2), (3, 3), (0, 5)],
-            3: [(2, 3), (0, 4), (1, 6)]
+            3: [(2, 3), (0, 4), (1, 6)],
         }
 
         k_result = kruskal(4, edges)
@@ -111,6 +94,7 @@ class TestBothAlgorithms:
 
     def test_same_result_complete_5(self):
         import random
+
         random.seed(42)
         n = 5
         edges = []
@@ -150,6 +134,7 @@ class TestEdgeCases:
 class TestStress:
     def test_large_sparse(self):
         import random
+
         random.seed(42)
         n = 100
         edges = []
@@ -165,6 +150,7 @@ class TestStress:
 
     def test_large_dense(self):
         import random
+
         random.seed(42)
         n = 30
         edges = []

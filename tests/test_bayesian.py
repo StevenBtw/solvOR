@@ -25,15 +25,9 @@ class TestBasicBayesian:
     def test_maximize(self):
         # Maximize -(x-0.5)^2 (peak at 0.5)
         def objective(x):
-            return -(x[0] - 0.5) ** 2
+            return -((x[0] - 0.5) ** 2)
 
-        result = bayesian_opt(
-            objective,
-            bounds=[(0, 1)],
-            max_iter=20,
-            minimize=False,
-            seed=42
-        )
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, minimize=False, seed=42)
         assert result.status == Status.FEASIBLE
         assert abs(result.solution[0] - 0.5) < 0.3
 
@@ -71,12 +65,7 @@ class TestMultiDimensional:
         def objective(x):
             return (x[0] - 0.3) ** 2 + (x[1] - 0.5) ** 2 + (x[2] - 0.7) ** 2
 
-        result = bayesian_opt(
-            objective,
-            bounds=[(0, 1), (0, 1), (0, 1)],
-            max_iter=40,
-            seed=42
-        )
+        result = bayesian_opt(objective, bounds=[(0, 1), (0, 1), (0, 1)], max_iter=40, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_different_scales(self):
@@ -84,12 +73,7 @@ class TestMultiDimensional:
         def objective(x):
             return (x[0] - 5) ** 2 + (x[1] - 0.5) ** 2
 
-        result = bayesian_opt(
-            objective,
-            bounds=[(0, 10), (0, 1)],
-            max_iter=30,
-            seed=42
-        )
+        result = bayesian_opt(objective, bounds=[(0, 10), (0, 1)], max_iter=30, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -112,13 +96,7 @@ class TestParameters:
         def objective(x):
             return x[0] ** 2
 
-        result = bayesian_opt(
-            objective,
-            bounds=[(0, 1)],
-            max_iter=15,
-            n_initial=5,
-            seed=42
-        )
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, n_initial=5, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_more_initial_points(self):
@@ -126,13 +104,7 @@ class TestParameters:
             return (x[0] - 0.5) ** 2
 
         # More initial exploration
-        result = bayesian_opt(
-            objective,
-            bounds=[(0, 1)],
-            max_iter=15,
-            n_initial=10,
-            seed=42
-        )
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, n_initial=10, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -193,17 +165,11 @@ class TestBayesianBehavior:
             return (x[0] - 0.3) ** 2 + (x[1] - 0.7) ** 2
 
         # Bayesian optimization
-        bayes_result = bayesian_opt(
-            objective,
-            bounds=[(0, 1), (0, 1)],
-            max_iter=30,
-            n_initial=5,
-            seed=42
-        )
+        bayes_result = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=30, n_initial=5, seed=42)
 
         # Pure random search with same budget
         random.seed(42)
-        random_best = float('inf')
+        random_best = float("inf")
         for _ in range(30):
             x = [random.uniform(0, 1), random.uniform(0, 1)]
             random_best = min(random_best, objective(x))
@@ -221,13 +187,7 @@ class TestBayesianBehavior:
             evaluated_points.append(x[:])
             return (x[0] - 0.5) ** 2
 
-        bayesian_opt(
-            tracking_objective,
-            bounds=[(0, 1)],
-            max_iter=25,
-            n_initial=5,
-            seed=42
-        )
+        bayesian_opt(tracking_objective, bounds=[(0, 1)], max_iter=25, n_initial=5, seed=42)
 
         # After initial random points, should concentrate near x=0.5
         later_points = evaluated_points[10:]  # Skip initial exploration

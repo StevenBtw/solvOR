@@ -13,12 +13,7 @@ class TestBasic:
         assert result.objective == 3
 
     def test_shortest_path(self):
-        edges = [
-            (0, 1, 4),
-            (0, 2, 5),
-            (1, 2, -3),
-            (2, 3, 4)
-        ]
+        edges = [(0, 1, 4), (0, 2, 5), (1, 2, -3), (2, 3, 4)]
         result = bellman_ford(0, edges, 4, target=3)
         assert result.status == Status.OPTIMAL
         assert result.objective == 5
@@ -40,12 +35,7 @@ class TestNegativeWeights:
         assert result.objective == 3
 
     def test_multiple_negative_edges(self):
-        edges = [
-            (0, 1, 2),
-            (1, 2, -1),
-            (2, 3, -1),
-            (0, 3, 5)
-        ]
+        edges = [(0, 1, 2), (1, 2, -1), (2, 3, -1), (0, 3, 5)]
         result = bellman_ford(0, edges, 4, target=3)
         assert result.status == Status.OPTIMAL
         assert result.objective == 0
@@ -53,29 +43,17 @@ class TestNegativeWeights:
 
 class TestNegativeCycle:
     def test_simple_negative_cycle(self):
-        edges = [
-            (0, 1, 1),
-            (1, 2, -1),
-            (2, 0, -1)
-        ]
+        edges = [(0, 1, 1), (1, 2, -1), (2, 0, -1)]
         result = bellman_ford(0, edges, 3)
         assert result.status == Status.UNBOUNDED
 
     def test_negative_cycle_detection(self):
-        edges = [
-            (0, 1, 4),
-            (1, 2, -6),
-            (2, 1, 2)
-        ]
+        edges = [(0, 1, 4), (1, 2, -6), (2, 1, 2)]
         result = bellman_ford(0, edges, 3)
         assert result.status == Status.UNBOUNDED
 
     def test_unreachable_negative_cycle(self):
-        edges = [
-            (0, 1, 1),
-            (2, 3, -2),
-            (3, 2, -2)
-        ]
+        edges = [(0, 1, 1), (2, 3, -2), (3, 2, -2)]
         result = bellman_ford(0, edges, 4, target=1)
         assert result.status == Status.OPTIMAL
 

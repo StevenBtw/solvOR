@@ -59,8 +59,8 @@ class TestThreeSAT:
         # Verify solution satisfies all clauses
         for clause in clauses:
             satisfied = any(
-                (lit > 0 and result.solution.get(abs(lit), False)) or
-                (lit < 0 and not result.solution.get(abs(lit), False))
+                (lit > 0 and result.solution.get(abs(lit), False))
+                or (lit < 0 and not result.solution.get(abs(lit), False))
                 for lit in clause
             )
             assert satisfied
@@ -79,8 +79,8 @@ class TestThreeSAT:
         # Verify all clauses satisfied
         for clause in clauses:
             satisfied = any(
-                (lit > 0 and result.solution.get(abs(lit), False)) or
-                (lit < 0 and not result.solution.get(abs(lit), False))
+                (lit > 0 and result.solution.get(abs(lit), False))
+                or (lit < 0 and not result.solution.get(abs(lit), False))
                 for lit in clause
             )
             assert satisfied
@@ -161,6 +161,7 @@ class TestStress:
     def test_random_satisfiable(self):
         # Random but satisfiable instance
         import random
+
         random.seed(42)
         n_vars = 10
         n_clauses = 20
@@ -180,8 +181,8 @@ class TestStress:
         if result.status == Status.OPTIMAL:
             for clause in clauses:
                 satisfied = any(
-                    (lit > 0 and result.solution.get(abs(lit), False)) or
-                    (lit < 0 and not result.solution.get(abs(lit), False))
+                    (lit > 0 and result.solution.get(abs(lit), False))
+                    or (lit < 0 and not result.solution.get(abs(lit), False))
                     for lit in clause
                 )
                 assert satisfied
