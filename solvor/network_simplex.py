@@ -1,4 +1,4 @@
-"""
+r"""
 Network Simplex - simplex specialized for flow networks.
 
 Remember simplex walking along edges of a crystal? Network simplex does the
