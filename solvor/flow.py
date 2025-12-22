@@ -60,6 +60,7 @@ def max_flow[Node](
                 return path
 
             for neighbor in capacity[node]:
+                # Forward capacity minus used, plus reverse flow we can cancel
                 residual = capacity[node][neighbor] - flow[node][neighbor] + flow[neighbor][node]
                 if neighbor not in visited and residual > 0:
                     visited.add(neighbor)
