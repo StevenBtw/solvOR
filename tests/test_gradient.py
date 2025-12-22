@@ -1,6 +1,8 @@
 """Tests for the gradient descent solvers."""
 
-from solvor.gradient import adam, gradient_descent, momentum
+import pytest
+
+from solvor.gradient import adam, gradient_descent, momentum, rmsprop
 from solvor.types import Progress, Status
 
 
@@ -286,3 +288,130 @@ class TestProgressCallback:
         assert p.iteration == 5
         assert p.objective is not None
         assert p.evaluations > 0
+
+    def test_momentum_early_stop(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        def stop_at_20(progress):
+            if progress.iteration >= 20:
+                return True
+
+        result = momentum(grad, [100.0], max_iter=100, on_progress=stop_at_20, progress_interval=5)
+        assert result.iterations == 20
+        assert result.status == Status.FEASIBLE
+
+    def test_adam_early_stop(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        def stop_at_20(progress):
+            if progress.iteration >= 20:
+                return True
+
+        result = adam(grad, [100.0], max_iter=100, on_progress=stop_at_20, progress_interval=5)
+        assert result.iterations == 20
+        assert result.status == Status.FEASIBLE
+
+    def test_rmsprop_callback(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        calls = []
+
+        def callback(progress):
+            calls.append(progress.iteration)
+
+        rmsprop(grad, [10.0], max_iter=50, on_progress=callback, progress_interval=10)
+        assert calls == [10, 20, 30, 40, 50]
+
+    def test_rmsprop_early_stop(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        def stop_at_20(progress):
+            if progress.iteration >= 20:
+                return True
+
+        result = rmsprop(grad, [100.0], max_iter=100, on_progress=stop_at_20, progress_interval=5)
+        assert result.iterations == 20
+        assert result.status == Status.FEASIBLE
+
+
+class TestRMSprop:
+    def test_basic_rmsprop(self):
+        def grad(x):
+            return [2 * x[0], 2 * x[1]]
+
+        result = rmsprop(grad, [5.0, 5.0], lr=0.1, max_iter=1000)
+        assert abs(result.solution[0]) < 0.5
+        assert abs(result.solution[1]) < 0.5
+
+    def test_rmsprop_parameters(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        result = rmsprop(grad, [10.0], lr=0.1, decay=0.9, eps=1e-8, max_iter=500)
+        assert abs(result.solution[0]) < 0.5
+
+    def test_rmsprop_maximize(self):
+        def grad(x):
+            return [-2 * x[0]]
+
+        result = rmsprop(grad, [5.0], minimize=False, lr=0.1, max_iter=1000)
+        assert abs(result.solution[0]) < 0.5
+
+    def test_rmsprop_convergence(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        result = rmsprop(grad, [0.001], tol=1e-4, max_iter=10000)
+        assert result.status == Status.OPTIMAL
+
+    def test_rmsprop_max_iter(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        result = rmsprop(grad, [100.0], lr=0.0001, max_iter=10, tol=1e-10)
+        assert result.status == Status.MAX_ITER
+
+
+class TestLineSearch:
+    def test_line_search_basic(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        def objective(x):
+            return x[0] ** 2
+
+        result = gradient_descent(grad, [5.0], line_search=True, objective_fn=objective, max_iter=1000)
+        assert abs(result.solution[0]) < 0.1
+
+    def test_line_search_2d(self):
+        def grad(x):
+            return [2 * x[0], 2 * x[1]]
+
+        def objective(x):
+            return x[0] ** 2 + x[1] ** 2
+
+        result = gradient_descent(grad, [5.0, 5.0], line_search=True, objective_fn=objective, max_iter=1000)
+        assert abs(result.solution[0]) < 0.5
+        assert abs(result.solution[1]) < 0.5
+
+    def test_line_search_requires_objective(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        with pytest.raises(ValueError, match="line_search=True requires objective_fn"):
+            gradient_descent(grad, [5.0], line_search=True)
+
+    def test_line_search_tracks_evaluations(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        def objective(x):
+            return x[0] ** 2
+
+        result = gradient_descent(grad, [5.0], line_search=True, objective_fn=objective, max_iter=50)
+        # Line search does additional objective evaluations
+        assert result.evaluations > 50
