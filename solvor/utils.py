@@ -24,10 +24,12 @@ __all__ = [
 
 _DEBUG = bool(environ.get("DEBUG"))
 
+
 def debug(*args, **kwargs) -> None:
     """Print only when DEBUG=1. Same signature as print()."""
     if _DEBUG:
         print(*args, **kwargs)
+
 
 def assignment_cost(matrix: list[list[float]], assignment: list[int]) -> float:
     total = 0.0
@@ -35,6 +37,7 @@ def assignment_cost(matrix: list[list[float]], assignment: list[int]) -> float:
         if j != -1 and i < len(matrix) and 0 <= j < len(matrix[i]):
             total += matrix[i][j]
     return total
+
 
 def is_feasible(
     A: list[list[float]],
@@ -48,12 +51,14 @@ def is_feasible(
             return False
     return True
 
+
 def random_permutation(n: int) -> list[int]:
     perm = list(range(n))
     for i in range(n - 1, 0, -1):
         j = randint(0, i)
         perm[i], perm[j] = perm[j], perm[i]
     return perm
+
 
 def pairwise_swap_neighbors(perm: list[int]) -> Iterator[list[int]]:
     n = len(perm)
@@ -62,6 +67,7 @@ def pairwise_swap_neighbors(perm: list[int]) -> Iterator[list[int]]:
             neighbor = perm.copy()
             neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
             yield neighbor
+
 
 def fenwick_build(values: list[float]) -> list[float]:
     n = len(values)
@@ -72,11 +78,13 @@ def fenwick_build(values: list[float]) -> list[float]:
             tree[j] += tree[i]
     return tree
 
+
 def fenwick_update(tree: list[float], i: int, delta: float) -> None:
     n = len(tree)
     while i < n:
         tree[i] += delta
         i |= i + 1
+
 
 def fenwick_prefix(tree: list[float], i: int) -> float:
     total = 0.0

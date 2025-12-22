@@ -44,22 +44,28 @@ CoolingSchedule = Callable[[float, int, int], float]
 
 def exponential_cooling(rate: float = 0.9995) -> CoolingSchedule:
     """Geometric cooling: temp = initial * rate^iteration."""
+
     def schedule(initial_temp: float, iteration: int, max_iter: int) -> float:
-        return initial_temp * (rate ** iteration)
+        return initial_temp * (rate**iteration)
+
     return schedule
 
 
 def linear_cooling(min_temp: float = 1e-8) -> CoolingSchedule:
     """Linear cooling: temp decreases linearly from initial to min_temp."""
+
     def schedule(initial_temp: float, iteration: int, max_iter: int) -> float:
         return initial_temp - (initial_temp - min_temp) * iteration / max_iter
+
     return schedule
 
 
 def logarithmic_cooling(c: float = 1.0) -> CoolingSchedule:
     """Logarithmic cooling: temp = initial / (1 + c * log(1 + iteration))."""
+
     def schedule(initial_temp: float, iteration: int, max_iter: int) -> float:
         return initial_temp / (1 + c * log(1 + iteration))
+
     return schedule
 
 
@@ -77,7 +83,6 @@ def anneal[T](
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
-
     rng = Random(seed)
     sign = 1 if minimize else -1
     evals = 0

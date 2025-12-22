@@ -32,6 +32,7 @@ from solvor.types import Result, Status
 
 __all__ = ["Model"]
 
+
 class IntVar:
     def __init__(self, model, lb, ub, name):
         self.model = model
@@ -44,23 +45,24 @@ class IntVar:
 
     def __eq__(self, other):
         if isinstance(other, int):
-            return ('eq_const', self, other)
+            return ("eq_const", self, other)
         if isinstance(other, IntVar):
-            return ('eq_var', self, other)
+            return ("eq_var", self, other)
         return NotImplemented
 
     def __ne__(self, other):
         if isinstance(other, int):
-            return ('ne_const', self, other)
+            return ("ne_const", self, other)
         if isinstance(other, IntVar):
-            return ('ne_var', self, other)
+            return ("ne_var", self, other)
         return NotImplemented
 
     def __add__(self, other):
-        return ('add', self, other)
+        return ("add", self, other)
 
     def __radd__(self, other):
-        return ('add', other, self)
+        return ("add", other, self)
+
 
 class Model:
     def __init__(self):
@@ -82,7 +84,7 @@ class Model:
         return var
 
     def all_different(self, variables):
-        return ('all_different', tuple(variables))
+        return ("all_different", tuple(variables))
 
     def add(self, constraint):
         self._constraints.append(constraint)
@@ -152,7 +154,7 @@ class Model:
                 terms.append(e)
             elif isinstance(e, int):
                 const += e
-            elif isinstance(e, tuple) and e[0] == 'add':
+            elif isinstance(e, tuple) and e[0] == "add":
                 flatten(e[1])
                 flatten(e[2])
 
@@ -187,16 +189,15 @@ class Model:
                     self._clauses.append([-v1.bool_vars[val1], v2.bool_vars[val2]])
             return
 
-        partial_sum = self.int_var(variables[0].lb + variables[1].lb,
-                                    variables[0].ub + variables[1].ub)
+        partial_sum = self.int_var(variables[0].lb + variables[1].lb, variables[0].ub + variables[1].ub)
 
         for v1 in range(variables[0].lb, variables[0].ub + 1):
             for v2 in range(variables[1].lb, variables[1].ub + 1):
                 s = v1 + v2
                 if s in partial_sum.bool_vars:
-                    self._clauses.append([-variables[0].bool_vars[v1],
-                                         -variables[1].bool_vars[v2],
-                                         partial_sum.bool_vars[s]])
+                    self._clauses.append(
+                        [-variables[0].bool_vars[v1], -variables[1].bool_vars[v2], partial_sum.bool_vars[s]]
+                    )
 
         self._encode_sum_eq([partial_sum] + list(variables[2:]), target)
 
@@ -204,22 +205,22 @@ class Model:
         if isinstance(constraint, tuple):
             kind = constraint[0]
 
-            if kind == 'all_different':
+            if kind == "all_different":
                 self._encode_all_different(constraint[1])
 
-            elif kind == 'eq_const':
+            elif kind == "eq_const":
                 self._encode_eq_const(constraint[1], constraint[2])
 
-            elif kind == 'ne_const':
+            elif kind == "ne_const":
                 self._encode_ne_const(constraint[1], constraint[2])
 
-            elif kind == 'eq_var':
+            elif kind == "eq_var":
                 self._encode_eq_var(constraint[1], constraint[2])
 
-            elif kind == 'ne_var':
+            elif kind == "ne_var":
                 self._encode_ne_var(constraint[1], constraint[2])
 
-            elif kind == 'add':
+            elif kind == "add":
                 terms, const = self._flatten_sum(constraint)
                 if len(terms) == 0:
                     if const != 0:
@@ -227,27 +228,27 @@ class Model:
                 else:
                     pass
 
-            elif kind == 'sum_eq':
+            elif kind == "sum_eq":
                 self._encode_sum_eq(list(constraint[1]), constraint[2])
 
-            elif kind == 'sum_le':
+            elif kind == "sum_le":
                 terms, target = constraint[1], constraint[2]
                 aux = self.int_var(sum(v.lb for v in terms), min(sum(v.ub for v in terms), target))
                 self._encode_sum_eq(list(terms), aux)
 
-            elif kind == 'sum_ge':
+            elif kind == "sum_ge":
                 terms, target = constraint[1], constraint[2]
                 aux = self.int_var(max(sum(v.lb for v in terms), target), sum(v.ub for v in terms))
                 self._encode_sum_eq(list(terms), aux)
 
     def sum_eq(self, variables, target):
-        return ('sum_eq', tuple(variables), target)
+        return ("sum_eq", tuple(variables), target)
 
     def sum_le(self, variables, target):
-        return ('sum_le', tuple(variables), target)
+        return ("sum_le", tuple(variables), target)
 
     def sum_ge(self, variables, target):
-        return ('sum_ge', tuple(variables), target)
+        return ("sum_ge", tuple(variables), target)
 
     def solve(self, **kwargs):
         self._clauses = []
@@ -268,11 +269,12 @@ class Model:
             return Result(None, 0, sat_result.iterations, sat_result.evaluations, Status.MAX_ITER)
 
         solution = {}
+        sat_solution: dict[int, bool] = sat_result.solution  # type: ignore[assignment]
         for name, var in self._vars.items():
-            if name.startswith('_'):
+            if name.startswith("_"):
                 continue
             for val, bool_var in var.bool_vars.items():
-                if sat_result.solution.get(bool_var, False):
+                if sat_solution.get(bool_var, False):
                     solution[name] = val
                     break
 

@@ -29,12 +29,12 @@ from solvor.types import Result
 
 __all__ = ["hungarian"]
 
+
 def hungarian(
     cost_matrix: Sequence[Sequence[float]],
     *,
     minimize: bool = True,
 ) -> Result:
-
     if not cost_matrix or not cost_matrix[0]:
         return Result([], 0.0, 0, 0)
 

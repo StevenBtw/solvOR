@@ -1,6 +1,6 @@
 [project]
 name = "solvOR"
-version = "0.4.2"
+version = "0.4.3"
 description = "Solvor all your optimization needs."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -22,14 +22,15 @@ classifiers = [
 
 [project.urls]
 Repository = "https://github.com/StevenBtw/solvOR"
-PyPI = "https://pypi.org/project/solvor" 
+PyPI = "https://pypi.org/project/solvor"
 
 [project.optional-dependencies]
 dev = [
-    "mypy>=1.19.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.10",
+    "pre-commit>=4.5.1",
+    "ty>=0.0.5",
 ]
 
 [build-system]
@@ -57,18 +58,8 @@ exclude_lines = [
     "raise NotImplementedError",
 ]
 
-[tool.mypy]
-python_version = "3.12"
-strict = false
-warn_return_any = false
-warn_unused_ignores = false
-disallow_untyped_defs = false
-check_untyped_defs = true
-no_implicit_optional = true
-show_error_codes = true
-files = ["solvor"]
-disable_error_code = ["var-annotated", "union-attr"]
+[tool.ty.environment]
+python-version = "3.12"
 
-[[tool.mypy.overrides]]
-module = ["solvor.dlx", "solvor.flow", "solvor.sat", "solvor.network_simplex", "solvor.cp"]
-disable_error_code = ["var-annotated", "union-attr", "assignment", "misc", "arg-type", "index", "attr-defined"]
+[tool.ty.rules]
+invalid-argument-type = "ignore"

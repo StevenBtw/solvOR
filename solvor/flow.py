@@ -36,6 +36,7 @@ from solvor.types import Result, Status
 
 __all__ = ["max_flow", "min_cost_flow", "solve_assignment"]
 
+
 def max_flow[Node](
     graph: dict[Node, list[tuple[Node, int, ...]]],
     source: Node,
@@ -66,8 +67,8 @@ def max_flow[Node](
 
         return None
 
-    while (path := bfs()):
-        path_flow = float('inf')
+    while path := bfs():
+        path_flow = float("inf")
         for u, v in zip(path, path[1:]):
             residual = capacity[u][v] - flow[u][v] + flow[v][u]
             path_flow = min(path_flow, residual)
@@ -86,15 +87,15 @@ def max_flow[Node](
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
     return Result(flows, total_flow, 0, 0)
 
+
 def min_cost_flow[Node](
     graph: dict[Node, list[tuple[Node, int, int]]],
     source: Node,
     sink: Node,
     demand: int,
 ) -> Result:
-    
     capacity = defaultdict(lambda: defaultdict(int))
-    cost = defaultdict(lambda: defaultdict(lambda: float('inf')))
+    cost = defaultdict(lambda: defaultdict(lambda: float("inf")))
     nodes = set()
 
     for u in graph:
@@ -103,7 +104,7 @@ def min_cost_flow[Node](
             nodes.add(v)
             capacity[u][v] += cap
             cost[u][v] = min(cost[u][v], c)
-            if cost[v][u] == float('inf'):
+            if cost[v][u] == float("inf"):
                 cost[v][u] = -c
 
     flow = defaultdict(lambda: defaultdict(int))
@@ -111,14 +112,14 @@ def min_cost_flow[Node](
     total_flow = 0
 
     def bellman_ford():
-        dist = {n: float('inf') for n in nodes}
+        dist = {n: float("inf") for n in nodes}
         parent = {n: None for n in nodes}
         dist[source] = 0
 
         for _ in range(len(nodes) - 1):
             updated = False
             for u in nodes:
-                if dist[u] == float('inf'):
+                if dist[u] == float("inf"):
                     continue
                 for v in nodes:
                     residual = capacity[u][v] - flow[u][v] + flow[v][u]
@@ -129,8 +130,8 @@ def min_cost_flow[Node](
             if not updated:
                 break
 
-        if dist[sink] == float('inf'):
-            return None, float('inf')
+        if dist[sink] == float("inf"):
+            return None, float("inf")
 
         path = []
         node = sink
@@ -144,7 +145,7 @@ def min_cost_flow[Node](
     while total_flow < demand:
         path, path_cost = bellman_ford()
         if path is None:
-            return Result({}, float('inf'), 0, 0, Status.INFEASIBLE)
+            return Result({}, float("inf"), 0, 0, Status.INFEASIBLE)
 
         path_flow = demand - total_flow
         for u, v in zip(path, path[1:]):
@@ -167,29 +168,30 @@ def min_cost_flow[Node](
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
     return Result(flows, total_cost, 0, 0)
 
+
 def solve_assignment(
     cost_matrix: Sequence[Sequence[float]],
 ) -> Result:
-    
     n = len(cost_matrix)
     m = len(cost_matrix[0]) if n > 0 else 0
 
     graph = defaultdict(list)
-    source, sink = 'source', 'sink'
+    source, sink = "source", "sink"
 
     for i in range(n):
-        graph[source].append((f'L{i}', 1, 0))
+        graph[source].append((f"L{i}", 1, 0))
         for j in range(m):
-            graph[f'L{i}'].append((f'R{j}', 1, cost_matrix[i][j]))
+            graph[f"L{i}"].append((f"R{j}", 1, cost_matrix[i][j]))
 
     for j in range(m):
-        graph[f'R{j}'].append((sink, 1, 0))
+        graph[f"R{j}"].append((sink, 1, 0))
 
     result = min_cost_flow(graph, source, sink, min(n, m))
 
     assignment = [-1] * n
-    for (u, v), f in result.solution.items():
-        if f > 0 and u.startswith('L') and v.startswith('R'):
+    flow_solution: dict[tuple[str, str], float] = result.solution  # type: ignore[assignment]
+    for (u, v), f in flow_solution.items():
+        if f > 0 and u.startswith("L") and v.startswith("R"):
             i = int(u[1:])
             j = int(v[1:])
             assignment[i] = j

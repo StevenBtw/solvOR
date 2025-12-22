@@ -27,6 +27,7 @@ from solvor.types import Result, Status
 
 __all__ = ["network_simplex"]
 
+
 def network_simplex(
     n_nodes: int,
     arcs: list[tuple[int, int, int, float]],
@@ -34,14 +35,13 @@ def network_simplex(
     *,
     max_iter: int = 1_000_000,
 ) -> Result:
-
     if abs(sum(supplies)) > 1e-9:
-        return Result(None, float('inf'), 0, 0, Status.INFEASIBLE)
+        return Result(None, float("inf"), 0, 0, Status.INFEASIBLE)
 
     if not arcs:
         if all(abs(s) < 1e-9 for s in supplies):
             return Result({}, 0.0, 0, 0)
-        return Result(None, float('inf'), 0, 0, Status.INFEASIBLE)
+        return Result(None, float("inf"), 0, 0, Status.INFEASIBLE)
 
     m = len(arcs)
     n = n_nodes
@@ -258,12 +258,13 @@ def network_simplex(
 
     for arc in range(m, total_arcs):
         if flow[arc] > 0:
-            return Result(None, float('inf'), iterations, total_arcs, Status.INFEASIBLE)
+            return Result(None, float("inf"), iterations, total_arcs, Status.INFEASIBLE)
 
     total_cost = sum(flow[i] * cost[i] for i in range(m))
     flow_dict = {(source[i], target[i]): flow[i] for i in range(m) if flow[i] > 0}
 
     return Result(flow_dict, total_cost, iterations, total_arcs)
+
 
 def _find_join(u, v, depth, parent):
     while u != v:
@@ -272,6 +273,7 @@ def _find_join(u, v, depth, parent):
         else:
             v = parent[v]
     return u
+
 
 def _residual(arc, node, source, flow, cap):
     if source[arc] == node:

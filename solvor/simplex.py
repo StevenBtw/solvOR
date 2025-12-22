@@ -30,6 +30,7 @@ from solvor.types import Result, Status
 
 __all__ = ["solve_lp"]
 
+
 def solve_lp(
     c: Sequence[float],
     A: Sequence[Sequence[float]],
@@ -39,29 +40,28 @@ def solve_lp(
     eps: float = 1e-10,
     max_iter: int = 100_000,
 ) -> Result:
-    
     m, n = len(b), len(c)
     weights = list(c) if minimize else [-ci for ci in c]
 
     matrix = []
     for i in range(m):
-        row = array('d', A[i])
+        row = array("d", A[i])
         row.extend([0.0] * m)
         row[n + i] = 1.0
         row.append(b[i])
         matrix.append(row)
 
-    obj = array('d', weights)
+    obj = array("d", weights)
     obj.extend([0.0] * (m + 1))
     matrix.append(obj)
 
-    basis = array('i', range(n, n + m))
+    basis = array("i", range(n, n + m))
     basis_set = set(basis)
 
     if any(matrix[i][-1] < -eps for i in range(m)):
         status, iters, matrix, basis, basis_set = _phase1(matrix, basis, basis_set, m, n, eps, max_iter)
         if status != Status.OPTIMAL:
-            return Result(tuple([0.0] * n), float('inf'), iters, iters, Status.INFEASIBLE)
+            return Result(tuple([0.0] * n), float("inf"), iters, iters, Status.INFEASIBLE)
         max_iter -= iters
     else:
         iters = 0
@@ -69,12 +69,13 @@ def solve_lp(
     status, iters2, matrix, basis, basis_set = _phase2(matrix, basis, basis_set, m, eps, max_iter)
     return _extract(matrix, basis, m, n, status, iters + iters2, minimize)
 
+
 def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
     n_cols = len(matrix[0])
     n_total = n + m
     art_cols = []
 
-    orig_obj = array('d', matrix[-1])
+    orig_obj = array("d", matrix[-1])
 
     for i in range(m):
         if matrix[i][-1] < -eps:
@@ -96,7 +97,7 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
         return Status.OPTIMAL, 0, matrix, basis, basis_set
 
     n_cols = len(matrix[0])
-    matrix[-1] = array('d', [0.0] * n_cols)
+    matrix[-1] = array("d", [0.0] * n_cols)
 
     for col in art_cols:
         matrix[-1][col] = 1.0
@@ -128,6 +129,7 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
 
     return Status.OPTIMAL, iters, matrix, basis, basis_set
 
+
 def _phase2(matrix, basis, basis_set, m, eps, max_iter):
     n_cols = len(matrix[0])
 
@@ -143,7 +145,7 @@ def _phase2(matrix, basis, basis_set, m, eps, max_iter):
             return Status.OPTIMAL, iteration, matrix, basis, basis_set
 
         # Bland's rule for leaving: minimum ratio, ties broken by smallest basis index
-        leave, min_ratio = -1, float('inf')
+        leave, min_ratio = -1, float("inf")
         for i in range(m):
             if matrix[i][enter] > eps:
                 ratio = matrix[i][-1] / matrix[i][enter]
@@ -163,6 +165,7 @@ def _phase2(matrix, basis, basis_set, m, eps, max_iter):
 
     return Status.MAX_ITER, max_iter, matrix, basis, basis_set
 
+
 def _pivot(matrix, m, row, col, eps):
     n_cols = len(matrix[0])
     inv = 1.0 / matrix[row][col]
@@ -178,6 +181,7 @@ def _pivot(matrix, m, row, col, eps):
                     matrix[i][j] -= f * matrix[row][j]
 
     return matrix
+
 
 def _extract(matrix, basis, m, n, status, iters, minimize):
     solution = [0.0] * n

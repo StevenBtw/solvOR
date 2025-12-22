@@ -6,7 +6,7 @@ Network analysis, finding graph diameter, checking reachability matrices,
 precomputing route tables where any node might query any other.
 
     from solvor.floyd_warshall import floyd_warshall
-    
+
     result = floyd_warshall(n_nodes, edges)
     dist = result.solution  # dist[i][j] = shortest path from i to j
 
@@ -23,15 +23,15 @@ from solvor.types import Result, Status
 
 __all__ = ["floyd_warshall"]
 
+
 def floyd_warshall(
     n_nodes: int,
     edges: list[tuple[int, int, float]],
     *,
     directed: bool = True,
 ) -> Result:
-
     n = n_nodes
-    dist = [[float('inf')] * n for _ in range(n)]
+    dist = [[float("inf")] * n for _ in range(n)]
 
     for i in range(n):
         dist[i][i] = 0.0
@@ -52,6 +52,6 @@ def floyd_warshall(
 
     for i in range(n):
         if dist[i][i] < 0:
-            return Result(None, float('-inf'), iterations, 0, Status.UNBOUNDED)
+            return Result(None, float("-inf"), iterations, 0, Status.UNBOUNDED)
 
     return Result(dist, 0, iterations, 0)

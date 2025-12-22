@@ -14,8 +14,8 @@ for faster goal-directed search.
 The neighbors function returns (neighbor, edge_cost) pairs. Edge costs must
 be non-negative, use bellman_ford for negative weights.
 
-For negative edges use bellman_ford, Dijkstra's negativity was legendary, 
-just not in his algorithm. For unweighted graphs use bfs (simpler). 
+For negative edges use bellman_ford, Dijkstra's negativity was legendary,
+just not in his algorithm. For unweighted graphs use bfs (simpler).
 With a good distance estimate, use astar.
 """
 
@@ -26,6 +26,7 @@ from solvor.types import Result, Status
 
 __all__ = ["dijkstra"]
 
+
 def dijkstra[S](
     start: S,
     goal: S | Callable[[S], bool],
@@ -34,7 +35,6 @@ def dijkstra[S](
     max_iter: int = 1_000_000,
     max_cost: float | None = None,
 ) -> Result:
-
     is_goal = goal if callable(goal) else lambda s: s == goal
 
     g: dict[S, float] = {start: 0.0}
@@ -68,7 +68,7 @@ def dijkstra[S](
 
             tentative_g = g[current] + edge_cost
 
-            if tentative_g < g.get(neighbor, float('inf')):
+            if tentative_g < g.get(neighbor, float("inf")):
                 g[neighbor] = tentative_g
                 parent[neighbor] = current
                 heappush(heap, (tentative_g, counter, neighbor))
@@ -76,8 +76,9 @@ def dijkstra[S](
                 evaluations += 1
 
     if iterations >= max_iter:
-        return Result(None, float('inf'), iterations, evaluations, Status.MAX_ITER)
-    return Result(None, float('inf'), iterations, evaluations, Status.INFEASIBLE)
+        return Result(None, float("inf"), iterations, evaluations, Status.MAX_ITER)
+    return Result(None, float("inf"), iterations, evaluations, Status.INFEASIBLE)
+
 
 def _reconstruct(parent, current):
     path = [current]

@@ -27,6 +27,7 @@ from solvor.types import Result, Status
 
 __all__ = ["bayesian_opt"]
 
+
 def bayesian_opt(
     objective_fn: Callable[[Sequence[float]], float],
     bounds: Sequence[tuple[float, float]],
@@ -36,7 +37,6 @@ def bayesian_opt(
     n_initial: int = 5,
     seed: int | None = None,
 ) -> Result:
-
     rng = Random(seed)
     sign = 1 if minimize else -1
     n_dims = len(bounds)
@@ -89,7 +89,7 @@ def bayesian_opt(
         return ei
 
     for iteration in range(n_initial, max_iter):
-        best_ei, best_candidate = -float('inf'), None
+        best_ei, best_candidate = -float("inf"), None
 
         for _ in range(100 * n_dims):
             candidate = random_point()
@@ -109,6 +109,7 @@ def bayesian_opt(
 
     final_obj = best_y * sign
     return Result(best_x, final_obj, max_iter, evals, Status.FEASIBLE)
+
 
 def _solve_linear(A, b):
     n = len(A)
@@ -133,8 +134,10 @@ def _solve_linear(A, b):
 
     return [aug[i][n] for i in range(n)]
 
+
 def _norm_pdf(x):
     return exp(-0.5 * x * x) / sqrt(2 * pi)
+
 
 def _norm_cdf(x):
     return 0.5 * (1 + erf(x / sqrt(2)))
