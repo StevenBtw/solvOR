@@ -4,6 +4,7 @@ from solvor.a_star import astar, astar_grid
 from solvor.anneal import anneal, exponential_cooling, linear_cooling, logarithmic_cooling
 from solvor.bayesian import bayesian_opt
 from solvor.bellman_ford import bellman_ford
+from solvor.bfgs import bfgs, lbfgs
 from solvor.bfs import bfs, dfs
 from solvor.cp import Model
 from solvor.dijkstra import dijkstra
@@ -12,10 +13,12 @@ from solvor.flow import max_flow, min_cost_flow, solve_assignment
 from solvor.floyd_warshall import floyd_warshall
 from solvor.genetic import evolve
 from solvor.gradient import adam, gradient_descent, momentum, rmsprop
-from solvor.hungarian import hungarian
+from solvor.hungarian import solve_hungarian
 from solvor.milp import solve_milp
 from solvor.mst import kruskal, prim
+from solvor.nelder_mead import nelder_mead
 from solvor.network_simplex import network_simplex
+from solvor.powell import powell
 from solvor.sat import solve_sat
 from solvor.simplex import solve_lp
 from solvor.tabu import solve_tsp, tabu_search
@@ -41,6 +44,10 @@ __all__ = [
     "momentum",
     "rmsprop",
     "adam",
+    "bfgs",
+    "lbfgs",
+    "nelder_mead",
+    "powell",
     "solve_exact_cover",
     "bfs",
     "dfs",
@@ -52,7 +59,7 @@ __all__ = [
     "kruskal",
     "prim",
     "network_simplex",
-    "hungarian",
+    "solve_hungarian",
     "Status",
     "Result",
 ]
