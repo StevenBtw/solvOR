@@ -30,7 +30,7 @@ dev = [
     "pytest-cov>=7.0.0",
     "ruff>=0.14.10",
     "pre-commit>=4.5.1",
-    "ty>=0.0.6",
+    "ty>=0.0.7",
 ]
 
 [build-system]
