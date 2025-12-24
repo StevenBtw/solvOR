@@ -1,274 +1,516 @@
 """
-SAT Solver, boolean satisfiability with clause learning.
+SAT solver, boolean satisfiability with clause learning.
 
-Use this for "is this configuration valid?" problems. Logic puzzles with
-implications, dependencies, exclusions. Anything that boils down to: given
-these boolean constraints, is there an assignment that satisfies all of them?
+You're navigating a maze where every dead end teaches you which turns to avoid.
+Hit a contradiction? Learn a new rule that prevents the same mistake. The solver
+gets smarter with each conflict, cutting through exponential search space.
 
-This is the engine behind CP, constraint programming encodes integer variables
-as booleans and feeds them here. For exact cover problems specifically, DLX is
-more efficient than encoding to SAT.
+Use this for "is this configuration valid?" problems. Logic puzzles, scheduling
+conflicts, dependency resolution, anything that boils down to: given these
+boolean constraints, find an assignment that satisfies all of them.
 
     from solvor.sat import solve_sat
 
-    # Clauses in CNF: each clause is a list of literals (OR'd together)
-    # Positive int = variable is true, negative = variable is false
-    # All clauses must be satisfied (AND'd together)
+    # Clauses in CNF: each clause is OR'd literals, all clauses AND'd
+    # Positive int = true, negative = false
+    # (x1 OR x2) AND (NOT x1 OR x3) AND (NOT x2 OR NOT x3)
     result = solve_sat([[1, 2], [-1, 3], [-2, -3]])
-    # Reads as: (x1 OR x2) AND (NOT x1 OR x3) AND (NOT x2 OR NOT x3)
+    result = solve_sat(clauses, solution_limit=10)  # Find multiple solutions
 
-CNF (conjunctive normal form) is standard because any boolean formula can be
-converted to it, and the algorithms are well documented. The integer encoding is
-compact and fast to process.
+This is the engine behind CP. Constraint programming encodes integer variables
+as booleans and feeds them here. For exact cover problems specifically, DLX
+is more efficient than encoding to SAT.
 
-Don't use this for: optimization problems (use MILP), or when integer variables
-are more natural than booleans (use CP, which handles the encoding for you).
+Don't use this for: optimization (use MILP), continuous variables (use simplex
+or gradient), or when integer domains are more natural (use CP, which handles
+the boolean encoding for you).
 """
 
-from collections import defaultdict
 from collections.abc import Sequence
+from heapq import heapify, heappop, heappush
 
 from solvor.types import Result, Status
 
 __all__ = ["solve_sat"]
+
+UNDEF = 2
+
+
+def lit_var(lit: int) -> int:
+    return abs(lit)
+
+
+def lit_sign(lit: int) -> int:
+    return 1 if lit > 0 else 0
+
+
+def lit_neg(lit: int) -> int:
+    return -lit
+
+
+def luby(i: int) -> int:
+    """Luby restart sequence: 1,1,2,1,1,2,4,1,1,2,1,1,2,4,8,..."""
+    k = 1
+    while True:
+        if i == (1 << k) - 1:
+            return 1 << (k - 1)
+        if i >= (1 << (k - 1)):
+            i -= (1 << (k - 1)) - 1
+            k = 1
+        else:
+            k += 1
+
+
+class BinaryImplications:
+    """Binary clause (a ∨ b) means ¬a → b and ¬b → a. Stores clause index for conflict analysis."""
+
+    __slots__ = ("pos", "neg")
+
+    def __init__(self, n_vars: int):
+        self.pos: list[list[tuple[int, int]]] = [[] for _ in range(n_vars + 1)]
+        self.neg: list[list[tuple[int, int]]] = [[] for _ in range(n_vars + 1)]
+
+    def add(self, lit_a: int, lit_b: int, clause_idx: int) -> None:
+        if lit_a > 0:
+            self.neg[lit_a].append((lit_b, clause_idx))
+        else:
+            self.pos[-lit_a].append((lit_b, clause_idx))
+        if lit_b > 0:
+            self.neg[lit_b].append((lit_a, clause_idx))
+        else:
+            self.pos[-lit_b].append((lit_a, clause_idx))
+
+    def implications(self, false_lit: int) -> list[tuple[int, int]]:
+        return self.neg[false_lit] if false_lit > 0 else self.pos[-false_lit]
+
+    def clear_learned(self, original_count: int) -> None:
+        for lst in self.pos:
+            lst[:] = [(lit, idx) for lit, idx in lst if idx < original_count]
+        for lst in self.neg:
+            lst[:] = [(lit, idx) for lit, idx in lst if idx < original_count]
 
 
 def solve_sat(
     clauses: Sequence[Sequence[int]],
     *,
     assumptions: Sequence[int] | None = None,
-    max_conflicts: int = 100,
-    max_restarts: int = 100,
+    max_conflicts: int = 100_000,
+    max_restarts: int = 10_000,
+    solution_limit: int = 1,
+    luby_factor: int = 100,
 ) -> Result:
     if not clauses:
         return Result({}, 0, 0, 0)
 
-    assumptions = assumptions or []
+    all_solutions: list[dict[int, bool]] = []
+    assumptions = list(assumptions) if assumptions else []
     clauses = [list(c) for c in clauses]
 
-    variables = set()
+    # Find all variables
+    n_vars = 0
     for clause in clauses:
         for lit in clause:
-            variables.add(abs(lit))
-    n_vars = max(variables) if variables else 0
+            n_vars = max(n_vars, lit_var(lit))
 
-    # Watch first two literals per clause. Only re-check when a watched literal becomes false.
-    watch = defaultdict(list)
-    for i, clause in enumerate(clauses):
-        if len(clause) >= 1:
-            watch[clause[0]].append(i)
-        if len(clause) >= 2:
-            watch[clause[1]].append(i)
+    if n_vars == 0:
+        return Result({}, 0, 0, 0)
 
-    assignment = {}
+    vals = [UNDEF] * (n_vars + 1)
+    levels = [0] * (n_vars + 1)
+    reasons = [-1] * (n_vars + 1)
+
     trail = []
-    level = {}
-    reason = {}
+    trail_lim = []
+    prop_head = 0
+
+    watch_pos = [[] for _ in range(n_vars + 1)]
+    watch_neg = [[] for _ in range(n_vars + 1)]
+    big = BinaryImplications(n_vars)
+
+    learned = []
+    lbd_scores = []
+
+    # VSIDS: negative activity for max-heap behavior
+    activity = [0.0] * (n_vars + 1)
+    activity_inc = 1.0
+    var_heap = [(-activity[v], v) for v in range(1, n_vars + 1)]
+    heapify(var_heap)
+    in_heap = [True] * (n_vars + 1)
+
+    phase = [True] * (n_vars + 1)
     decisions = 0
     propagations = 0
     conflicts = 0
     restarts = 0
-    learned = []
 
-    def value(lit):
-        var = abs(lit)
-        if var not in assignment:
+    def lit_value(lit):
+        v = vals[lit_var(lit)]
+        if v == UNDEF:
             return None
-        return assignment[var] if lit > 0 else not assignment[var]
+        return (v == 1) == (lit > 0)
 
-    def assign(var, val, dec_level, clause_idx=None):
+    def watch_list(lit):
+        return watch_pos[lit] if lit > 0 else watch_neg[-lit]
+
+    def add_watch(lit, idx):
+        if lit > 0:
+            watch_pos[lit].append(idx)
+        else:
+            watch_neg[-lit].append(idx)
+
+    def get_clause(idx):
+        return clauses[idx] if idx < len(clauses) else learned[idx - len(clauses)]
+
+    def bump_activity(var):
+        nonlocal activity_inc
+        activity[var] += activity_inc
+        if in_heap[var]:
+            heappush(var_heap, (-activity[var], var))
+
+    def decay_activity():
+        nonlocal activity_inc
+        activity_inc /= 0.95
+
+    def assign(var, val, reason_idx):
         nonlocal propagations
         propagations += 1
-        assignment[var] = val
+        vals[var] = 1 if val else 0
+        levels[var] = len(trail_lim)
+        reasons[var] = reason_idx
         trail.append(var)
-        level[var] = dec_level
-        reason[var] = clause_idx
 
-    def unassign_to(target_level):
-        while trail and level[trail[-1]] > target_level:
+    def unassign_to(level):
+        nonlocal prop_head
+        while len(trail_lim) > level:
+            trail_lim.pop()
+        target = trail_lim[-1] if trail_lim else 0
+        while len(trail) > target:
             var = trail.pop()
-            del assignment[var]
-            del level[var]
-            del reason[var]
+            phase[var] = vals[var] == 1
+            vals[var] = UNDEF
+            if not in_heap[var]:
+                heappush(var_heap, (-activity[var], var))
+                in_heap[var] = True
+        prop_head = len(trail)
 
-    def propagate(dec_level):
-        nonlocal conflicts
-        queue = list(trail[-1:]) if trail else []
-        head = 0
+    def find_pure_literals():
+        pos_count = [0] * (n_vars + 1)
+        neg_count = [0] * (n_vars + 1)
+        for clause in clauses:
+            for lit in clause:
+                if lit > 0:
+                    pos_count[lit] += 1
+                else:
+                    neg_count[-lit] += 1
+        pure = []
+        for v in range(1, n_vars + 1):
+            if pos_count[v] > 0 and neg_count[v] == 0:
+                pure.append((v, True))
+            elif neg_count[v] > 0 and pos_count[v] == 0:
+                pure.append((v, False))
+        return pure
 
-        while head < len(queue) or any(value(lit) is False for lit in assumptions if abs(lit) not in assignment):
+    def propagate():
+        nonlocal conflicts, prop_head
+
+        if len(trail_lim) == 0:
             for lit in assumptions:
-                var = abs(lit)
-                if var not in assignment:
-                    val = lit > 0
-                    assign(var, val, dec_level)
-                    queue.append(var)
+                var = lit_var(lit)
+                v = vals[var]
+                if v == UNDEF:
+                    assign(var, lit > 0, -1)
+                elif (v == 1) != (lit > 0):
+                    conflicts += 1
+                    return -2
 
-            if head >= len(queue):
-                break
+        while prop_head < len(trail):
+            var = trail[prop_head]
+            prop_head += 1
+            false_lit = var if vals[var] == 0 else -var
 
-            var = queue[head]
-            head += 1
-            false_lit = -var if assignment[var] else var
+            for implied, clause_idx in big.implications(false_lit):
+                impl_var = lit_var(implied)
+                if vals[impl_var] == UNDEF:
+                    assign(impl_var, implied > 0, clause_idx)
+                elif (vals[impl_var] == 1) != (implied > 0):
+                    conflicts += 1
+                    return clause_idx
 
+            watches = watch_list(false_lit)
             i = 0
-            watches = watch[false_lit]
             while i < len(watches):
                 clause_idx = watches[i]
-                clause = clauses[clause_idx] if clause_idx < len(clauses) else learned[clause_idx - len(clauses)]
+                clause = get_clause(clause_idx)
 
                 if len(clause) == 1:
-                    if value(clause[0]) is False:
-                        conflicts += 1
-                        return clause_idx
-                    i += 1
-                    continue
-
-                other = clause[1] if clause[0] == false_lit else clause[0]
-                if value(other) is True:
-                    i += 1
-                    continue
-
-                found = False
-                for j in range(2, len(clause)):
-                    lit = clause[j]
-                    if value(lit) is not False:
-                        clause[0], clause[j] = clause[j], clause[0]
-                        if clause[0] != false_lit:
-                            watches[i] = watches[-1]
-                            watches.pop()
-                            watch[clause[0]].append(clause_idx)
-                            found = True
-                            break
-                        else:
-                            clause[1], clause[j] = clause[j], clause[1]
-                            i += 1
-                            found = True
-                            break
-
-                if found:
-                    continue
+                    conflicts += 1
+                    return clause_idx
 
                 if clause[0] == false_lit:
                     clause[0], clause[1] = clause[1], clause[0]
 
-                if value(clause[0]) is False:
+                first_val = lit_value(clause[0])
+                if first_val is True:
+                    i += 1
+                    continue
+
+                found = False
+                for k in range(2, len(clause)):
+                    if lit_value(clause[k]) is not False:
+                        clause[1], clause[k] = clause[k], clause[1]
+                        watches[i] = watches[-1]
+                        watches.pop()
+                        add_watch(clause[1], clause_idx)
+                        found = True
+                        break
+
+                if found:
+                    continue
+
+                if first_val is False:
                     conflicts += 1
                     return clause_idx
-                elif value(clause[0]) is None:
-                    assign(abs(clause[0]), clause[0] > 0, dec_level, clause_idx)
-                    queue.append(abs(clause[0]))
+                else:
+                    assign(lit_var(clause[0]), clause[0] > 0, clause_idx)
 
                 i += 1
 
-        return None
+        return -1
 
-    def analyze(conflict_clause_idx):
-        """Learn a clause from the conflict, return it and the level to backtrack to."""
-        if conflict_clause_idx < len(clauses):
-            clause = clauses[conflict_clause_idx]
-        else:
-            clause = learned[conflict_clause_idx - len(clauses)]
+    def analyze(conflict_idx):
+        if conflict_idx == -2:
+            return None, -1, 0
 
-        current_level = max(level.get(abs(lit), 0) for lit in clause) if clause else 0
+        clause = get_clause(conflict_idx) if conflict_idx >= 0 else []
+        current_level = len(trail_lim)
+
         if current_level == 0:
-            return None, -1
+            return None, -1, 0
 
-        learned_clause = set(clause)
-        count = sum(1 for lit in learned_clause if level.get(abs(lit), 0) == current_level)
+        seen = [False] * (n_vars + 1)
+        learned_lits = []
+        counter = 0
+
+        def add_lit(lit):
+            nonlocal counter
+            var = lit_var(lit)
+            if seen[var] or vals[var] == UNDEF:
+                return
+            seen[var] = True
+            bump_activity(var)
+            if levels[var] == current_level:
+                counter += 1
+            else:
+                learned_lits.append(lit_neg(lit) if (vals[var] == 1) == (lit > 0) else lit)
+
+        for lit in clause:
+            add_lit(lit)
 
         trail_idx = len(trail) - 1
-        while count > 1 and trail_idx >= 0:
+        while counter > 0:
+            while trail_idx >= 0 and not seen[trail[trail_idx]]:
+                trail_idx -= 1
+            if trail_idx < 0:
+                break
+
             var = trail[trail_idx]
             trail_idx -= 1
 
-            if var not in [abs(lit) for lit in learned_clause]:
-                continue
-            if level.get(var, 0) != current_level:
-                continue
-            if reason.get(var) is None:
-                continue
+            if levels[var] == current_level:
+                counter -= 1
+                if counter == 0:
+                    uip_lit = var if vals[var] == 0 else -var
+                    learned_lits.insert(0, uip_lit)
+                    break
 
-            reason_idx = reason[var]
-            if reason_idx < len(clauses):
-                reason_clause = clauses[reason_idx]
-            else:
-                reason_clause = learned[reason_idx - len(clauses)]
+                reason_idx = reasons[var]
+                if reason_idx >= 0:
+                    for lit in get_clause(reason_idx):
+                        if lit_var(lit) != var:
+                            add_lit(lit)
 
-            lit = var if var in [abs(x) for x in learned_clause if x > 0 and abs(x) == var] else -var
-            if lit in learned_clause:
-                learned_clause.remove(lit)
-            elif -lit in learned_clause:
-                learned_clause.remove(-lit)
+        decay_activity()
 
-            for reason_lit in reason_clause:
-                if abs(reason_lit) != var:
-                    learned_clause.add(reason_lit)
+        if not learned_lits:
+            return None, -1, 0
 
-            count = sum(1 for lit in learned_clause if level.get(abs(lit), 0) == current_level)
+        lvl_set = set(levels[lit_var(lit)] for lit in learned_lits if vals[lit_var(lit)] != UNDEF)
+        lvls = sorted(lvl_set, reverse=True)
+        bt_level = lvls[1] if len(lvls) > 1 else 0
+        lbd = len(lvl_set)
 
-        learned_list = list(learned_clause)
-        if not learned_list:
-            return None, -1
+        return learned_lits, bt_level, lbd
 
-        levels = [level.get(abs(lit), 0) for lit in learned_list]
-        if len(set(levels)) <= 1:
-            backtrack = 0
-        else:
-            backtrack = sorted(set(levels))[-2]
+    def pick_var():
+        while var_heap:
+            _, var = heappop(var_heap)
+            in_heap[var] = False
+            if vals[var] == UNDEF:
+                return var
+        return 0
 
-        return learned_list, backtrack
+    def reduce_db():
+        nonlocal learned, lbd_scores
+        if len(learned) < 2000:
+            return
 
-    def decide():
+        indexed = sorted(enumerate(learned), key=lambda x: (lbd_scores[x[0]], len(x[1])))
+        keep, keep_lbd = [], []
+        for i, (orig_idx, clause) in enumerate(indexed):
+            if i < len(indexed) // 2 or lbd_scores[orig_idx] <= 3:
+                keep.append(clause)
+                keep_lbd.append(lbd_scores[orig_idx])
+
+        learned, lbd_scores = keep, keep_lbd
+
         for v in range(1, n_vars + 1):
-            if v not in assignment:
-                return v
-        return None
+            watch_pos[v] = [c for c in watch_pos[v] if c < len(clauses)]
+            watch_neg[v] = [c for c in watch_neg[v] if c < len(clauses)]
+
+        big.clear_learned(len(clauses))
+
+        for i, clause in enumerate(learned):
+            idx = len(clauses) + i
+            if len(clause) == 2:
+                big.add(clause[0], clause[1], idx)
+            elif len(clause) > 2:
+                add_watch(clause[0], idx)
+                add_watch(clause[1], idx)
+
+    unit_clauses = []
+    for i, clause in enumerate(clauses):
+        if len(clause) == 0:
+            return Result(None, 0, 0, 0, Status.INFEASIBLE)
+        elif len(clause) == 1:
+            unit_clauses.append((clause[0], i))
+        elif len(clause) == 2:
+            big.add(clause[0], clause[1], i)
+        else:
+            add_watch(clause[0], i)
+            add_watch(clause[1], i)
+
+    for var, val in find_pure_literals():
+        if vals[var] == UNDEF:
+            assign(var, val, -1)
+
+    for lit, idx in unit_clauses:
+        var = lit_var(lit)
+        val = lit > 0
+        if vals[var] == UNDEF:
+            assign(var, val, idx)
+        elif (vals[var] == 1) != val:
+            return Result(None, 0, 0, 0, Status.INFEASIBLE)
+
+    conflict = propagate()
+    if conflict >= 0:
+        return Result(None, 0, decisions, propagations, Status.INFEASIBLE)
 
     dec_level = 0
-    conflict = propagate(dec_level)
+    conflicts_since_restart = 0
+    luby_idx = 1
+    next_restart = luby_factor * luby(luby_idx)
 
     while True:
-        if conflict is not None:
-            if dec_level == 0:
+        if conflict >= 0 or conflict == -2:
+            if dec_level == 0 or conflict == -2:
+                if all_solutions:
+                    return Result(
+                        all_solutions[0], len(all_solutions[0]), decisions, propagations, solutions=tuple(all_solutions)
+                    )
                 return Result(None, 0, decisions, propagations, Status.INFEASIBLE)
 
-            learned_clause, backtrack_level = analyze(conflict)
+            learned_clause, bt_level, lbd = analyze(conflict)
+
             if learned_clause is None:
+                if all_solutions:
+                    return Result(
+                        all_solutions[0], len(all_solutions[0]), decisions, propagations, solutions=tuple(all_solutions)
+                    )
                 return Result(None, 0, decisions, propagations, Status.INFEASIBLE)
 
-            unassign_to(backtrack_level)
-            dec_level = backtrack_level
+            unassign_to(bt_level)
+            dec_level = bt_level
 
             clause_idx = len(clauses) + len(learned)
             learned.append(learned_clause)
+            lbd_scores.append(lbd)
 
-            if len(learned_clause) >= 1:
-                watch[learned_clause[0]].append(clause_idx)
-            if len(learned_clause) >= 2:
-                watch[learned_clause[1]].append(clause_idx)
+            if len(learned_clause) == 2:
+                big.add(learned_clause[0], learned_clause[1], clause_idx)
+            elif len(learned_clause) > 2:
+                add_watch(learned_clause[0], clause_idx)
+                add_watch(learned_clause[1], clause_idx)
 
-            if len(learned_clause) == 1:
-                lit = learned_clause[0]
-                assign(abs(lit), lit > 0, dec_level, clause_idx)
+            if learned_clause:
+                assign(lit_var(learned_clause[0]), learned_clause[0] > 0, clause_idx)
 
-            if conflicts >= max_conflicts:
+            conflicts_since_restart += 1
+
+            if conflicts_since_restart >= next_restart:
                 if restarts >= max_restarts:
+                    if all_solutions:
+                        return Result(
+                            all_solutions[0],
+                            len(all_solutions[0]),
+                            decisions,
+                            propagations,
+                            Status.MAX_ITER,
+                            solutions=tuple(all_solutions),
+                        )
                     return Result(None, 0, decisions, propagations, Status.MAX_ITER)
+
                 restarts += 1
-                conflicts = 0
+                luby_idx += 1
+                next_restart = luby_factor * luby(luby_idx)
+                conflicts_since_restart = 0
                 unassign_to(0)
                 dec_level = 0
+                reduce_db()
 
-            conflict = propagate(dec_level)
+            conflict = propagate()
             continue
 
-        var = decide()
-        if var is None:
-            sol = {v: assignment[v] for v in range(1, n_vars + 1) if v in assignment}
-            return Result(sol, len(sol), decisions, propagations)
+        var = pick_var()
+
+        if var == 0:
+            sol = {v: vals[v] == 1 for v in range(1, n_vars + 1) if vals[v] != UNDEF}
+            all_solutions.append(sol)
+
+            if len(all_solutions) >= solution_limit:
+                if solution_limit == 1:
+                    return Result(sol, len(sol), decisions, propagations)
+                return Result(sol, len(sol), decisions, propagations, solutions=tuple(all_solutions))
+
+            blocking = [(-v if vals[v] == 1 else v) for v in range(1, n_vars + 1) if vals[v] != UNDEF]
+            clause_idx = len(clauses) + len(learned)
+            learned.append(blocking)
+            lbd_scores.append(n_vars)
+
+            if len(blocking) >= 2:
+                add_watch(blocking[0], clause_idx)
+                add_watch(blocking[1], clause_idx)
+            elif len(blocking) == 1:
+                add_watch(blocking[0], clause_idx)
+
+            unassign_to(0)
+            dec_level = 0
+            conflict = propagate()
+            continue
 
         decisions += 1
         dec_level += 1
-        assign(var, True, dec_level)
-        conflict = propagate(dec_level)
+        trail_lim.append(len(trail))
+        assign(var, phase[var], -1)
+        conflict = propagate()
+
+        if conflicts >= max_conflicts:
+            if all_solutions:
+                return Result(
+                    all_solutions[0],
+                    len(all_solutions[0]),
+                    decisions,
+                    propagations,
+                    Status.MAX_ITER,
+                    solutions=tuple(all_solutions),
+                )
+            return Result(None, 0, decisions, propagations, Status.MAX_ITER)
