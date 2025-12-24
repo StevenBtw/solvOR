@@ -4,13 +4,13 @@ Hungarian Algorithm for optimal assignment.
 Got workers and tasks? This finds who does what at minimum total cost. O(n³),
 the go-to for pure assignment problems.
 
-    from solvor.hungarian import hungarian
+    from solvor import solve_hungarian
 
-    result = hungarian(cost_matrix)
-    result = hungarian(cost_matrix, minimize=False)  # maximize
+    result = solve_hungarian(cost_matrix)
+    result = solve_hungarian(cost_matrix, minimize=False)  # maximize
 
              Task A  Task B  Task C
-    Worker 0   10      5      13        hungarian finds: 0→B, 1→A, 2→C
+    Worker 0   10      5      13        solve_hungarian finds: 0→B, 1→A, 2→C
     Worker 1    3      9      18        total cost: 5 + 3 + 12 = 20
     Worker 2   10      6      12
 
@@ -27,10 +27,10 @@ from math import inf
 
 from solvor.types import Result
 
-__all__ = ["hungarian"]
+__all__ = ["solve_hungarian"]
 
 
-def hungarian(
+def solve_hungarian(
     cost_matrix: Sequence[Sequence[float]],
     *,
     minimize: bool = True,
