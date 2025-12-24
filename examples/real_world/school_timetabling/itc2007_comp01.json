@@ -1,0 +1,1006 @@
+{
+  "source": "ITC 2007 Competition - comp01 (Fis0506-1)",
+  "url": "https://github.com/Docheinstein/itc2007-cct",
+  "timeslots": [
+    "MON_8:00",
+    "MON_9:00",
+    "MON_10:00",
+    "MON_11:00",
+    "MON_12:00",
+    "MON_13:00",
+    "TUE_8:00",
+    "TUE_9:00",
+    "TUE_10:00",
+    "TUE_11:00",
+    "TUE_12:00",
+    "TUE_13:00",
+    "WED_8:00",
+    "WED_9:00",
+    "WED_10:00",
+    "WED_11:00",
+    "WED_12:00",
+    "WED_13:00",
+    "THU_8:00",
+    "THU_9:00",
+    "THU_10:00",
+    "THU_11:00",
+    "THU_12:00",
+    "THU_13:00",
+    "FRI_8:00",
+    "FRI_9:00",
+    "FRI_10:00",
+    "FRI_11:00",
+    "FRI_12:00",
+    "FRI_13:00"
+  ],
+  "rooms": [
+    "Room_B",
+    "Room_C",
+    "Room_E",
+    "Room_F",
+    "Room_G",
+    "Room_S"
+  ],
+  "lessons": [
+    {
+      "id": "c0001_L1",
+      "subject": "Statistics",
+      "teacher": "t000",
+      "group": "q000"
+    },
+    {
+      "id": "c0001_L2",
+      "subject": "Statistics",
+      "teacher": "t000",
+      "group": "q000"
+    },
+    {
+      "id": "c0001_L3",
+      "subject": "Statistics",
+      "teacher": "t000",
+      "group": "q000"
+    },
+    {
+      "id": "c0001_L4",
+      "subject": "Statistics",
+      "teacher": "t000",
+      "group": "q000"
+    },
+    {
+      "id": "c0001_L5",
+      "subject": "Statistics",
+      "teacher": "t000",
+      "group": "q000"
+    },
+    {
+      "id": "c0001_L6",
+      "subject": "Statistics",
+      "teacher": "t000",
+      "group": "q000"
+    },
+    {
+      "id": "c0002_L1",
+      "subject": "Logic",
+      "teacher": "t001",
+      "group": "q000"
+    },
+    {
+      "id": "c0002_L2",
+      "subject": "Logic",
+      "teacher": "t001",
+      "group": "q000"
+    },
+    {
+      "id": "c0002_L3",
+      "subject": "Logic",
+      "teacher": "t001",
+      "group": "q000"
+    },
+    {
+      "id": "c0002_L4",
+      "subject": "Logic",
+      "teacher": "t001",
+      "group": "q000"
+    },
+    {
+      "id": "c0002_L5",
+      "subject": "Logic",
+      "teacher": "t001",
+      "group": "q000"
+    },
+    {
+      "id": "c0002_L6",
+      "subject": "Logic",
+      "teacher": "t001",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L1",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L2",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L3",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L4",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L5",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L6",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0004_L7",
+      "subject": "Biology",
+      "teacher": "t002",
+      "group": "q000"
+    },
+    {
+      "id": "c0005_L1",
+      "subject": "Philosophy",
+      "teacher": "t003",
+      "group": "q000"
+    },
+    {
+      "id": "c0005_L2",
+      "subject": "Philosophy",
+      "teacher": "t003",
+      "group": "q000"
+    },
+    {
+      "id": "c0005_L3",
+      "subject": "Philosophy",
+      "teacher": "t003",
+      "group": "q000"
+    },
+    {
+      "id": "c0014_L1",
+      "subject": "Logic",
+      "teacher": "t004",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L1",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L2",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L3",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L4",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L5",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L6",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L7",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0015_L8",
+      "subject": "Philosophy",
+      "teacher": "t005",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L1",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L2",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L3",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L4",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L5",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L6",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0016_L7",
+      "subject": "Logic",
+      "teacher": "t006",
+      "group": "q001"
+    },
+    {
+      "id": "c0017_L1",
+      "subject": "Math",
+      "teacher": "t007",
+      "group": "q001"
+    },
+    {
+      "id": "c0017_L2",
+      "subject": "Math",
+      "teacher": "t007",
+      "group": "q001"
+    },
+    {
+      "id": "c0024_L1",
+      "subject": "Math",
+      "teacher": "t008",
+      "group": "q002"
+    },
+    {
+      "id": "c0024_L2",
+      "subject": "Math",
+      "teacher": "t008",
+      "group": "q002"
+    },
+    {
+      "id": "c0024_L3",
+      "subject": "Math",
+      "teacher": "t008",
+      "group": "q002"
+    },
+    {
+      "id": "c0024_L4",
+      "subject": "Math",
+      "teacher": "t008",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L1",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L2",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L3",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L4",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L5",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L6",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L7",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0025_L8",
+      "subject": "Algebra",
+      "teacher": "t009",
+      "group": "q002"
+    },
+    {
+      "id": "c0078_L1",
+      "subject": "Economics",
+      "teacher": "t010",
+      "group": "q002"
+    },
+    {
+      "id": "c0078_L2",
+      "subject": "Economics",
+      "teacher": "t010",
+      "group": "q002"
+    },
+    {
+      "id": "c0078_L3",
+      "subject": "Economics",
+      "teacher": "t010",
+      "group": "q002"
+    },
+    {
+      "id": "c0078_L4",
+      "subject": "Economics",
+      "teacher": "t010",
+      "group": "q002"
+    },
+    {
+      "id": "c0078_L5",
+      "subject": "Economics",
+      "teacher": "t010",
+      "group": "q002"
+    },
+    {
+      "id": "c0030_L1",
+      "subject": "Music",
+      "teacher": "t011",
+      "group": "q003"
+    },
+    {
+      "id": "c0030_L2",
+      "subject": "Music",
+      "teacher": "t011",
+      "group": "q003"
+    },
+    {
+      "id": "c0030_L3",
+      "subject": "Music",
+      "teacher": "t011",
+      "group": "q003"
+    },
+    {
+      "id": "c0030_L4",
+      "subject": "Music",
+      "teacher": "t011",
+      "group": "q003"
+    },
+    {
+      "id": "c0030_L5",
+      "subject": "Music",
+      "teacher": "t011",
+      "group": "q003"
+    },
+    {
+      "id": "c0031_L1",
+      "subject": "Philosophy",
+      "teacher": "t012",
+      "group": "q004"
+    },
+    {
+      "id": "c0031_L2",
+      "subject": "Philosophy",
+      "teacher": "t012",
+      "group": "q004"
+    },
+    {
+      "id": "c0031_L3",
+      "subject": "Philosophy",
+      "teacher": "t012",
+      "group": "q004"
+    },
+    {
+      "id": "c0031_L4",
+      "subject": "Philosophy",
+      "teacher": "t012",
+      "group": "q004"
+    },
+    {
+      "id": "c0031_L5",
+      "subject": "Philosophy",
+      "teacher": "t012",
+      "group": "q004"
+    },
+    {
+      "id": "c0032_L1",
+      "subject": "Physics",
+      "teacher": "t013",
+      "group": "q003"
+    },
+    {
+      "id": "c0033_L1",
+      "subject": "Economics",
+      "teacher": "t014",
+      "group": "q003"
+    },
+    {
+      "id": "c0033_L2",
+      "subject": "Economics",
+      "teacher": "t014",
+      "group": "q003"
+    },
+    {
+      "id": "c0033_L3",
+      "subject": "Economics",
+      "teacher": "t014",
+      "group": "q003"
+    },
+    {
+      "id": "c0033_L4",
+      "subject": "Economics",
+      "teacher": "t014",
+      "group": "q003"
+    },
+    {
+      "id": "c0033_L5",
+      "subject": "Economics",
+      "teacher": "t014",
+      "group": "q003"
+    },
+    {
+      "id": "c0033_L6",
+      "subject": "Economics",
+      "teacher": "t014",
+      "group": "q003"
+    },
+    {
+      "id": "c0057_L1",
+      "subject": "French",
+      "teacher": "t015",
+      "group": "q006"
+    },
+    {
+      "id": "c0057_L2",
+      "subject": "French",
+      "teacher": "t015",
+      "group": "q006"
+    },
+    {
+      "id": "c0057_L3",
+      "subject": "French",
+      "teacher": "t015",
+      "group": "q006"
+    },
+    {
+      "id": "c0057_L4",
+      "subject": "French",
+      "teacher": "t015",
+      "group": "q006"
+    },
+    {
+      "id": "c0057_L5",
+      "subject": "French",
+      "teacher": "t015",
+      "group": "q006"
+    },
+    {
+      "id": "c0058_L1",
+      "subject": "Computing",
+      "teacher": "t016",
+      "group": "q010"
+    },
+    {
+      "id": "c0058_L2",
+      "subject": "Computing",
+      "teacher": "t016",
+      "group": "q010"
+    },
+    {
+      "id": "c0058_L3",
+      "subject": "Computing",
+      "teacher": "t016",
+      "group": "q010"
+    },
+    {
+      "id": "c0058_L4",
+      "subject": "Computing",
+      "teacher": "t016",
+      "group": "q010"
+    },
+    {
+      "id": "c0058_L5",
+      "subject": "Computing",
+      "teacher": "t016",
+      "group": "q010"
+    },
+    {
+      "id": "c0059_L1",
+      "subject": "Logic",
+      "teacher": "t017",
+      "group": "q006"
+    },
+    {
+      "id": "c0059_L2",
+      "subject": "Logic",
+      "teacher": "t017",
+      "group": "q006"
+    },
+    {
+      "id": "c0059_L3",
+      "subject": "Logic",
+      "teacher": "t017",
+      "group": "q006"
+    },
+    {
+      "id": "c0059_L4",
+      "subject": "Logic",
+      "teacher": "t017",
+      "group": "q006"
+    },
+    {
+      "id": "c0059_L5",
+      "subject": "Logic",
+      "teacher": "t017",
+      "group": "q006"
+    },
+    {
+      "id": "c0059_L6",
+      "subject": "Logic",
+      "teacher": "t017",
+      "group": "q006"
+    },
+    {
+      "id": "c0061_L1",
+      "subject": "PE",
+      "teacher": "t018",
+      "group": "q007"
+    },
+    {
+      "id": "c0061_L2",
+      "subject": "PE",
+      "teacher": "t018",
+      "group": "q007"
+    },
+    {
+      "id": "c0061_L3",
+      "subject": "PE",
+      "teacher": "t018",
+      "group": "q007"
+    },
+    {
+      "id": "c0061_L4",
+      "subject": "PE",
+      "teacher": "t018",
+      "group": "q007"
+    },
+    {
+      "id": "c0061_L5",
+      "subject": "PE",
+      "teacher": "t018",
+      "group": "q007"
+    },
+    {
+      "id": "c0061_L6",
+      "subject": "PE",
+      "teacher": "t018",
+      "group": "q007"
+    },
+    {
+      "id": "c0062_L1",
+      "subject": "PE",
+      "teacher": "t019",
+      "group": "q007"
+    },
+    {
+      "id": "c0062_L2",
+      "subject": "PE",
+      "teacher": "t019",
+      "group": "q007"
+    },
+    {
+      "id": "c0062_L3",
+      "subject": "PE",
+      "teacher": "t019",
+      "group": "q007"
+    },
+    {
+      "id": "c0062_L4",
+      "subject": "PE",
+      "teacher": "t019",
+      "group": "q007"
+    },
+    {
+      "id": "c0062_L5",
+      "subject": "PE",
+      "teacher": "t019",
+      "group": "q007"
+    },
+    {
+      "id": "c0063_L1",
+      "subject": "Physics",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0063_L2",
+      "subject": "Physics",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0063_L3",
+      "subject": "Physics",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0063_L4",
+      "subject": "Physics",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0063_L5",
+      "subject": "Physics",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0063_L6",
+      "subject": "Physics",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0064_L1",
+      "subject": "Calculus",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0064_L2",
+      "subject": "Calculus",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0064_L3",
+      "subject": "Calculus",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0064_L4",
+      "subject": "Calculus",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0064_L5",
+      "subject": "Calculus",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0064_L6",
+      "subject": "Calculus",
+      "teacher": "t020",
+      "group": "q009"
+    },
+    {
+      "id": "c0065_L1",
+      "subject": "Calculus",
+      "teacher": "t021",
+      "group": "q008"
+    },
+    {
+      "id": "c0065_L2",
+      "subject": "Calculus",
+      "teacher": "t021",
+      "group": "q008"
+    },
+    {
+      "id": "c0065_L3",
+      "subject": "Calculus",
+      "teacher": "t021",
+      "group": "q008"
+    },
+    {
+      "id": "c0065_L4",
+      "subject": "Calculus",
+      "teacher": "t021",
+      "group": "q008"
+    },
+    {
+      "id": "c0065_L5",
+      "subject": "Calculus",
+      "teacher": "t021",
+      "group": "q008"
+    },
+    {
+      "id": "c0065_L6",
+      "subject": "Calculus",
+      "teacher": "t021",
+      "group": "q008"
+    },
+    {
+      "id": "c0066_L1",
+      "subject": "History",
+      "teacher": "t008",
+      "group": "q005"
+    },
+    {
+      "id": "c0066_L2",
+      "subject": "History",
+      "teacher": "t008",
+      "group": "q005"
+    },
+    {
+      "id": "c0066_L3",
+      "subject": "History",
+      "teacher": "t008",
+      "group": "q005"
+    },
+    {
+      "id": "c0066_L4",
+      "subject": "History",
+      "teacher": "t008",
+      "group": "q005"
+    },
+    {
+      "id": "c0066_L5",
+      "subject": "History",
+      "teacher": "t008",
+      "group": "q005"
+    },
+    {
+      "id": "c0066_L6",
+      "subject": "History",
+      "teacher": "t008",
+      "group": "q005"
+    },
+    {
+      "id": "c0067_L1",
+      "subject": "Chemistry",
+      "teacher": "t022",
+      "group": "q011"
+    },
+    {
+      "id": "c0067_L2",
+      "subject": "Chemistry",
+      "teacher": "t022",
+      "group": "q011"
+    },
+    {
+      "id": "c0067_L3",
+      "subject": "Chemistry",
+      "teacher": "t022",
+      "group": "q011"
+    },
+    {
+      "id": "c0067_L4",
+      "subject": "Chemistry",
+      "teacher": "t022",
+      "group": "q011"
+    },
+    {
+      "id": "c0067_L5",
+      "subject": "Chemistry",
+      "teacher": "t022",
+      "group": "q011"
+    },
+    {
+      "id": "c0068_L1",
+      "subject": "French",
+      "teacher": "t023",
+      "group": "q010"
+    },
+    {
+      "id": "c0068_L2",
+      "subject": "French",
+      "teacher": "t023",
+      "group": "q010"
+    },
+    {
+      "id": "c0068_L3",
+      "subject": "French",
+      "teacher": "t023",
+      "group": "q010"
+    },
+    {
+      "id": "c0068_L4",
+      "subject": "French",
+      "teacher": "t023",
+      "group": "q010"
+    },
+    {
+      "id": "c0068_L5",
+      "subject": "French",
+      "teacher": "t023",
+      "group": "q010"
+    },
+    {
+      "id": "c0068_L6",
+      "subject": "French",
+      "teacher": "t023",
+      "group": "q010"
+    },
+    {
+      "id": "c0069_L1",
+      "subject": "French",
+      "teacher": "t007",
+      "group": "q011"
+    },
+    {
+      "id": "c0069_L2",
+      "subject": "French",
+      "teacher": "t007",
+      "group": "q011"
+    },
+    {
+      "id": "c0069_L3",
+      "subject": "French",
+      "teacher": "t007",
+      "group": "q011"
+    },
+    {
+      "id": "c0069_L4",
+      "subject": "French",
+      "teacher": "t007",
+      "group": "q011"
+    },
+    {
+      "id": "c0069_L5",
+      "subject": "French",
+      "teacher": "t007",
+      "group": "q011"
+    },
+    {
+      "id": "c0069_L6",
+      "subject": "French",
+      "teacher": "t007",
+      "group": "q011"
+    },
+    {
+      "id": "c0070_L1",
+      "subject": "Geography",
+      "teacher": "t002",
+      "group": "q005"
+    },
+    {
+      "id": "c0070_L2",
+      "subject": "Geography",
+      "teacher": "t002",
+      "group": "q005"
+    },
+    {
+      "id": "c0070_L3",
+      "subject": "Geography",
+      "teacher": "t002",
+      "group": "q005"
+    },
+    {
+      "id": "c0070_L4",
+      "subject": "Geography",
+      "teacher": "t002",
+      "group": "q005"
+    },
+    {
+      "id": "c0070_L5",
+      "subject": "Geography",
+      "teacher": "t002",
+      "group": "q005"
+    },
+    {
+      "id": "c0070_L6",
+      "subject": "Geography",
+      "teacher": "t002",
+      "group": "q005"
+    },
+    {
+      "id": "c0071_L1",
+      "subject": "Statistics",
+      "teacher": "t001",
+      "group": "q009"
+    },
+    {
+      "id": "c0071_L2",
+      "subject": "Statistics",
+      "teacher": "t001",
+      "group": "q009"
+    },
+    {
+      "id": "c0071_L3",
+      "subject": "Statistics",
+      "teacher": "t001",
+      "group": "q009"
+    },
+    {
+      "id": "c0071_L4",
+      "subject": "Statistics",
+      "teacher": "t001",
+      "group": "q009"
+    },
+    {
+      "id": "c0071_L5",
+      "subject": "Statistics",
+      "teacher": "t001",
+      "group": "q009"
+    },
+    {
+      "id": "c0071_L6",
+      "subject": "Statistics",
+      "teacher": "t001",
+      "group": "q009"
+    },
+    {
+      "id": "c0072_L1",
+      "subject": "Music",
+      "teacher": "t003",
+      "group": "q005"
+    },
+    {
+      "id": "c0072_L2",
+      "subject": "Music",
+      "teacher": "t003",
+      "group": "q005"
+    },
+    {
+      "id": "c0072_L3",
+      "subject": "Music",
+      "teacher": "t003",
+      "group": "q005"
+    },
+    {
+      "id": "c0072_L4",
+      "subject": "Music",
+      "teacher": "t003",
+      "group": "q005"
+    },
+    {
+      "id": "c0072_L5",
+      "subject": "Music",
+      "teacher": "t003",
+      "group": "q005"
+    },
+    {
+      "id": "c0072_L6",
+      "subject": "Music",
+      "teacher": "t003",
+      "group": "q005"
+    }
+  ]
+}

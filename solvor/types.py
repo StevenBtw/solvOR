@@ -26,6 +26,7 @@ class Result:
     evaluations: int = 0
     status: Status = Status.OPTIMAL
     error: str | None = None
+    solutions: tuple | None = None
 
     @property
     def ok(self) -> bool:
