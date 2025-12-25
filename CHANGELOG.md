@@ -20,7 +20,7 @@ Santa's been busy, a lot more solvors, focussing on more real world problems, go
 - `vrp` vehicle routing problem
 - `lns` large neighborhood search
 - `differential_evolution` evolution strategy for continuous optimization
-- `particle_swarm` swarm intelligence (just peer pressure for algorithms), also includes "velocity clamping" so particles don't yeet into infinity, which the textbook examples aparently do
+- `particle_swarm` swarm intelligence (just peer pressure for algorithms), also includes "velocity clamping" so particles don't yeet into infinity, which the textbook examples apparently do
 - `knapsack` the classic packing problem
 - `bin_pack` fit items into bins
 
