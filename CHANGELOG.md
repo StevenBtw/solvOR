@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.7] - 2025-12-25
 
-Added a changelog (this file), a whole lot of solvors and some great optimizations.
-This should have been a 0.5.0 release maybe.
+Added a changelog (this file), a whole lot of solvors and some much needed optimizations, working on some more examples, but they need a bit more work still. 
+This could have been a 0.5.0 release, if it wasn't for the examples, readme and wiki. Will probably add the examples in the next release, then 0.5.0 with extra tests and more polish (readme/wiki/etc.).
 
 ### Added
 
@@ -50,11 +50,11 @@ Gradient-free optimizers join the party.
 ### Added
 
 - **Quasi-Newton Methods:**
-  - `bfgs` - BFGS with optional line search and progress callbacks
-  - `lbfgs` - L-BFGS for when memory matters
+  - `bfgs` BFGS with optional line search and progress callbacks
+  - `lbfgs` L-BFGS for when memory matters
 - **Derivative-Free Optimization:**
-  - `nelder_mead` - simplex method with adaptive parameters
-  - `powell` - conjugate direction method with optional bounds
+  - `nelder_mead` simplex method with adaptive parameters
+  - `powell` conjugate direction method with optional bounds
 
 ### Changed
 
@@ -130,16 +130,16 @@ Graph algorithms join the party.
 Some extracted logic from old AoC solutions:
 
 - **Pathfinding:**
-  - `astar`, `astar_grid` - A* for graphs and grids
-  - `bfs`, `dfs` - the classics
-  - `dijkstra` - shortest paths
-  - `bellman_ford` - when edges go negative
-  - `floyd_warshall` - all pairs, all the time
+  - `astar`, `astar_grid` A* for graphs and grids
+  - `bfs`, `dfs` the classics
+  - `dijkstra` shortest paths
+  - `bellman_ford` when edges go negative
+  - `floyd_warshall` all pairs, all the time
 - **Minimum Spanning Tree:**
-  - `kruskal`, `prim` - two ways to connect everything cheaply
+  - `kruskal`, `prim` two ways to connect everything cheaply
 - **Assignment & Flow:**
-  - `hungarian` - optimal assignment in polynomial time
-  - `network_simplex` - min cost flow done right
+  - `hungarian` optimal assignment in polynomial time
+  - `network_simplex` min cost flow done right
 
 ## [0.3.5] - 2025-12-19
 
@@ -185,27 +185,27 @@ Some extracted logic from old AoC solutions:
 
 ## [0.3.0] - 2025-12-18
 
-First public release. Moved my solver collection from "random scripts folder" to "actual package".
+First public release. Moved my solver collection from "random scripts folder(s)" to "actual package".
 
 ### Added
 
 - **Linear Programming:**
-  - `solve_lp` - simplex method
-  - `solve_milp` - mixed-integer LP
+  - `solve_lp` simplex method
+  - `solve_milp` mixed-integer LP
 - **Constraint Satisfaction:**
-  - `solve_sat` - SAT solver
-  - `solve_assignment` - assignment problems
-  - `solve_tsp` - traveling salesman
+  - `solve_sat` SAT solver
+  - `solve_assignment` assignment problems
+  - `solve_tsp` traveling salesman
 - **Metaheuristics:**
-  - `anneal` - simulated annealing
-  - `tabu_search` - tabu search
-  - `evolve` - genetic algorithm
+  - `anneal` simulated annealing
+  - `tabu_search` tabu search
+  - `evolve` genetic algorithm
 - **Continuous Optimization:**
-  - `gradient_descent`, `momentum`, `rmsprop`, `adam` - gradient-based optimizers
-  - `bayesian_opt` - when you can't compute gradients
+  - `gradient_descent`, `momentum`, `rmsprop`, `adam` gradient-based optimizers
+  - `bayesian_opt` when you can't compute gradients
 - **Network Flow:**
-  - `max_flow` - Ford-Fulkerson
-  - `min_cost_flow` - minimum cost flow
+  - `max_flow` Ford-Fulkerson
+  - `min_cost_flow` minimum cost flow
 - `Result` dataclass with `.ok` property and `Status` enum
 - Pure Python, no dependencies, works everywhere
 
