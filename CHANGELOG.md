@@ -162,7 +162,7 @@ Some extracted logic from old AoC solutions:
 
 ### Added
 
-- `solve_exact_cover` - Algorithm X (DLX) implementation
+- `solve_exact_cover`, Knuths algorithm X (DLX) implementation
 - Actual docstrings for public APIs
 
 ### Changed
@@ -174,7 +174,7 @@ Some extracted logic from old AoC solutions:
 
 ### Changed
 
-- Flattened project structure - `from solvor import solve_lp` just works now
+- Flattened project structure, `from solvor import solve_lp` just works now
 - CI updated to match
 
 ## [0.3.1] - 2025-12-18
