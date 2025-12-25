@@ -39,6 +39,14 @@ Example: tiling a 2x3 board with 3 dominoes:
 
     result = solve_exact_cover(matrix, find_all=True)
     # result.solution = [(0, 3, 6), (1, 2, 4), ...] all valid tilings
+
+Secondary columns (optional constraints):
+    Use the `secondary` parameter for constraints that can be satisfied at most
+    once, but don't need to be satisfied. Useful for N-Queens diagonal constraints
+    or puzzle variants where some conditions are optional.
+
+    result = solve_exact_cover(matrix, columns=['A','B','C'], secondary=['C'])
+    # Column 'C' is optional - solutions don't need to cover it
 """
 
 from collections.abc import Sequence
@@ -86,24 +94,39 @@ class _Column:
         self.down = self
 
 
-def _build_links(matrix, columns=None):
+def _build_links(matrix, columns=None, secondary=None):
     if not matrix or not matrix[0]:
-        return None, []
+        return None, [], None
 
     n_cols = len(matrix[0])
     col_names = columns if columns else list(range(n_cols))
+    secondary_set = set(secondary) if secondary else set()
     root = _Node()
+    secondary_root = _Node()  # Separate root for secondary columns
     col_headers = []
 
+    # Link primary columns to main root
     prev = root
-    for name in col_names:
+    for idx, name in enumerate(col_names):
         col = _Column(name)
         col_headers.append(col)
-        col.left = prev
-        prev.right = col
-        prev = col
+        if name not in secondary_set:
+            col.left = prev
+            prev.right = col
+            prev = col
     prev.right = root
     root.left = prev
+
+    # Link secondary columns to secondary root (not searched, but covered when used)
+    prev_sec = secondary_root
+    for idx, name in enumerate(col_names):
+        col = col_headers[idx]
+        if name in secondary_set:
+            col.left = prev_sec
+            prev_sec.right = col
+            prev_sec = col
+    prev_sec.right = secondary_root
+    secondary_root.left = prev_sec
 
     for row_idx, row in enumerate(matrix):
         first = None
@@ -132,7 +155,7 @@ def _build_links(matrix, columns=None):
             first.left = prev_node
             prev_node.right = first
 
-    return root, col_headers
+    return root, col_headers, secondary_set
 
 
 def _cover(col):
@@ -169,14 +192,31 @@ def solve_exact_cover(
     matrix: Sequence[Sequence[int]],
     *,
     columns: Sequence | None = None,
+    secondary: Sequence | None = None,
     find_all: bool = False,
     max_solutions: int | None = None,
     max_iter: int = 10_000_000,
 ) -> Result:
+    """
+    Solve exact cover using Dancing Links (Algorithm X).
+
+    Args:
+        matrix: Binary matrix where 1s indicate which constraints each row covers
+        columns: Optional names for columns (default: 0, 1, 2, ...)
+        secondary: Column names that are optional (can be covered at most once,
+                   but don't need to be covered). Useful for puzzles where some
+                   constraints are "nice to have" rather than required.
+        find_all: If True, find all solutions
+        max_solutions: Stop after finding this many solutions
+        max_iter: Maximum search iterations
+
+    Returns:
+        Result with solution (tuple of row indices) or list of solutions if find_all
+    """
     if not matrix:
         return Result((), 0, 0, 0)
 
-    root, col_headers = _build_links(matrix, columns)
+    root, _, _ = _build_links(matrix, columns, secondary)
     if root is None:
         return Result((), 0, 0, 0)
 

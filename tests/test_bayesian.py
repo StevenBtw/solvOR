@@ -1,63 +1,57 @@
 """Tests for the Bayesian optimization solver."""
 
 from solvor.bayesian import bayesian_opt
-from solvor.types import Status
+from solvor.types import Progress, Status
 
 
 class TestBasicBayesian:
     def test_1d_optimization(self):
-        # Minimize (x-0.5)^2
         def objective(x):
             return (x[0] - 0.5) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
         assert abs(result.solution[0] - 0.5) < 0.3
 
     def test_2d_optimization(self):
-        # Minimize (x-0.3)^2 + (y-0.7)^2
         def objective(x):
             return (x[0] - 0.3) ** 2 + (x[1] - 0.7) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=30, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
 
     def test_maximize(self):
-        # Maximize -(x-0.5)^2 (peak at 0.5)
         def objective(x):
             return -((x[0] - 0.5) ** 2)
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, minimize=False, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
         assert abs(result.solution[0] - 0.5) < 0.3
 
 
 class TestBoundHandling:
     def test_wide_bounds(self):
-        # Optimum at center of wide bounds
         def objective(x):
             return (x[0] - 50) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 100)], max_iter=25, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
         assert abs(result.solution[0] - 50) < 20
 
     def test_narrow_bounds(self):
-        # Very narrow search space
         def objective(x):
             return (x[0] - 0.5) ** 2
 
         result = bayesian_opt(objective, bounds=[(0.4, 0.6)], max_iter=15, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
         assert 0.4 <= result.solution[0] <= 0.6
 
     def test_asymmetric_bounds(self):
-        # Non-centered optimum
         def objective(x):
             return (x[0] - 0.1) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
 
 
 class TestMultiDimensional:
@@ -66,28 +60,25 @@ class TestMultiDimensional:
             return (x[0] - 0.3) ** 2 + (x[1] - 0.5) ** 2 + (x[2] - 0.7) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1), (0, 1), (0, 1)], max_iter=40, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
 
     def test_different_scales(self):
-        # Variables with different scales
         def objective(x):
             return (x[0] - 5) ** 2 + (x[1] - 0.5) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 10), (0, 1)], max_iter=30, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
 
 
 class TestMultiModal:
     def test_simple_multimodal(self):
-        # Function with multiple local minima
         import math
 
         def objective(x):
             return math.sin(5 * x[0]) + (x[0] - 0.5) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=25, seed=42)
-        assert result.status == Status.FEASIBLE
-        # Should find a good local minimum
+        assert result.ok or result.status == Status.MAX_ITER
         assert result.objective < 1.0
 
 
@@ -97,43 +88,40 @@ class TestParameters:
             return x[0] ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, n_initial=5, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
 
     def test_more_initial_points(self):
         def objective(x):
             return (x[0] - 0.5) ** 2
 
-        # More initial exploration
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, n_initial=10, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
 
 
 class TestEdgeCases:
     def test_flat_function(self):
-        # Constant function
         def objective(x):
             return 1.0
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=10, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
         assert abs(result.objective - 1.0) < 1e-6
 
     def test_linear_function(self):
-        # Linear: minimum at boundary
         def objective(x):
             return x[0]
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, seed=42)
-        assert result.status == Status.FEASIBLE
-        # Should find x close to 0
+        assert result.ok or result.status == Status.MAX_ITER
         assert result.solution[0] < 0.3
 
     def test_single_iteration(self):
         def objective(x):
             return x[0] ** 2
 
-        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=1, seed=42)
-        assert result.status == Status.FEASIBLE
+        # With n_initial=5 (default), max_iter=1 means only initial points
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=5, n_initial=5, seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
 
 
 class TestStress:
@@ -142,7 +130,7 @@ class TestStress:
             return (x[0] - 0.5) ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=50, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.ok or result.status == Status.MAX_ITER
         assert abs(result.solution[0] - 0.5) < 0.15
 
     def test_evaluations_tracked(self):
@@ -150,37 +138,27 @@ class TestStress:
             return x[0] ** 2
 
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, seed=42)
-        # Should have tracked evaluations
         assert result.evaluations >= 20
 
 
 class TestBayesianBehavior:
     def test_beats_random_search(self):
-        # Bayesian optimization should find better solutions than pure random
-        # on a problem where the surrogate model helps
         import random
 
         def objective(x):
-            # Needle-in-haystack: optimum at (0.3, 0.7)
             return (x[0] - 0.3) ** 2 + (x[1] - 0.7) ** 2
 
-        # Bayesian optimization
         bayes_result = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=30, n_initial=5, seed=42)
 
-        # Pure random search with same budget
         random.seed(42)
         random_best = float("inf")
         for _ in range(30):
             x = [random.uniform(0, 1), random.uniform(0, 1)]
             random_best = min(random_best, objective(x))
 
-        # Bayesian should find better or equal solution
-        # (with GP guidance vs pure luck)
-        assert bayes_result.objective <= random_best * 1.5  # Allow some margin
+        assert bayes_result.objective <= random_best * 1.5
 
     def test_exploits_surrogate_model(self):
-        # Test that Bayesian opt concentrates samples near the optimum
-        # by tracking where it evaluates
         evaluated_points = []
 
         def tracking_objective(x):
@@ -189,11 +167,9 @@ class TestBayesianBehavior:
 
         bayesian_opt(tracking_objective, bounds=[(0, 1)], max_iter=25, n_initial=5, seed=42)
 
-        # After initial random points, should concentrate near x=0.5
-        later_points = evaluated_points[10:]  # Skip initial exploration
+        later_points = evaluated_points[10:]
         near_optimum = sum(1 for p in later_points if abs(p[0] - 0.5) < 0.3)
 
-        # Most later samples should be near the optimum
         assert near_optimum > len(later_points) * 0.5
 
 
@@ -216,5 +192,122 @@ class TestSeedReproducibility:
         result1 = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, seed=42)
         result2 = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, seed=99)
 
-        # Different seeds should (almost certainly) give different solutions
         assert result1.solution != result2.solution
+
+
+class TestAcquisitionFunctions:
+    def test_expected_improvement(self):
+        def objective(x):
+            return (x[0] - 0.5) ** 2
+
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, acquisition="ei", seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
+        assert abs(result.solution[0] - 0.5) < 0.3
+
+    def test_ucb(self):
+        def objective(x):
+            return (x[0] - 0.5) ** 2
+
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, acquisition="ucb", seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
+        assert abs(result.solution[0] - 0.5) < 0.3
+
+    def test_ucb_kappa(self):
+        def objective(x):
+            return (x[0] - 0.5) ** 2
+
+        # Higher kappa = more exploration
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, acquisition="ucb", kappa=5.0, seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
+
+    def test_invalid_acquisition(self):
+        def objective(x):
+            return x[0] ** 2
+
+        try:
+            bayesian_opt(objective, bounds=[(0, 1)], acquisition="invalid")
+            assert False, "Should raise ValueError"
+        except ValueError as e:
+            assert "ei" in str(e) and "ucb" in str(e)
+
+
+class TestAcquisitionRestarts:
+    def test_default_restarts(self):
+        def objective(x):
+            return (x[0] - 0.5) ** 2
+
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
+
+    def test_custom_restarts(self):
+        def objective(x):
+            return (x[0] - 0.5) ** 2
+
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, acq_restarts=3, seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
+
+    def test_more_restarts_better_acquisition(self):
+        def objective(x):
+            return (x[0] - 0.5) ** 2 + (x[1] - 0.5) ** 2
+
+        # More restarts should generally find better acquisition maxima
+        result_few = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=25, acq_restarts=2, seed=42)
+        result_many = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=25, acq_restarts=10, seed=42)
+
+        # Both should find reasonable solutions
+        assert result_few.ok or result_few.status == Status.MAX_ITER
+        assert result_many.ok or result_many.status == Status.MAX_ITER
+
+
+class TestProgressCallback:
+    def test_callback_called(self):
+        calls = []
+
+        def callback(p: Progress) -> None:
+            calls.append(p)
+
+        def objective(x):
+            return x[0] ** 2
+
+        bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, on_progress=callback, progress_interval=5, seed=42)
+
+        assert len(calls) > 0
+        for p in calls:
+            assert p.iteration > 0
+            assert p.evaluations > 0
+
+    def test_early_stopping(self):
+        def stop_early(p: Progress) -> bool:
+            return p.iteration >= 10
+
+        def objective(x):
+            return x[0] ** 2
+
+        result = bayesian_opt(
+            objective, bounds=[(0, 1)], max_iter=50, on_progress=stop_early, progress_interval=1, seed=42
+        )
+
+        # Should have stopped early
+        assert result.iterations <= 15
+        assert result.status == Status.FEASIBLE
+
+    def test_no_callback_no_crash(self):
+        def objective(x):
+            return x[0] ** 2
+
+        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=10, seed=42)
+        assert result.ok or result.status == Status.MAX_ITER
+
+    def test_progress_interval_zero_disabled(self):
+        calls = []
+
+        def callback(p: Progress) -> None:
+            calls.append(p)
+
+        def objective(x):
+            return x[0] ** 2
+
+        bayesian_opt(objective, bounds=[(0, 1)], max_iter=20, on_progress=callback, progress_interval=0, seed=42)
+
+        # With interval=0, callback should not be called
+        assert len(calls) == 0

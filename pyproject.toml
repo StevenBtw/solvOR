@@ -1,6 +1,6 @@
 [project]
 name = "solvOR"
-version = "0.4.6"
+version = "0.4.7"
 description = "Solvor all your optimization needs."
 readme = "README.md"
 requires-python = ">=3.12"
