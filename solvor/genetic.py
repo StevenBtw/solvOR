@@ -51,12 +51,20 @@ def evolve[T](
     minimize: bool = True,
     elite_size: int = 2,
     mutation_rate: float = 0.1,
+    adaptive_mutation: bool = False,
     max_gen: int = 100,
     tournament_k: int = 3,
     seed: int | None = None,
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
+    """
+    Genetic algorithm with optional adaptive mutation.
+
+    Args:
+        adaptive_mutation: If True, increase mutation rate when population
+            diversity is low (stagnation), decrease when improving.
+    """
     rng = Random(seed)
     sign = 1 if minimize else -1
     pop_size = len(population)
@@ -69,11 +77,15 @@ def evolve[T](
 
     pop = [Individual(sol, evaluate(sol)) for sol in population]
     pop.sort(key=attrgetter("fitness"))
-    best = pop[0]
+    best_solution = pop[0].solution
+    best_fitness = pop[0].fitness
 
     def tournament():
         contestants = rng.sample(pop, min(tournament_k, len(pop)))
         return min(contestants, key=attrgetter("fitness"))
+
+    current_mutation_rate = mutation_rate
+    stagnation_count = 0
 
     for gen in range(max_gen):
         new_pop = pop[:elite_size]
@@ -83,7 +95,7 @@ def evolve[T](
             p2 = tournament()
             child_sol = crossover(p1.solution, p2.solution)
 
-            if rng.random() < mutation_rate:
+            if rng.random() < current_mutation_rate:
                 child_sol = mutate(child_sol)
 
             child = Individual(child_sol, evaluate(child_sol))
@@ -91,15 +103,27 @@ def evolve[T](
 
         pop = sorted(new_pop, key=attrgetter("fitness"))[:pop_size]
 
-        if pop[0].fitness < best.fitness:
-            best = pop[0]
+        improved = False
+        if pop[0].fitness < best_fitness:
+            best_solution = pop[0].solution
+            best_fitness = pop[0].fitness
+            improved = True
+
+        if adaptive_mutation:
+            if improved:
+                stagnation_count = 0
+                current_mutation_rate = max(0.01, current_mutation_rate * 0.95)
+            else:
+                stagnation_count += 1
+                if stagnation_count >= 5:
+                    current_mutation_rate = min(0.5, current_mutation_rate * 1.2)
 
         if on_progress and progress_interval > 0 and (gen + 1) % progress_interval == 0:
             current_obj = pop[0].fitness * sign
-            best_so_far = best.fitness * sign
+            best_so_far = best_fitness * sign
             progress = Progress(gen + 1, current_obj, best_so_far if best_so_far != current_obj else None, evals)
             if on_progress(progress) is True:
-                return Result(best.solution, best_so_far, gen + 1, evals, Status.FEASIBLE)
+                return Result(best_solution, best_so_far, gen + 1, evals, Status.FEASIBLE)
 
-    final_obj = best.fitness * sign
-    return Result(best.solution, final_obj, max_gen, evals, Status.FEASIBLE)
+    final_obj = best_fitness * sign
+    return Result(best_solution, final_obj, max_gen, evals, Status.FEASIBLE)
