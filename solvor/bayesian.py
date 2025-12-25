@@ -14,6 +14,7 @@ or discrete/categorical parameters without encoding tricks.
 
     result = bayesian_opt(objective_fn, bounds=[(0, 1), (-5, 5)])
     result = bayesian_opt(objective_fn, bounds, minimize=False)  # maximize
+    result = bayesian_opt(objective_fn, bounds, acquisition="ucb", kappa=2.5)  # UCB
 
 If you're doing serious ML hyperparameter tuning, consider scikit-optimize or
 Optuna, they handle the edge cases and integrations this implementation doesn't.
@@ -23,7 +24,8 @@ from collections.abc import Callable, Sequence
 from math import erf, exp, pi, sqrt
 from random import Random
 
-from solvor.types import Result, Status
+from solvor.nelder_mead import nelder_mead
+from solvor.types import Progress, ProgressCallback, Result, Status
 
 __all__ = ["bayesian_opt"]
 
@@ -35,11 +37,37 @@ def bayesian_opt(
     minimize: bool = True,
     max_iter: int = 50,
     n_initial: int = 5,
+    acquisition: str = "ei",
+    kappa: float = 2.0,
+    acq_restarts: int = 6,
     seed: int | None = None,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
 ) -> Result:
+    """
+    Bayesian optimization using Gaussian Process surrogate.
+
+    Args:
+        objective_fn: Function to optimize
+        bounds: List of (lower, upper) bounds for each dimension
+        minimize: If True minimize, else maximize
+        max_iter: Total evaluations including initial points
+        n_initial: Number of random initial points
+        acquisition: Acquisition function - "ei" (Expected Improvement) or "ucb"
+        kappa: UCB exploration parameter (only used if acquisition="ucb")
+        acq_restarts: Number of random restarts for acquisition optimization
+        seed: Random seed for reproducibility
+        on_progress: Optional progress callback
+        progress_interval: How often to call progress callback
+
+    Returns:
+        Result with best solution found
+    """
+    if acquisition not in ("ei", "ucb"):
+        raise ValueError(f"acquisition must be 'ei' or 'ucb', got '{acquisition}'")
+
     rng = Random(seed)
     sign = 1 if minimize else -1
-    n_dims = len(bounds)
     evals = 0
 
     def evaluate(x):
@@ -50,11 +78,15 @@ def bayesian_opt(
     def random_point():
         return [rng.uniform(lo, hi) for lo, hi in bounds]
 
+    def clip_to_bounds(x):
+        return [max(lo, min(hi, xi)) for xi, (lo, hi) in zip(x, bounds)]
+
+    # Initial random samples
     xs = [random_point() for _ in range(n_initial)]
     ys = [evaluate(x) for x in xs]
 
     best_idx = min(range(len(ys)), key=lambda i: ys[i])
-    best_x, best_y = xs[best_idx], ys[best_idx]
+    best_solution, best_obj = xs[best_idx][:], ys[best_idx]
 
     length_scales = [(hi - lo) / 2 for lo, hi in bounds]
 
@@ -62,25 +94,28 @@ def bayesian_opt(
         sq_dist = sum(((a - b) / ls) ** 2 for a, b, ls in zip(x1, x2, length_scales))
         return exp(-0.5 * sq_dist)
 
-    def gp_predict(x_new, X, Y, noise=1e-6):
+    def gp_predict(x_new, X, Y, L, noise=1e-6):
         n = len(X)
         if n == 0:
             return 0.0, 1.0
 
-        kernel_matrix = [[kernel(X[i], X[j]) + (noise if i == j else 0) for j in range(n)] for i in range(n)]
         cross_kernel = [kernel(x_new, X[i]) for i in range(n)]
 
-        mean_weights = _solve_linear(kernel_matrix, Y)
-        var_weights = _solve_linear(kernel_matrix, cross_kernel)
+        # Solve L @ alpha = y, then L.T @ mean_weights = alpha
+        alpha = _forward_solve(L, Y)
+        mean_weights = _backward_solve(L, alpha)
+
+        # Solve L @ v = cross_kernel
+        v = _forward_solve(L, cross_kernel)
 
         mu = sum(cross_kernel[i] * mean_weights[i] for i in range(n))
-        var = kernel(x_new, x_new) - sum(cross_kernel[i] * var_weights[i] for i in range(n))
+        var = kernel(x_new, x_new) - sum(v[i] * v[i] for i in range(n))
         var = max(var, 1e-10)
 
         return mu, sqrt(var)
 
-    def expected_improvement(x, X, Y, best_y, xi=0.01):
-        mu, sigma = gp_predict(x, X, Y)
+    def expected_improvement(x, X, Y, L, best_y, xi=0.01):
+        mu, sigma = gp_predict(x, X, Y, L)
         if sigma < 1e-10:
             return 0.0
 
@@ -88,51 +123,121 @@ def bayesian_opt(
         ei = (best_y - mu - xi) * _norm_cdf(z) + sigma * _norm_pdf(z)
         return ei
 
-    for iteration in range(n_initial, max_iter):
-        best_ei, best_candidate = -float("inf"), None
+    def ucb(x, X, Y, L, kappa_val):
+        mu, sigma = gp_predict(x, X, Y, L)
+        # For minimization, we want low mu and high uncertainty
+        # UCB = -mu + kappa * sigma (we maximize this)
+        return -mu + kappa_val * sigma
 
-        for _ in range(100 * n_dims):
-            candidate = random_point()
-            ei = expected_improvement(candidate, xs, ys, best_y)
-            if ei > best_ei:
-                best_ei, best_candidate = ei, candidate
+    def optimize_acquisition(X, Y, L, best_y):
+        """Find point that maximizes acquisition using multi-start Nelder-Mead."""
+        best_acq = -float("inf")
+        best_candidate = None
 
+        if acquisition == "ei":
+
+            def neg_acq(x):
+                return -expected_improvement(x, X, Y, L, best_y)
+        else:
+
+            def neg_acq(x):
+                return -ucb(x, X, Y, L, kappa)
+
+        for _ in range(acq_restarts):
+            x0 = random_point()
+            result = nelder_mead(neg_acq, x0, max_iter=50, tol=1e-4)
+
+            if result.ok:
+                candidate = clip_to_bounds(result.solution)
+                acq_val = -neg_acq(candidate)
+                if acq_val > best_acq:
+                    best_acq = acq_val
+                    best_candidate = candidate
+
+        # Fallback to random if optimization failed
         if best_candidate is None:
             best_candidate = random_point()
 
-        y_new = evaluate(best_candidate)
-        xs.append(best_candidate)
+        return best_candidate
+
+    iteration = n_initial
+    for iteration in range(n_initial, max_iter):
+        # Build kernel matrix and compute Cholesky
+        n = len(xs)
+        noise = 1e-6
+        K = [[kernel(xs[i], xs[j]) + (noise if i == j else 0) for j in range(n)] for i in range(n)]
+        L = _cholesky(K)
+
+        if L is None:
+            # Cholesky failed, fall back to random sampling
+            top_candidate = random_point()
+        else:
+            top_candidate = optimize_acquisition(xs, ys, L, best_obj)
+
+        y_new = evaluate(top_candidate)
+        xs.append(top_candidate)
         ys.append(y_new)
 
-        if y_new < best_y:
-            best_x, best_y = best_candidate, y_new
+        if y_new < best_obj:
+            best_solution, best_obj = top_candidate[:], y_new
 
-    final_obj = best_y * sign
-    return Result(best_x, final_obj, max_iter, evals, Status.FEASIBLE)
+        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
+            current_obj = best_obj * sign
+            progress = Progress(iteration + 1, current_obj, None, evals)
+            if on_progress(progress) is True:
+                return Result(best_solution, current_obj, iteration + 1, evals, Status.FEASIBLE)
+
+    final_obj = best_obj * sign
+    status = Status.MAX_ITER if iteration >= max_iter - 1 else Status.OPTIMAL
+    return Result(best_solution, final_obj, iteration + 1, evals, status)
 
 
-def _solve_linear(A, b):
+def _cholesky(A):
+    """Cholesky decomposition: A = L @ L.T. Returns None if not positive definite."""
     n = len(A)
-    aug = [row[:] + [b[i]] for i, row in enumerate(A)]
+    L = [[0.0] * n for _ in range(n)]
 
-    for col in range(n):
-        max_row = max(range(col, n), key=lambda r: abs(aug[r][col]))
-        aug[col], aug[max_row] = aug[max_row], aug[col]
+    for i in range(n):
+        for j in range(i + 1):
+            s = sum(L[i][k] * L[j][k] for k in range(j))
 
-        pivot = aug[col][col]
-        if abs(pivot) < 1e-12:
-            continue
+            if i == j:
+                val = A[i][i] - s
+                if val <= 0:
+                    return None
+                L[i][j] = sqrt(val)
+            else:
+                if abs(L[j][j]) < 1e-12:
+                    return None
+                L[i][j] = (A[i][j] - s) / L[j][j]
 
-        for j in range(col, n + 1):
-            aug[col][j] /= pivot
+    return L
 
-        for row in range(n):
-            if row != col:
-                factor = aug[row][col]
-                for j in range(col, n + 1):
-                    aug[row][j] -= factor * aug[col][j]
 
-    return [aug[i][n] for i in range(n)]
+def _forward_solve(L, b):
+    """Solve L @ x = b where L is lower triangular."""
+    n = len(b)
+    x = [0.0] * n
+    for i in range(n):
+        s = sum(L[i][j] * x[j] for j in range(i))
+        if abs(L[i][i]) < 1e-12:
+            x[i] = 0.0
+        else:
+            x[i] = (b[i] - s) / L[i][i]
+    return x
+
+
+def _backward_solve(L, b):
+    """Solve L.T @ x = b where L is lower triangular (so L.T is upper)."""
+    n = len(b)
+    x = [0.0] * n
+    for i in range(n - 1, -1, -1):
+        s = sum(L[j][i] * x[j] for j in range(i + 1, n))
+        if abs(L[i][i]) < 1e-12:
+            x[i] = 0.0
+        else:
+            x[i] = (b[i] - s) / L[i][i]
+    return x
 
 
 def _norm_pdf(x):

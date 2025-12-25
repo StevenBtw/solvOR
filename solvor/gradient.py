@@ -204,15 +204,49 @@ def adam(
     eps: float = 1e-8,
     max_iter: int = 1000,
     tol: float = 1e-6,
+    lr_schedule: str = "constant",
+    warmup_steps: int = 0,
+    decay_rate: float = 0.1,
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
+    """
+    Adam optimizer with optional learning rate schedules.
+
+    lr_schedule options:
+        "constant" : Fixed learning rate (default)
+        "step"     : Decay by decay_rate at 50% and 75% of max_iter
+        "cosine"   : Cosine annealing from lr to 0
+        "warmup"   : Linear warmup for warmup_steps, then constant
+    """
+    if lr_schedule not in ("constant", "step", "cosine", "warmup"):
+        raise ValueError(f"lr_schedule must be 'constant', 'step', 'cosine', or 'warmup', got '{lr_schedule}'")
+
     sign = 1 if minimize else -1
     x = list(x0)
     n = len(x)
     m = [0.0] * n
     v = [0.0] * n
     evals = 0
+
+    from math import cos, pi
+
+    def get_lr(t):
+        if lr_schedule == "constant":
+            return lr
+        elif lr_schedule == "step":
+            if t >= int(0.75 * max_iter):
+                return lr * decay_rate * decay_rate
+            elif t >= int(0.5 * max_iter):
+                return lr * decay_rate
+            return lr
+        elif lr_schedule == "cosine":
+            return lr * (1 + cos(pi * t / max_iter)) / 2
+        elif lr_schedule == "warmup":
+            if t < warmup_steps:
+                return lr * t / max(warmup_steps, 1)
+            return lr
+        return lr
 
     for iteration in range(1, max_iter + 1):
         grad = grad_fn(x)
@@ -222,6 +256,8 @@ def adam(
         if grad_norm < tol:
             return Result(x, grad_norm, iteration, evals)
 
+        current_lr = get_lr(iteration)
+
         for i in range(n):
             g = sign * grad[i]
             m[i] = beta1 * m[i] + (1 - beta1) * g
@@ -230,7 +266,7 @@ def adam(
             m_hat = m[i] / (1 - beta1**iteration)
             v_hat = v[i] / (1 - beta2**iteration)
 
-            x[i] -= lr * m_hat / (sqrt(v_hat) + eps)
+            x[i] -= current_lr * m_hat / (sqrt(v_hat) + eps)
 
         if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
             progress = Progress(iteration, grad_norm, None, evals)
