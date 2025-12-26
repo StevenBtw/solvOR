@@ -20,7 +20,7 @@ from timetabling_common import build_conflict_groups, count_violations, load_dat
 from solvor import evolve
 
 
-def solve(max_gen=500, pop_size=100, seed=42):
+def solve(max_iter=500, pop_size=100, seed=42):
     """Solve using genetic algorithm."""
     data = load_data()
     lessons = data["lessons"]
@@ -52,7 +52,7 @@ def solve(max_gen=500, pop_size=100, seed=42):
     # Create initial population
     population = [tuple(randint(0, n_slots - 1) for _ in range(n_lessons)) for _ in range(pop_size)]
 
-    result = evolve(fitness, population, crossover, mutate, max_gen=max_gen, seed=seed)
+    result = evolve(fitness, population, crossover, mutate, max_iter=max_iter, seed=seed)
 
     # Local repair: fix any remaining violations
     solution = list(result.solution)

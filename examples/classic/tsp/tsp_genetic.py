@@ -100,7 +100,7 @@ def main():
         population,
         order_crossover,
         swap_mutate,
-        max_gen=200,
+        max_iter=200,
         mutation_rate=0.2,
         elite_size=5,
         tournament_k=3,

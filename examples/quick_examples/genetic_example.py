@@ -33,6 +33,6 @@ def mutate(ind):
 # Initial population
 population = [tuple(random.randint(0, 1) for _ in range(N)) for _ in range(50)]
 
-result = evolve(fitness, population, crossover, mutate, max_gen=100, minimize=False)
+result = evolve(fitness, population, crossover, mutate, max_iter=100, minimize=False)
 print(f"Best: {''.join(map(str, result.solution))}")
 print(f"Fitness: {result.objective}")
