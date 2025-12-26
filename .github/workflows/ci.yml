@@ -52,7 +52,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --extra dev
       - name: Run solver tests with coverage
-        run: uv run pytest tests/solvers/ -v --cov=solvor --cov-report=xml --cov-report=term-missing --cov-fail-under=88
+        run: uv run pytest tests/solvors/ -v --cov=solvor --cov-report=xml --cov-report=term-missing --cov-fail-under=88
 
       - name: Upload coverage reports to Codecov
         if: matrix.python-version == '3.13'
@@ -67,3 +67,17 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-examples:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --extra dev
+      - name: Run example tests
+        run: uv run pytest tests/examples/ -v -m examples --no-cov

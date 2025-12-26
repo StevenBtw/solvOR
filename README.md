@@ -18,7 +18,7 @@ Solvor all your optimization needs.
 |----------|---------|----------|
 | **Linear/Integer** | `solve_lp`, `solve_milp` | Resource allocation, scheduling |
 | **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
-| **Combinatorial** | `solve_knapsack`, `solve_binpack`, `solve_jobshop`, `solve_vrptw` | Packing, scheduling, routing |
+| **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
 | **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
 | **Population** | `evolve`, `differential_evolution`, `particle_swarm` | Global search, nature-inspired |
 | **Gradient** | `gradient_descent`, `momentum`, `rmsprop`, `adam` | ML, curve fitting |
@@ -26,7 +26,7 @@ Solvor all your optimization needs.
 | **Derivative-Free** | `nelder_mead`, `powell`, `bayesian_opt` | Black-box, expensive functions |
 | **Pathfinding** | `bfs`, `dfs`, `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | Shortest paths, graph traversal |
 | **Graph** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | Flow, MST, connectivity |
-| **Assignment** | `solve_assignment`, `hungarian`, `network_simplex` | Matching, min-cost flow |
+| **Assignment** | `solve_assignment`, `solve_hungarian`, `network_simplex` | Matching, min-cost flow |
 | **Exact Cover** | `solve_exact_cover` | N-Queens, tiling puzzles |
 | **Utilities** | `FenwickTree`, `UnionFind` | Data structures for algorithms |
 
@@ -39,7 +39,7 @@ uv add solvor
 ```
 
 ```python
-from solvor import solve_lp, solve_tsp, dijkstra, hungarian
+from solvor import solve_lp, solve_tsp, dijkstra, solve_hungarian
 
 # Linear Programming
 result = solve_lp(c=[1, 2], A=[[1, 1], [2, 1]], b=[4, 5])
@@ -57,7 +57,7 @@ print(result.solution)  # ['A', 'B', 'C']
 
 # Assignment
 costs = [[10, 5], [3, 9]]
-result = hungarian(costs)
+result = solve_hungarian(costs)
 print(result.solution)  # [1, 0] - row 0 gets col 1, row 1 gets col 0
 ```
 
@@ -299,8 +299,8 @@ result = kruskal(n_nodes=3, edges=edges)
 <details>
 <summary><strong>Assignment</strong></summary>
 
-### solve_assignment / hungarian
-Optimal one-to-one matching. `hungarian` is O(n³), direct algorithm for assignment problems.
+### solve_assignment / solve_hungarian
+Optimal one-to-one matching. `solve_hungarian` is O(n³), direct algorithm for assignment problems.
 
 ```python
 costs = [
@@ -308,12 +308,12 @@ costs = [
     [3, 9, 18],
     [10, 6, 12]
 ]
-result = hungarian(costs)
+result = solve_hungarian(costs)
 # result.solution[i] = column assigned to row i
 # result.objective = total cost
 
 # For maximization
-result = hungarian(costs, minimize=False)
+result = solve_hungarian(costs, minimize=False)
 ```
 
 </details>
@@ -352,24 +352,24 @@ result = solve_knapsack(values, weights, capacity=50)
 # result.solution = [1, 1, 1] - which items to take
 ```
 
-### solve_binpack
+### solve_bin_pack
 
 Bin packing with First Fit Decreasing. Minimize bins needed for items.
 
 ```python
 items = [4, 8, 1, 4, 2, 1]
-result = solve_binpack(items, bin_capacity=10)
+result = solve_bin_pack(items, bin_capacity=10)
 # result.solution = [[8, 2], [4, 4, 1, 1]] - items per bin
 ```
 
-### solve_jobshop
+### solve_job_shop
 
 Job shop scheduling. Minimize makespan for jobs on machines.
 
 ```python
 # jobs[i] = [(machine, duration), ...] - operations for job i
 jobs = [[(0, 3), (1, 2)], [(1, 2), (0, 4)]]
-result = solve_jobshop(jobs, n_machines=2)
+result = solve_job_shop(jobs, n_machines=2)
 ```
 
 ### solve_vrptw
@@ -413,8 +413,8 @@ Result(
 | Boolean satisfiability | `solve_sat` |
 | Discrete vars, complex constraints | `Model` |
 | Knapsack, subset selection | `solve_knapsack` |
-| Bin packing | `solve_binpack` |
-| Job shop scheduling | `solve_jobshop` |
+| Bin packing | `solve_bin_pack` |
+| Job shop scheduling | `solve_job_shop` |
 | Vehicle routing | `solve_vrptw` |
 | Combinatorial, local search | `tabu_search`, `anneal` |
 | Combinatorial, destroy-repair | `lns`, `alns` |
@@ -431,7 +431,7 @@ Result(
 | Minimum spanning tree | `kruskal`, `prim` |
 | Maximum flow | `max_flow` |
 | Min-cost flow | `min_cost_flow`, `network_simplex` |
-| Assignment, matching | `hungarian`, `solve_assignment` |
+| Assignment, matching | `solve_hungarian`, `solve_assignment` |
 | Exact cover, tiling | `solve_exact_cover` |
 
 ---

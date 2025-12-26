@@ -21,7 +21,7 @@ Reference:
     Kuhn, H.W. (1955) "The Hungarian Method for the Assignment Problem"
 """
 
-from solvor import hungarian
+from solvor import solve_hungarian
 
 # Cost matrix: cost[worker][task]
 # Worker 0 costs 82 for task 0, 83 for task 1, etc.
@@ -32,7 +32,7 @@ cost = [
     [8, 9, 98, 23],
 ]
 
-result = hungarian(cost)
+result = solve_hungarian(cost)
 
 print("Optimal assignment:")
 for worker, task in enumerate(result.solution):

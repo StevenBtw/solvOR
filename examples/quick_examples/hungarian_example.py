@@ -4,7 +4,7 @@ Hungarian Algorithm Example
 Find optimal assignment of workers to tasks.
 """
 
-from solvor import hungarian
+from solvor import solve_hungarian
 
 # Cost matrix: cost[i][j] = cost of assigning worker i to task j
 cost = [
@@ -14,6 +14,6 @@ cost = [
     [8, 8, 9, 11],
 ]
 
-result = hungarian(cost)
+result = solve_hungarian(cost)
 print(f"Assignment: {result.solution}")  # worker i -> task assignment[i]
 print(f"Total cost: {result.objective}")

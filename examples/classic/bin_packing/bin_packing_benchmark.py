@@ -15,7 +15,7 @@ Why this solver: FFD (First-Fit Decreasing) is a simple O(n log n) heuristic
 that achieves at most 11/9 * OPT + 6/9 bins. For optimal solutions, use MILP.
 """
 
-from solvor.bin_pack import solve_binpack
+from solvor import solve_bin_pack
 
 # Falkenauer U120_00 instance
 # 120 items with sizes in [20, 100], bin capacity 150
@@ -158,7 +158,7 @@ def main():
 
     # Try different algorithms
     for algo in ["first-fit", "best-fit", "first-fit-decreasing", "best-fit-decreasing"]:
-        result = solve_binpack(U120_00_ITEMS, BIN_CAPACITY, algorithm=algo)
+        result = solve_bin_pack(U120_00_ITEMS, BIN_CAPACITY, algorithm=algo)
         bins_used = int(result.objective)
         gap = (bins_used - OPTIMAL_BINS) / OPTIMAL_BINS * 100
         print(f"  {algo:25s}: {bins_used} bins (gap: {gap:+.1f}%)")
@@ -166,7 +166,7 @@ def main():
     print()
 
     # Show best result details
-    result = solve_binpack(U120_00_ITEMS, BIN_CAPACITY, algorithm="best-fit-decreasing")
+    result = solve_bin_pack(U120_00_ITEMS, BIN_CAPACITY, algorithm="best-fit-decreasing")
     bins_used = int(result.objective)
 
     # Reconstruct bins from assignment
