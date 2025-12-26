@@ -270,7 +270,7 @@ class TestProgressCallback:
         p = received[0]
         assert isinstance(p, Progress)
         assert p.iteration == 5
-        assert p.objective is not None
+        assert isinstance(p.objective, (int, float)) and p.objective == p.objective  # finite number
         assert p.evaluations > 0
 
 

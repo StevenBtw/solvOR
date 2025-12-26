@@ -26,7 +26,7 @@ class Result:
     evaluations: int = 0
     status: Status = Status.OPTIMAL
     error: str | None = None
-    solutions: tuple | None = None
+    solutions: tuple | None = None  # Multiple solutions when solution_limit > 1
 
     @property
     def ok(self) -> bool:

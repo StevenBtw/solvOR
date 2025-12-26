@@ -51,6 +51,7 @@ def solve_job_shop(
     if n_jobs == 0:
         return Result({}, 0.0, 0, 0, Status.OPTIMAL)
 
+    # Validate and count machines
     n_machines = 0
     for j, job in enumerate(jobs):
         if not job:
@@ -65,6 +66,7 @@ def solve_job_shop(
     rng = Random(seed)
     evals = 0
 
+    # Generate initial schedule using dispatching rule
     schedule = _dispatch(jobs, n_machines, rule, rng)
     makespan = _compute_makespan(jobs, schedule)
     evals += 1
@@ -75,13 +77,16 @@ def solve_job_shop(
     if not local_search:
         return Result(best_schedule, float(best_makespan), 0, evals, Status.FEASIBLE)
 
+    # Local search: swap adjacent operations on same machine
     no_improve = 0
     max_no_improve = 100
 
     for iteration in range(1, max_iter + 1):
+        # Try random swap on random machine
         improved = False
         machine = rng.randrange(n_machines)
 
+        # Get operations on this machine in current order
         ops_on_machine = []
         for j, job in enumerate(jobs):
             for op_idx, (m, _) in enumerate(job):
@@ -91,12 +96,15 @@ def solve_job_shop(
         if len(ops_on_machine) < 2:
             continue
 
+        # Sort by start time
         ops_on_machine.sort(key=lambda x: schedule[(x[0], x[1])][0])
 
+        # Try swapping adjacent pairs
         for i in range(len(ops_on_machine) - 1):
             j1, op1 = ops_on_machine[i]
             j2, op2 = ops_on_machine[i + 1]
 
+            # Check if swap is valid (doesn't violate job precedence)
             new_schedule = _try_swap(jobs, schedule, j1, op1, j2, op2)
             if new_schedule is None:
                 continue
@@ -139,20 +147,24 @@ def _dispatch(
     """Generate schedule using dispatching rule. Returns {(job, op): (start, end)}."""
     n_jobs = len(jobs)
 
+    # Track next operation index for each job
     next_op = [0] * n_jobs
 
+    # Track when each machine becomes free
     machine_free = [0] * n_machines
 
+    # Track when each job's last operation ends
     job_free = [0] * n_jobs
 
     schedule: dict[tuple[int, int], tuple[int, int]] = {}
 
+    # Compute total remaining work for each job (for MWKR rule)
     remaining_work = [sum(d for _, d in job) for job in jobs]
 
     total_ops = sum(len(job) for job in jobs)
 
     for _ in range(total_ops):
-
+        # Find ready operations (next operation of each job that's ready)
         ready = []
         for j in range(n_jobs):
             if next_op[j] < len(jobs[j]):
@@ -162,14 +174,19 @@ def _dispatch(
         if not ready:
             break
 
+        # Select operation based on rule
         rule_lower = rule.lower()
         if rule_lower == "fifo":
+            # First ready (by job index)
             selected = ready[0]
         elif rule_lower == "spt":
+            # Shortest Processing Time
             selected = min(ready, key=lambda x: x[3])
         elif rule_lower == "lpt":
+            # Longest Processing Time
             selected = max(ready, key=lambda x: x[3])
         elif rule_lower == "mwkr":
+            # Most Work Remaining
             selected = max(ready, key=lambda x: remaining_work[x[0]])
         elif rule_lower == "random":
             selected = rng.choice(ready)
@@ -184,6 +201,7 @@ def _dispatch(
 
         schedule[(j, op_idx)] = (start, end)
 
+        # Update state
         machine_free[machine] = end
         job_free[j] = end
         next_op[j] += 1
@@ -209,17 +227,23 @@ def _try_swap(
     op2: int,
 ) -> dict[tuple[int, int], tuple[int, int]] | None:
     """Try swapping two operations on the same machine. Returns new schedule or None."""
+    # This is a simplified swap - we rebuild the schedule with swapped priority
+    # A full implementation would do critical path analysis
+
     machine = jobs[j1][op1][0]
     assert jobs[j2][op2][0] == machine
 
+    # Get all operations on this machine
     ops_on_machine = []
     for j, job in enumerate(jobs):
         for op_idx, (m, _) in enumerate(job):
             if m == machine:
                 ops_on_machine.append((j, op_idx, schedule[(j, op_idx)][0]))
 
+    # Sort by original start time
     ops_on_machine.sort(key=lambda x: x[2])
 
+    # Find positions to swap
     pos1 = pos2 = -1
     for i, (j, op_idx, _) in enumerate(ops_on_machine):
         if j == j1 and op_idx == op1:
@@ -230,7 +254,10 @@ def _try_swap(
     if pos1 == -1 or pos2 == -1 or abs(pos1 - pos2) != 1:
         return None
 
+    # Swap in the order
     ops_on_machine[pos1], ops_on_machine[pos2] = ops_on_machine[pos2], ops_on_machine[pos1]
+
+    # Rebuild schedule with new order constraint
     new_schedule = _rebuild_schedule(jobs, schedule, machine, ops_on_machine)
     return new_schedule
 
@@ -245,27 +272,38 @@ def _rebuild_schedule(
     n_jobs = len(jobs)
     n_machines = max(jobs[j][op][0] for j in range(n_jobs) for op in range(len(jobs[j]))) + 1
 
+    # Track constraints
     machine_free = [0] * n_machines
     job_free = [0] * n_jobs
+
     new_schedule: dict[tuple[int, int], tuple[int, int]] = {}
 
+    # Process all operations in topological order respecting:
+    # 1. Job precedence (earlier ops before later in same job)
+    # 2. New machine order for target_machine
+
+    # Build operation list with dependencies
     all_ops = []
     for j, job in enumerate(jobs):
         for op_idx in range(len(job)):
             all_ops.append((j, op_idx))
 
+    # Sort by: job precedence first, then by specified machine order for target machine
     machine_order_map = {(j, op): i for i, (j, op, _) in enumerate(machine_order)}
 
     def op_priority(op_tuple):
         j, op_idx = op_tuple
         machine = jobs[j][op_idx][0]
-
+        # Primary: operation index in job (precedence)
+        # Secondary: position in machine order if on target machine
         if machine == target_machine:
             return (op_idx, machine_order_map.get((j, op_idx), 0))
         return (op_idx, old_schedule[(j, op_idx)][0])
 
+    # Schedule operations greedily
     scheduled = set()
     while len(scheduled) < len(all_ops):
+        # Find ready operations
         ready = []
         for j, op_idx in all_ops:
             if (j, op_idx) in scheduled:
@@ -278,7 +316,10 @@ def _rebuild_schedule(
         if not ready:
             break
 
+        # Sort ready ops by priority
         ready.sort(key=op_priority)
+
+        # Schedule first ready
         j, op_idx = ready[0]
         machine, duration = jobs[j][op_idx]
 

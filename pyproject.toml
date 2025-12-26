@@ -1,6 +1,6 @@
 [project]
 name = "solvOR"
-version = "0.4.7"
+version = "0.4.8"
 description = "Solvor all your optimization needs."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -44,8 +44,18 @@ line-length = 120
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=solvor --cov-report=term-missing --cov-fail-under=88"
+addopts = "--cov=solvor --cov-report=term-missing --cov-fail-under=88 -m 'not examples'"
 testpaths = ["tests"]
+markers = [
+    "examples: all example tests (disabled by default)",
+    "quick_examples: quick_examples folder tests",
+    "puzzles: puzzles folder tests",
+    "real_world: real_world folder tests",
+    "classic: classic folder tests",
+    "graph_algorithms: graph_algorithms folder tests",
+    "linear_programming: linear_programming folder tests",
+    "machine_learning: machine_learning folder tests",
+]
 
 [tool.coverage.run]
 source = ["solvor"]

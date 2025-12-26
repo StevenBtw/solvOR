@@ -44,6 +44,48 @@ class TestKruskalDisconnected:
         assert result.status == Status.INFEASIBLE
 
 
+class TestKruskalAllowForest:
+    def test_allow_forest_disconnected(self):
+        edges = [(0, 1, 1)]
+        result = kruskal(3, edges, allow_forest=True)
+        assert result.status == Status.FEASIBLE
+        assert result.solution == [(0, 1, 1)]
+        assert result.objective == 1
+
+    def test_allow_forest_two_components(self):
+        edges = [(0, 1, 1), (2, 3, 2)]
+        result = kruskal(4, edges, allow_forest=True)
+        assert result.status == Status.FEASIBLE
+        assert len(result.solution) == 2
+        assert result.objective == 3
+
+    def test_allow_forest_connected_same_as_regular(self):
+        edges = [(0, 1, 1), (1, 2, 2), (0, 2, 3)]
+        result_regular = kruskal(3, edges)
+        result_forest = kruskal(3, edges, allow_forest=True)
+        assert result_regular.objective == result_forest.objective
+        assert result_regular.solution == result_forest.solution
+
+    def test_allow_forest_no_edges(self):
+        result = kruskal(3, [], allow_forest=True)
+        assert result.status == Status.FEASIBLE
+        assert result.solution == []
+        assert result.objective == 0
+
+    def test_allow_forest_multiple_components(self):
+        # 6 nodes in 3 components: {0,1}, {2,3}, {4,5}
+        edges = [(0, 1, 1), (2, 3, 2), (4, 5, 3)]
+        result = kruskal(6, edges, allow_forest=True)
+        assert result.status == Status.FEASIBLE
+        assert len(result.solution) == 3
+        assert result.objective == 6
+
+    def test_allow_forest_false_default(self):
+        edges = [(0, 1, 1)]
+        result = kruskal(3, edges)  # allow_forest defaults to False
+        assert result.status == Status.INFEASIBLE
+
+
 class TestPrimBasic:
     def test_simple_triangle(self):
         graph = {0: [(1, 1), (2, 3)], 1: [(0, 1), (2, 2)], 2: [(0, 3), (1, 2)]}

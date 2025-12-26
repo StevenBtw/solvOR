@@ -27,6 +27,7 @@ from collections.abc import Iterable
 from heapq import heappop, heappush
 
 from solvor.types import Result, Status
+from solvor.utils import UnionFind, check_edge_nodes, check_positive
 
 __all__ = ["kruskal", "prim"]
 
@@ -34,26 +35,28 @@ __all__ = ["kruskal", "prim"]
 def kruskal(
     n_nodes: int,
     edges: list[tuple[int, int, float]],
+    *,
+    allow_forest: bool = False,
 ) -> Result:
-    parent = list(range(n_nodes))
-    rank = [0] * n_nodes
+    """
+    Find minimum spanning tree using Kruskal's algorithm.
 
-    def find(x):
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
+    Args:
+        n_nodes: Number of nodes in the graph
+        edges: List of (u, v, weight) tuples
+        allow_forest: If True, return partial result for disconnected graphs
+                      (Status.FEASIBLE with forest edges). If False, return
+                      Status.INFEASIBLE for disconnected graphs.
 
-    def union(x, y):
-        rx, ry = find(x), find(y)
-        if rx == ry:
-            return False
-        if rank[rx] < rank[ry]:
-            rx, ry = ry, rx
-        parent[ry] = rx
-        if rank[rx] == rank[ry]:
-            rank[rx] += 1
-        return True
+    Returns:
+        Result with MST edges as solution and total weight as objective.
+        If allow_forest=True and graph is disconnected, returns minimum
+        spanning forest (MST for each connected component).
+    """
+    check_positive(n_nodes, name="n_nodes")
+    check_edge_nodes(edges, n_nodes)
 
+    uf = UnionFind(n_nodes)
     sorted_edges = sorted(edges, key=lambda e: e[2])
     mst_edges = []
     total_weight = 0.0
@@ -61,13 +64,15 @@ def kruskal(
 
     for u, v, w in sorted_edges:
         iterations += 1
-        if union(u, v):
+        if uf.union(u, v):
             mst_edges.append((u, v, w))
             total_weight += w
             if len(mst_edges) == n_nodes - 1:
                 break
 
     if len(mst_edges) < n_nodes - 1:
+        if allow_forest:
+            return Result(mst_edges, total_weight, iterations, len(edges), Status.FEASIBLE)
         return Result(None, float("inf"), iterations, len(edges), Status.INFEASIBLE)
 
     return Result(mst_edges, total_weight, iterations, len(edges))
