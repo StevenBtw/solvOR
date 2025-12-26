@@ -22,7 +22,7 @@ for medium instances. For proven optimal, use CP-SAT formulation.
 
 from time import perf_counter
 
-from solvor.job_shop import solve_jobshop
+from solvor import solve_job_shop
 
 # ft06 instance: 6 jobs x 6 machines
 # Format: job = [(machine, duration), (machine, duration), ...]
@@ -61,7 +61,7 @@ def main():
 
     print("Dispatching rules (no local search):")
     for rule in rules:
-        result = solve_jobshop(FT06_JOBS, rule=rule, local_search=False, seed=42)
+        result = solve_job_shop(FT06_JOBS, rule=rule, local_search=False, seed=42)
         gap = (result.objective - OPTIMAL_MAKESPAN) / OPTIMAL_MAKESPAN * 100
         print(f"  {rule:8s}: makespan = {int(result.objective)} (gap: {gap:+.1f}%)")
 
@@ -69,7 +69,7 @@ def main():
     print("With local search improvement:")
 
     start = perf_counter()
-    result = solve_jobshop(
+    result = solve_job_shop(
         FT06_JOBS,
         rule="spt",
         local_search=True,

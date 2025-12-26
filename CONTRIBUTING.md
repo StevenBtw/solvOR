@@ -569,7 +569,7 @@ def _helper(...):
 2. Import shared types: `from solvor.types import Status, Result`
 3. Export `Status`, `Result`, and main solver function in `__all__`
 4. Add exports to `solvor/__init__.py`
-5. Create `tests/solvers/test_<solver_name>.py` with comprehensive tests
+5. Create `tests/solvors/test_<solver_name>.py` with comprehensive tests
 6. Add a quick example in `examples/quick_examples/<solver_name>_example.py`
 7. Update `README.md` with usage examples
 
@@ -609,7 +609,7 @@ Each solver has its own test file. Tests should cover:
 uv run pytest
 
 # Run tests for a specific solver
-uv run pytest tests/solvers/test_simplex.py -v --no-cov
+uv run pytest tests/solvors/test_simplex.py -v --no-cov
 ```
 
 ### Example Tests
