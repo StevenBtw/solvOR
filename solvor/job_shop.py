@@ -131,8 +131,9 @@ def solve_job_shop(
         if no_improve >= max_no_improve:
             break
 
-        if report_progress(on_progress, progress_interval, iteration, float(best_makespan), float(best_makespan), evals):
-            return Result(best_schedule, float(best_makespan), iteration, evals, Status.FEASIBLE)
+        obj = float(best_makespan)
+        if report_progress(on_progress, progress_interval, iteration, obj, obj, evals):
+            return Result(best_schedule, obj, iteration, evals, Status.FEASIBLE)
 
     return Result(best_schedule, float(best_makespan), iteration, evals, Status.FEASIBLE)
 
