@@ -174,7 +174,10 @@ def _phase2(matrix, basis, basis_set, m, eps, max_iter):
 
 def _pivot(matrix, m, row, col, eps):
     n_cols = len(matrix[0])
-    inv = 1.0 / matrix[row][col]
+    pivot_val = matrix[row][col]
+    if abs(pivot_val) < eps:
+        return matrix  # numerical instability, skip pivot
+    inv = 1.0 / pivot_val
 
     for j in range(n_cols):
         matrix[row][j] *= inv
