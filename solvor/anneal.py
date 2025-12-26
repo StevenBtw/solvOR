@@ -35,7 +35,8 @@ from collections.abc import Callable
 from math import exp, log
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["anneal", "exponential_cooling", "linear_cooling", "logarithmic_cooling"]
 
@@ -84,18 +85,12 @@ def anneal[T](
     progress_interval: int = 0,
 ) -> Result:
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
+    evaluate = Evaluator(objective_fn, minimize)
 
     if callable(cooling):
         schedule = cooling
     else:
         schedule = exponential_cooling(cooling)
-
-    def evaluate(sol):
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(sol)
 
     solution, obj = initial, evaluate(initial)
     best_solution, best_obj = solution, obj
@@ -117,13 +112,10 @@ def anneal[T](
             if obj < best_obj:
                 best_solution, best_obj = solution, obj
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            current_obj = obj * sign
-            best_so_far = best_obj * sign
-            progress = Progress(iteration, current_obj, best_so_far if best_so_far != current_obj else None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, best_so_far, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
-    final_obj = best_obj * sign
+    final_obj = evaluate.to_user(best_obj)
     status = Status.MAX_ITER if iteration == max_iter else Status.FEASIBLE
-    return Result(best_solution, final_obj, iteration, evals, status)
+    return Result(best_solution, final_obj, iteration, evaluate.evals, status)

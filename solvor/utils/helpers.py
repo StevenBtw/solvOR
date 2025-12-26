@@ -20,6 +20,8 @@ __all__ = [
     "pairwise_swap_neighbors",
     "timed_progress",
     "default_progress",
+    "Evaluator",
+    "report_progress",
 ]
 
 _DEBUG = bool(environ.get("DEBUG"))
@@ -121,3 +123,71 @@ def default_progress(name: str = "", *, interval: int = 100, time_limit: float |
         return None
 
     return callback
+
+
+class Evaluator[T]:
+    """Wraps objective function to track evaluations and handle minimize/maximize.
+
+    The internal objective values are sign-adjusted so that minimization always
+    means finding smaller values. Use `to_user()` to convert back for reporting.
+
+    Example:
+        evaluator = Evaluator(objective_fn, minimize=True)
+        obj = evaluator(solution)  # Internal (signed) value
+        user_obj = evaluator.to_user(obj)  # User-facing value
+        print(f"Evaluations: {evaluator.evals}")
+    """
+
+    __slots__ = ("objective_fn", "sign", "evals")
+
+    def __init__(self, objective_fn: Callable[[T], float], minimize: bool = True):
+        self.objective_fn = objective_fn
+        self.sign = 1 if minimize else -1
+        self.evals = 0
+
+    def __call__(self, sol: T) -> float:
+        """Evaluate solution, returning internal (signed) value."""
+        self.evals += 1
+        return self.sign * self.objective_fn(sol)
+
+    def to_user(self, internal_obj: float) -> float:
+        """Convert internal objective to user-facing value."""
+        return internal_obj * self.sign
+
+
+def report_progress(
+    on_progress: ProgressCallback | None,
+    progress_interval: int,
+    iteration: int,
+    current_obj: float,
+    best_obj: float,
+    evals: int,
+) -> bool:
+    """Report progress if interval reached. Returns True if callback requested stop.
+
+    Args:
+        on_progress: Progress callback or None
+        progress_interval: Report every N iterations (0 = disabled)
+        iteration: Current iteration number
+        current_obj: Current objective value (user-facing)
+        best_obj: Best objective found so far (user-facing)
+        evals: Number of objective evaluations
+
+    Returns:
+        True if callback returned True (stop requested), False otherwise.
+
+    Example:
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluator.to_user(obj), evaluator.to_user(best), evaluator.evals):
+            return Result(solution, evaluator.to_user(best), iteration, evaluator.evals, Status.FEASIBLE)
+    """
+    if not (on_progress and progress_interval > 0 and iteration % progress_interval == 0):
+        return False
+
+    progress = Progress(
+        iteration,
+        current_obj,
+        best_obj if best_obj != current_obj else None,
+        evals,
+    )
+    return on_progress(progress) is True
