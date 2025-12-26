@@ -28,7 +28,7 @@ class TestBasicGA:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective < 5  # Should find mostly zeros
 
@@ -38,7 +38,7 @@ class TestBasicGA:
             return sum(bits)
 
         population = [tuple([0] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, minimize=False, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, minimize=False, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective > 5  # Should find mostly ones
 
@@ -50,7 +50,7 @@ class TestBasicGA:
             return sum(b != t for b, t in zip(bits, target))
 
         population = [tuple(randint(0, 1) for _ in range(5)) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=100, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=100, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective <= 2  # Should get close to target
 
@@ -66,7 +66,7 @@ class TestCrossover:
             return sum(bits)
 
         population = [tuple([1] * 8) for _ in range(15)]
-        result = evolve(objective, population, two_point, bit_mutate, max_gen=50, seed=42)
+        result = evolve(objective, population, two_point, bit_mutate, max_iter=50, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_uniform_crossover(self):
@@ -77,7 +77,7 @@ class TestCrossover:
             return sum(bits)
 
         population = [tuple([1] * 8) for _ in range(15)]
-        result = evolve(objective, population, uniform, bit_mutate, max_gen=50, seed=42)
+        result = evolve(objective, population, uniform, bit_mutate, max_iter=50, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -94,7 +94,7 @@ class TestMutation:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, multi_mutate, max_gen=50, seed=42)
+        result = evolve(objective, population, simple_crossover, multi_mutate, max_iter=50, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -104,7 +104,7 @@ class TestParameters:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(50)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=30, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_small_population(self):
@@ -112,7 +112,7 @@ class TestParameters:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(5)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_elitism(self):
@@ -120,7 +120,7 @@ class TestParameters:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=30, elite_size=5, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, elite_size=5, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_mutation_rate(self):
@@ -128,7 +128,7 @@ class TestParameters:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, mutation_rate=0.5, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, mutation_rate=0.5, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -149,7 +149,7 @@ class TestRealValuedGA:
 
         set_seed(42)
         population = [tuple(randint(-10, 10) for _ in range(3)) for _ in range(20)]
-        result = evolve(objective, population, float_crossover, float_mutate, max_gen=100, seed=42)
+        result = evolve(objective, population, float_crossover, float_mutate, max_iter=100, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective < 50  # Should improve from initial
 
@@ -160,7 +160,7 @@ class TestEdgeCases:
             return bits[0]
 
         population = [tuple([1]) for _ in range(10)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=20, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=20, seed=42)
         assert result.status == Status.FEASIBLE
 
     def test_already_optimal(self):
@@ -169,7 +169,7 @@ class TestEdgeCases:
             return sum(bits)
 
         population = [tuple([0] * 5)] + [tuple([1] * 5) for _ in range(9)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=10, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=10, seed=42)
         assert result.objective == 0
 
     def test_identical_population(self):
@@ -177,7 +177,7 @@ class TestEdgeCases:
             return sum(bits)
 
         population = [tuple([1, 0, 1, 0]) for _ in range(10)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=30, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, seed=42)
         assert result.status == Status.FEASIBLE
 
 
@@ -187,7 +187,7 @@ class TestStress:
             return sum(bits)
 
         population = [tuple([1] * 50) for _ in range(30)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=100, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=100, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective < 25  # Should reduce significantly
 
@@ -196,7 +196,7 @@ class TestStress:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=200, seed=42)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=200, seed=42)
         assert result.status == Status.FEASIBLE
         assert result.objective < 3
 
@@ -217,7 +217,7 @@ class TestProgressCallback:
             population,
             simple_crossover,
             bit_mutate,
-            max_gen=50,
+            max_iter=50,
             seed=42,
             on_progress=callback,
             progress_interval=10,
@@ -239,7 +239,7 @@ class TestProgressCallback:
             population,
             simple_crossover,
             bit_mutate,
-            max_gen=100,
+            max_iter=100,
             seed=42,
             on_progress=stop_at_20,
             progress_interval=5,
@@ -261,7 +261,7 @@ class TestProgressCallback:
             population,
             simple_crossover,
             bit_mutate,
-            max_gen=20,
+            max_iter=20,
             seed=42,
             on_progress=callback,
             progress_interval=5,
@@ -274,6 +274,38 @@ class TestProgressCallback:
         assert p.evaluations > 0
 
 
+class TestAdaptiveMutation:
+    """Test adaptive mutation rate adjustment."""
+
+    def test_adaptive_mutation_improves(self):
+        """Test adaptive mutation when making progress (decreases rate)."""
+        def objective(bits):
+            return sum(bits)
+
+        # Start with all ones - easy to improve
+        population = [tuple([1] * 10) for _ in range(20)]
+        result = evolve(
+            objective, population, simple_crossover, bit_mutate,
+            max_iter=50, adaptive_mutation=True, seed=42
+        )
+        assert result.status == Status.FEASIBLE
+        assert result.objective < 5  # Should make progress
+
+    def test_adaptive_mutation_stagnation(self):
+        """Test adaptive mutation when stagnating (increases rate)."""
+        def objective(bits):
+            # Very flat landscape - hard to improve
+            return 10 if sum(bits) > 3 else sum(bits)
+
+        # Start with already good solutions
+        population = [tuple([0] * 5 + [1] * 5) for _ in range(20)]
+        result = evolve(
+            objective, population, simple_crossover, bit_mutate,
+            max_iter=30, adaptive_mutation=True, seed=42
+        )
+        assert result.status == Status.FEASIBLE
+
+
 class TestTournamentK:
     def test_high_tournament_pressure(self):
         # High tournament_k = more selection pressure
@@ -281,7 +313,7 @@ class TestTournamentK:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42, tournament_k=10)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42, tournament_k=10)
         assert result.status == Status.FEASIBLE
 
     def test_low_tournament_pressure(self):
@@ -290,7 +322,7 @@ class TestTournamentK:
             return sum(bits)
 
         population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_gen=50, seed=42, tournament_k=2)
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42, tournament_k=2)
         assert result.status == Status.FEASIBLE
 
     def test_tournament_k_comparison(self):
@@ -302,10 +334,10 @@ class TestTournamentK:
         population_low = [tuple([1] * 15) for _ in range(30)]
 
         result_high = evolve(
-            objective, population_high, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=15
+            objective, population_high, simple_crossover, bit_mutate, max_iter=30, seed=42, tournament_k=15
         )
         result_low = evolve(
-            objective, population_low, simple_crossover, bit_mutate, max_gen=30, seed=42, tournament_k=2
+            objective, population_low, simple_crossover, bit_mutate, max_iter=30, seed=42, tournament_k=2
         )
         # Both should work, but high k typically converges faster
         assert result_high.status == Status.FEASIBLE

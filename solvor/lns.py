@@ -33,7 +33,8 @@ from collections.abc import Callable, Sequence
 from math import exp
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["lns", "alns"]
 
@@ -95,14 +96,8 @@ def lns[T](
 ) -> Result:
     """Large Neighborhood Search with single destroy/repair operator."""
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
+    evaluate = Evaluator(objective_fn, minimize)
     accept_fn = _get_accept_fn(accept, start_temp, cooling_rate)
-
-    def evaluate(sol: T) -> float:
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(sol)
 
     current = initial
     current_obj = evaluate(current)
@@ -120,18 +115,15 @@ def lns[T](
                 best_solution, best_obj = current, current_obj
                 best_iter = iteration
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            cur = current_obj * sign
-            bst = best_obj * sign
-            progress = Progress(iteration, cur, bst if bst != cur else None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, bst, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(current_obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
         if iteration - best_iter >= max_no_improve:
             break
 
-    final_obj = best_obj * sign
-    return Result(best_solution, final_obj, iteration, evals, Status.FEASIBLE)
+    final_obj = evaluate.to_user(best_obj)
+    return Result(best_solution, final_obj, iteration, evaluate.evals, Status.FEASIBLE)
 
 
 def alns[T](
@@ -162,8 +154,7 @@ def alns[T](
         raise ValueError("Need at least one destroy and one repair operator")
 
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
+    evaluate = Evaluator(objective_fn, minimize)
     accept_fn = _get_accept_fn(accept, start_temp, cooling_rate)
 
     n_destroy = len(destroy_ops)
@@ -175,11 +166,6 @@ def alns[T](
     r_scores = [0.0] * n_repair
     d_counts = [0] * n_destroy
     r_counts = [0] * n_repair
-
-    def evaluate(sol: T) -> float:
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(sol)
 
     def select_weighted(weights: list[float]) -> int:
         total = sum(weights)
@@ -245,15 +231,12 @@ def alns[T](
             update_weights(d_weights, d_scores, d_counts)
             update_weights(r_weights, r_scores, r_counts)
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            cur = current_obj * sign
-            bst = best_obj * sign
-            progress = Progress(iteration, cur, bst if bst != cur else None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, bst, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(current_obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
         if iteration - best_iter >= max_no_improve:
             break
 
-    final_obj = best_obj * sign
-    return Result(best_solution, final_obj, iteration, evals, Status.FEASIBLE)
+    final_obj = evaluate.to_user(best_obj)
+    return Result(best_solution, final_obj, iteration, evaluate.evals, Status.FEASIBLE)

@@ -16,3 +16,6 @@ dist/
 .coverage
 .cov
 uv.lock
+
+# MkDocs
+site/

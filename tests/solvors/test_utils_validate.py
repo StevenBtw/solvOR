@@ -5,6 +5,7 @@ import pytest
 from solvor.utils import (
     check_bounds,
     check_edge_nodes,
+    check_graph_nodes,
     check_in_range,
     check_integers_valid,
     check_matrix_dims,
@@ -172,3 +173,34 @@ class TestEdgeNodes:
         edges = [(0, 1, 1.0), (-1, 2, 2.0)]
         with pytest.raises(ValueError, match="u=-1"):
             check_edge_nodes(edges, 3)
+
+
+class TestGraphNodes:
+    def test_valid_nodes(self):
+        """Valid nodes in graph pass."""
+        graph = {"a": ["b", "c"], "b": ["c"], "c": []}
+        check_graph_nodes(graph, ("a", "start"), ("c", "goal"))
+
+    def test_missing_node(self):
+        """Missing node raises error."""
+        graph = {"a": ["b"], "b": []}
+        with pytest.raises(ValueError, match="'x' not found"):
+            check_graph_nodes(graph, ("x", "start"))
+
+    def test_missing_goal_node(self):
+        """Missing goal node raises error."""
+        graph = {"a": ["b"], "b": []}
+        with pytest.raises(ValueError, match="'z' not found"):
+            check_graph_nodes(graph, ("a", "start"), ("z", "goal"))
+
+
+class TestIntegersValidTypes:
+    def test_non_integer_type(self):
+        """Non-integer in list raises TypeError."""
+        with pytest.raises(TypeError, match="must contain integers"):
+            check_integers_valid([0, 1.5, 2], 5)  # 1.5 is float, not int
+
+    def test_string_type(self):
+        """String in list raises TypeError."""
+        with pytest.raises(TypeError, match="must contain integers"):
+            check_integers_valid([0, "1", 2], 5)  # "1" is string

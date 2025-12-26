@@ -27,7 +27,8 @@ Matrix Adaptation Evolution Strategy) or other methods.
 from collections.abc import Callable, Sequence
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["differential_evolution"]
 
@@ -54,16 +55,10 @@ def differential_evolution(
         raise ValueError("bounds cannot be empty")
 
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
+    evaluate = Evaluator(objective_fn, minimize)
 
     # Parse strategy
     base, num_diffs = _parse_strategy(strategy)
-
-    def evaluate(x: list[float]) -> float:
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(x)
 
     def clip(x: list[float]) -> list[float]:
         return [max(lo, min(hi, x[i])) for i, (lo, hi) in enumerate(bounds)]
@@ -141,15 +136,13 @@ def differential_evolution(
         if _population_converged(population, tol):
             break
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            obj = best_obj * sign
-            progress = Progress(iteration, obj, None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, obj, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(best_obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
-    final_obj = best_obj * sign
+    final_obj = evaluate.to_user(best_obj)
     status = Status.OPTIMAL if iteration < max_iter else Status.MAX_ITER
-    return Result(best_solution, final_obj, iteration, evals, status)
+    return Result(best_solution, final_obj, iteration, evaluate.evals, status)
 
 
 def _parse_strategy(strategy: str) -> tuple[str, int]:

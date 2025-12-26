@@ -28,7 +28,8 @@ genetic algorithms or CP-SAT instead.
 from collections.abc import Callable, Sequence
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["particle_swarm"]
 
@@ -62,19 +63,13 @@ def particle_swarm(
         raise ValueError("bounds cannot be empty")
 
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
+    evaluate = Evaluator(objective_fn, minimize)
 
     # Velocity limits per dimension
     v_limits = []
     for lo, hi in bounds:
         v_lim = v_max if v_max is not None else 0.2 * (hi - lo)
         v_limits.append(v_lim)
-
-    def evaluate(x: list[float]) -> float:
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(x)
 
     def clip(x: list[float]) -> list[float]:
         return [max(lo, min(hi, x[j])) for j, (lo, hi) in enumerate(bounds)]
@@ -151,11 +146,9 @@ def particle_swarm(
                     best_solution = positions[i][:]
                     best_obj = fitness[i]
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            obj = best_obj * sign
-            progress = Progress(iteration, obj, None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, obj, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(best_obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
-    final_obj = best_obj * sign
-    return Result(best_solution, final_obj, iteration, evals, Status.FEASIBLE)
+    final_obj = evaluate.to_user(best_obj)
+    return Result(best_solution, final_obj, iteration, evaluate.evals, Status.FEASIBLE)

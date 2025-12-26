@@ -28,7 +28,8 @@ from collections.abc import Callable, Sequence
 from itertools import pairwise
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["tabu_search", "solve_tsp"]
 
@@ -47,13 +48,7 @@ def tabu_search[T, M](
     progress_interval: int = 0,
 ) -> Result:
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
-
-    def evaluate(sol):
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(sol)
+    evaluate = Evaluator(objective_fn, minimize)
 
     solution, obj = initial, evaluate(initial)
     best_solution, best_obj, best_iter = solution, obj, 0
@@ -88,18 +83,15 @@ def tabu_search[T, M](
         if obj < best_obj:
             best_solution, best_obj, best_iter = solution, obj, iteration
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            current_obj = obj * sign
-            best_so_far = best_obj * sign
-            progress = Progress(iteration, current_obj, best_so_far if best_so_far != current_obj else None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, best_so_far, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
         if iteration - best_iter >= max_no_improve:
             break
 
-    final_obj = best_obj * sign
-    return Result(best_solution, final_obj, iteration, evals, Status.FEASIBLE)
+    final_obj = evaluate.to_user(best_obj)
+    return Result(best_solution, final_obj, iteration, evaluate.evals, Status.FEASIBLE)
 
 
 def solve_tsp(

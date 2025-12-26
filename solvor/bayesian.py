@@ -25,7 +25,8 @@ from math import erf, exp, pi, sqrt
 from random import Random
 
 from solvor.nelder_mead import nelder_mead
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["bayesian_opt"]
 
@@ -67,13 +68,7 @@ def bayesian_opt(
         raise ValueError(f"acquisition must be 'ei' or 'ucb', got '{acquisition}'")
 
     rng = Random(seed)
-    sign = 1 if minimize else -1
-    evals = 0
-
-    def evaluate(x):
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(x)
+    evaluate = Evaluator(objective_fn, minimize)
 
     def random_point():
         return [rng.uniform(lo, hi) for lo, hi in bounds]
@@ -181,15 +176,13 @@ def bayesian_opt(
         if y_new < best_obj:
             best_solution, best_obj = top_candidate[:], y_new
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            current_obj = best_obj * sign
-            progress = Progress(iteration + 1, current_obj, None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, current_obj, iteration + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1,
+                          evaluate.to_user(best_obj), evaluate.to_user(best_obj), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_obj), iteration + 1, evaluate.evals, Status.FEASIBLE)
 
-    final_obj = best_obj * sign
+    final_obj = evaluate.to_user(best_obj)
     status = Status.MAX_ITER if iteration >= max_iter - 1 else Status.OPTIMAL
-    return Result(best_solution, final_obj, iteration + 1, evals, status)
+    return Result(best_solution, final_obj, iteration + 1, evaluate.evals, status)
 
 
 def _cholesky(A):

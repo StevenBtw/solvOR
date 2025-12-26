@@ -33,7 +33,8 @@ you don't have access to gradients.
 from collections.abc import Callable, Sequence
 from math import sqrt
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import report_progress
 
 __all__ = ["gradient_descent", "momentum", "rmsprop", "adam"]
 
@@ -104,10 +105,8 @@ def gradient_descent(
             for i in range(n):
                 x[i] -= sign * lr * grad[i]
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            progress = Progress(iteration + 1, grad_norm, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1, grad_norm, grad_norm, evals):
+            return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
@@ -143,10 +142,8 @@ def momentum(
             v[i] = beta * v[i] + sign * grad[i]
             x[i] -= lr * v[i]
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            progress = Progress(iteration + 1, grad_norm, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1, grad_norm, grad_norm, evals):
+            return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
@@ -184,10 +181,8 @@ def rmsprop(
             v[i] = decay * v[i] + (1 - decay) * g * g
             x[i] -= lr * g / (sqrt(v[i]) + eps)
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            progress = Progress(iteration + 1, grad_norm, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1, grad_norm, grad_norm, evals):
+            return Result(x, grad_norm, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)
@@ -268,10 +263,8 @@ def adam(
 
             x[i] -= current_lr * m_hat / (sqrt(v_hat) + eps)
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            progress = Progress(iteration, grad_norm, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, grad_norm, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration, grad_norm, grad_norm, evals):
+            return Result(x, grad_norm, iteration, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(sum(g * g for g in grad_fn(x)))
     return Result(x, grad_norm, max_iter, evals + 1, Status.MAX_ITER)

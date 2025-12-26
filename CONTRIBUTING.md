@@ -679,6 +679,32 @@ uv run ty check solvor/
 
 Type hints are required on public APIs but optional for internal helpers.
 
+## Documentation
+
+Docs live in `docs/` and are built with MkDocs + Material theme. Deployed to [solver.ai](https://solver.ai) via GitHub Actions.
+
+```bash
+# Serve locally
+uv run mkdocs serve
+
+# Build
+uv run mkdocs build
+```
+
+**When to update docs:**
+
+- Adding new solvers: add to `docs/algorithms/`
+- New cookbook examples: add to `docs/cookbook/`
+- API changes: update relevant algorithm page
+
+**Structure:**
+
+- `docs/algorithms/` - solver reference pages
+- `docs/cookbook/` - worked examples
+- `docs/examples/` - links to example scripts
+- `docs/getting-started/` - installation, quickstart
+- `docs/api/` - auto-generated from docstrings
+
 ## Pull Requests
 
 1. Fork the repo

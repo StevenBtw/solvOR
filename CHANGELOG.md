@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+## [0.5.0] - 2025-12-26
+
+Documentation finally has a proper home. Moved everything from the wiki to MkDocs, deployed at [solver.ai](https://solver.ai). The wiki now just points there.
+
+### Added
+
+- Documentation site at [solver.ai](https://solver.ai). MkDocs with Material theme, dark mode by default (as it should be). Getting started, algorithm reference (40+ pages), cookbook with 18 worked examples, API docs, troubleshooting.
+
+- GitHub Actions workflow for docs, auto-deploys to GitHub Pages on push to main.
+
+### Changed
+
+- **BREAKING:** `evolve()` renamed `max_gen` to `max_iter` for consistency. Update your code: `evolve(..., max_gen=100)` → `evolve(..., max_iter=100)`
+
+- `Result` is now generic (`Result[T]`), so type checkers actually know what `.solution` contains. Less red underscores in the IDE.
+
+- Test coverage now statistically significant at 95%, added tests for adam learning rate schedules, genetic adaptive mutation, validation utilities.
+
+- Internal cleanup: `Evaluator` class and `report_progress()` in `solvor/utils/helpers.py`, deduplicated boilerplate across 12 solver files. No API changes for this one.
+
+- Wiki retired, all content now lives at solver.ai. The wiki just points there.
+
 ## [0.4.8] - 2025-12-25
 
 Examples! Finally they all work (and can be used as extra tests! optional for now). Also some last changes to solvors that didn't play nice with some of the wikipedia examples. 0.5.0 will be next, which will be considered a "beta" where 0.4.x releases are "alpha". Development cycle will slow down after that, extra maintainers are welcome!
@@ -239,6 +263,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.5.0]: https://github.com/StevenBtw/solvor/compare/v0.4.8...v0.5.0
 [0.4.8]: https://github.com/StevenBtw/solvor/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/StevenBtw/solvor/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/StevenBtw/solvor/compare/v0.4.5...v0.4.6

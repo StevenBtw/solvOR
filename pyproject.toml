@@ -1,6 +1,6 @@
 [project]
 name = "solvOR"
-version = "0.4.8"
+version = "0.5.0"
 description = "Solvor all your optimization needs."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -11,7 +11,7 @@ authors = [
 license = { text = "Apache-2.0" }
 keywords = ["optimization", "solver", "linear-programming", "sat", "metaheuristics", "operations-research"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.12",
@@ -21,6 +21,7 @@ classifiers = [
 ]
 
 [project.urls]
+Website = "https://solver.ai"
 Repository = "https://github.com/StevenBtw/solvOR"
 PyPI = "https://pypi.org/project/solvor"
 
@@ -31,6 +32,12 @@ dev = [
     "ruff>=0.14.10",
     "pre-commit>=4.5.1",
     "ty>=0.0.7",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.27",
+    "mkdocs-git-revision-date-localized-plugin>=1.3",
 ]
 
 [build-system]

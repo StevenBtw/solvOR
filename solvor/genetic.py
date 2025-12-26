@@ -23,7 +23,7 @@ Parameters:
     mutate        : solution -> solution, small random changes - keep it subtle
     elite_size    : survivors per generation, too high = stagnation (default: 2)
     mutation_rate : how often to mutate, too low = premature convergence (default: 0.1)
-    max_gen       : generations to run (default: 100)
+    max_iter      : iterations/generations to run (default: 100)
     tournament_k  : selection pressure, higher = greedier (default: 3)
 
 Don't use this for: problems with gradient info (use gradient descent), convex
@@ -35,7 +35,8 @@ from collections.abc import Callable, Sequence
 from operator import attrgetter
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["evolve"]
 
@@ -52,7 +53,7 @@ def evolve[T](
     elite_size: int = 2,
     mutation_rate: float = 0.1,
     adaptive_mutation: bool = False,
-    max_gen: int = 100,
+    max_iter: int = 100,
     tournament_k: int = 3,
     seed: int | None = None,
     on_progress: ProgressCallback | None = None,
@@ -66,14 +67,8 @@ def evolve[T](
             diversity is low (stagnation), decrease when improving.
     """
     rng = Random(seed)
-    sign = 1 if minimize else -1
+    evaluate = Evaluator(objective_fn, minimize)
     pop_size = len(population)
-    evals = 0
-
-    def evaluate(sol):
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(sol)
 
     pop = [Individual(sol, evaluate(sol)) for sol in population]
     pop.sort(key=attrgetter("fitness"))
@@ -87,7 +82,7 @@ def evolve[T](
     current_mutation_rate = mutation_rate
     stagnation_count = 0
 
-    for gen in range(max_gen):
+    for iteration in range(max_iter):
         new_pop = pop[:elite_size]
 
         while len(new_pop) < pop_size:
@@ -121,12 +116,9 @@ def evolve[T](
                     # Increase mutation when stagnating
                     current_mutation_rate = min(0.5, current_mutation_rate * 1.2)
 
-        if on_progress and progress_interval > 0 and (gen + 1) % progress_interval == 0:
-            current_obj = pop[0].fitness * sign
-            best_so_far = best_fitness * sign
-            progress = Progress(gen + 1, current_obj, best_so_far if best_so_far != current_obj else None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, best_so_far, gen + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1,
+                          evaluate.to_user(pop[0].fitness), evaluate.to_user(best_fitness), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_fitness), iteration + 1, evaluate.evals, Status.FEASIBLE)
 
-    final_obj = best_fitness * sign
-    return Result(best_solution, final_obj, max_gen, evals, Status.FEASIBLE)
+    final_obj = evaluate.to_user(best_fitness)
+    return Result(best_solution, final_obj, max_iter, evaluate.evals, Status.FEASIBLE)
