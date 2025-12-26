@@ -115,7 +115,7 @@ PENTOMINOES = {
 }
 
 
-def generate_placements(piece_name: str, height: int, width: int) -> list[list[int]]:
+def generate_placements(piece_name: str, height: int, width: int) -> list[list[tuple[int, int]]]:
     """Generate all valid placements of a piece on the board."""
     placements = []
     orientations = PENTOMINOES[piece_name]

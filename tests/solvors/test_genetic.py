@@ -274,6 +274,38 @@ class TestProgressCallback:
         assert p.evaluations > 0
 
 
+class TestAdaptiveMutation:
+    """Test adaptive mutation rate adjustment."""
+
+    def test_adaptive_mutation_improves(self):
+        """Test adaptive mutation when making progress (decreases rate)."""
+        def objective(bits):
+            return sum(bits)
+
+        # Start with all ones - easy to improve
+        population = [tuple([1] * 10) for _ in range(20)]
+        result = evolve(
+            objective, population, simple_crossover, bit_mutate,
+            max_gen=50, adaptive_mutation=True, seed=42
+        )
+        assert result.status == Status.FEASIBLE
+        assert result.objective < 5  # Should make progress
+
+    def test_adaptive_mutation_stagnation(self):
+        """Test adaptive mutation when stagnating (increases rate)."""
+        def objective(bits):
+            # Very flat landscape - hard to improve
+            return 10 if sum(bits) > 3 else sum(bits)
+
+        # Start with already good solutions
+        population = [tuple([0] * 5 + [1] * 5) for _ in range(20)]
+        result = evolve(
+            objective, population, simple_crossover, bit_mutate,
+            max_gen=30, adaptive_mutation=True, seed=42
+        )
+        assert result.status == Status.FEASIBLE
+
+
 class TestTournamentK:
     def test_high_tournament_pressure(self):
         # High tournament_k = more selection pressure

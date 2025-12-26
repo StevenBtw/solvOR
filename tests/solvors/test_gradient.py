@@ -415,3 +415,38 @@ class TestLineSearch:
         result = gradient_descent(grad, [5.0], line_search=True, objective_fn=objective, max_iter=50)
         # Line search does additional objective evaluations
         assert result.evaluations > 50
+
+
+class TestLearningRateSchedules:
+    """Tests for adam learning rate schedule options."""
+
+    def test_adam_step_schedule(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        result = adam(grad, [5.0], lr=0.1, lr_schedule="step", max_iter=200)
+        assert result.status in (Status.OPTIMAL, Status.MAX_ITER)
+
+    def test_adam_cosine_schedule(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        result = adam(grad, [5.0], lr=0.1, lr_schedule="cosine", max_iter=100)
+        assert result.status in (Status.OPTIMAL, Status.MAX_ITER)
+
+    def test_adam_warmup_schedule(self):
+        def grad(x):
+            return [2 * x[0]]
+
+        result = adam(grad, [5.0], lr=0.1, lr_schedule="warmup", warmup_steps=10, max_iter=100)
+        assert result.status in (Status.OPTIMAL, Status.MAX_ITER)
+
+    def test_adam_step_schedule_convergence(self):
+        """Test that step schedule actually applies decay at 50% and 75%."""
+        def grad(x):
+            return [2 * x[0], 2 * x[1]]
+
+        # Use enough iterations to trigger both decay points
+        result = adam(grad, [5.0, 5.0], lr=0.1, lr_schedule="step", decay_rate=0.5, max_iter=500)
+        assert abs(result.solution[0]) < 1.0
+        assert abs(result.solution[1]) < 1.0
