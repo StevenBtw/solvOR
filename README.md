@@ -1,4 +1,8 @@
-# solvOR
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.svg">
+  <img alt="solvOR" src="docs/assets/logo-light.svg" width="200">
+</picture>
 
 [![Build Status](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/StevenBtw/solvOR/graph/badge.svg?token=A3H2COO119)](https://codecov.io/gh/StevenBtw/solvOR)
@@ -442,6 +446,12 @@ Result(
 2. **Readable:** each solvor fits in one file you can actually read
 3. **Consistent:** same Result format, same minimize/maximize convention
 4. **Practical:** solves real problems (and AoC puzzles, obviously)
+
+---
+
+## Documentation
+
+Full docs at **[solver.ai](https://solver.ai)** - getting started, algorithm reference, cookbook with worked examples, and troubleshooting.
 
 ---
 

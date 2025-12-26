@@ -1,0 +1,91 @@
+/* Custom styles for solvOR documentation */
+
+:root {
+  /* Dark slate for header/primary elements */
+  --md-primary-fg-color: #1e293b;
+  --md-primary-fg-color--light: #334155;
+  --md-primary-fg-color--dark: #0f172a;
+  /* Teal for accent/interactive elements */
+  --md-accent-fg-color: #009688;
+  --md-accent-fg-color--transparent: #00968820;
+}
+
+/* Code block styling */
+.md-typeset code {
+  font-size: 0.85em;
+}
+
+/* Make tables more readable */
+.md-typeset table:not([class]) {
+  font-size: 0.8rem;
+}
+
+/* Hero section on home page */
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+/* Card grid styling */
+.grid.cards > ul > li {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/* Admonition styling */
+.md-typeset .admonition {
+  border-radius: 0.25rem;
+}
+
+/* Navigation links - more visible in dark mode */
+.md-nav__link {
+  color: var(--md-default-fg-color--light) !important;
+}
+
+.md-nav__link:hover,
+.md-nav__link--active {
+  color: var(--md-accent-fg-color) !important;
+}
+
+/* Sidebar nav items */
+[data-md-color-scheme="slate"] .md-nav__link {
+  color: #94a3b8 !important;
+}
+
+[data-md-color-scheme="slate"] .md-nav__link:hover,
+[data-md-color-scheme="slate"] .md-nav__link--active {
+  color: #5eead4 !important;
+}
+
+/* Content links */
+[data-md-color-scheme="slate"] .md-typeset a {
+  color: #5eead4;
+}
+
+[data-md-color-scheme="slate"] .md-typeset a:hover {
+  color: #99f6e4;
+}
+
+/* Hide site name text in header (logo is enough) */
+.md-header__topic .md-ellipsis {
+  display: none;
+}
+
+/* Hero logo on homepage */
+.logo-hero {
+  height: 80px;
+  width: auto;
+  margin-bottom: 0.5rem;
+}
+
+/* Visually hidden (for accessibility/SEO) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

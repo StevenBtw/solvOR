@@ -1,0 +1,183 @@
+site_name: solvOR
+site_url: https://solver.ai
+site_description: Pure Python optimization library - zero dependencies, maximum performance
+site_author: Steven Bytheway
+repo_url: https://github.com/StevenBtw/solvOR
+repo_name: StevenBtw/solvOR
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+  logo: assets/logo.svg
+  favicon: assets/favicon.ico
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            docstring_style: google
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.snippets:
+      base_path: ["."]
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/StevenBtw/solvOR
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/solvor/
+  generator: false
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+      - Choosing a Solver: getting-started/choosing-solver.md
+  - Algorithms:
+      - Overview: algorithms/index.md
+      - Linear Programming:
+          - solve_lp: algorithms/linear-programming/solve-lp.md
+          - solve_milp: algorithms/linear-programming/solve-milp.md
+      - Constraint Programming:
+          - solve_sat: algorithms/constraint-programming/solve-sat.md
+          - CP-SAT Model: algorithms/constraint-programming/cp-sat.md
+          - solve_exact_cover: algorithms/constraint-programming/solve-exact-cover.md
+      - Metaheuristics:
+          - Overview: algorithms/metaheuristics/index.md
+          - Simulated Annealing: algorithms/metaheuristics/anneal.md
+          - Tabu Search: algorithms/metaheuristics/tabu.md
+          - Genetic Algorithms: algorithms/metaheuristics/genetic.md
+          - LNS / ALNS: algorithms/metaheuristics/lns.md
+      - Continuous Optimization:
+          - Overview: algorithms/continuous/index.md
+          - Gradient Descent: algorithms/continuous/gradient.md
+          - BFGS / L-BFGS: algorithms/continuous/bfgs.md
+          - Nelder-Mead: algorithms/continuous/nelder-mead.md
+          - Powell: algorithms/continuous/powell.md
+          - Bayesian Optimization: algorithms/continuous/bayesian.md
+          - Differential Evolution: algorithms/continuous/differential-evolution.md
+          - Particle Swarm: algorithms/continuous/particle-swarm.md
+      - Graph Algorithms:
+          - Overview: algorithms/graph/index.md
+          - Pathfinding: algorithms/graph/pathfinding.md
+          - Shortest Paths: algorithms/graph/shortest-paths.md
+          - Network Flow: algorithms/graph/network-flow.md
+          - Minimum Spanning Tree: algorithms/graph/mst.md
+      - Combinatorial:
+          - Overview: algorithms/combinatorial/index.md
+          - Knapsack: algorithms/combinatorial/knapsack.md
+          - Bin Packing: algorithms/combinatorial/bin-packing.md
+          - Job Shop: algorithms/combinatorial/job-shop.md
+          - VRP: algorithms/combinatorial/vrp.md
+  - Examples:
+      - Overview: examples/index.md
+      - Quick Examples: examples/quick-examples.md
+      - Classic Problems: examples/classic.md
+      - Puzzles: examples/puzzles.md
+      - Real World: examples/real-world.md
+  - Cookbook:
+      - Overview: cookbook/index.md
+      - TSP: cookbook/tsp.md
+      - Sudoku: cookbook/sudoku.md
+      - Knapsack: cookbook/knapsack.md
+      - N-Queens: cookbook/n-queens.md
+      - Diet Problem: cookbook/diet.md
+      - Nurse Scheduling: cookbook/nurse-scheduling.md
+      - Bin Packing: cookbook/bin-packing.md
+      - Job Shop: cookbook/job-shop.md
+      - Shortest Path Grid: cookbook/shortest-path-grid.md
+      - Max Flow: cookbook/max-flow.md
+      - Resource Allocation: cookbook/resource-allocation.md
+      - Assignment: cookbook/assignment.md
+      - Magic Square: cookbook/magic-square.md
+      - Portfolio: cookbook/portfolio.md
+      - Pentomino: cookbook/pentomino.md
+      - Currency Arbitrage: cookbook/currency-arbitrage.md
+      - Production Planning: cookbook/production-planning.md
+      - Graph Coloring: cookbook/graph-coloring.md
+  - API Reference:
+      - Overview: api/index.md
+      - Types: api/types.md
+      - Utilities: api/utilities.md
+  - Troubleshooting: troubleshooting.md
