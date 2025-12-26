@@ -27,7 +27,8 @@ or very high dimensions (the method needs O(n) line searches per iteration).
 from collections.abc import Callable, Sequence
 from math import sqrt
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import report_progress
 
 __all__ = ["powell"]
 
@@ -241,9 +242,7 @@ def powell(
             x, f_x, ls_evals = _line_search(objective_fn, x, displacement, sign, bounds_list)
             evals += ls_evals
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            progress = Progress(iteration + 1, f_x, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, f_x, iteration + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1, f_x, f_x, evals):
+            return Result(x, f_x, iteration + 1, evals, Status.FEASIBLE)
 
     return Result(x, f_x, max_iter, evals, Status.MAX_ITER)

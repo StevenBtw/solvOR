@@ -27,7 +27,8 @@ or when gradients are expensive (consider derivative-free methods).
 from collections.abc import Callable, Sequence
 from math import sqrt
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import report_progress
 
 __all__ = ["bfgs", "lbfgs"]
 
@@ -179,11 +180,9 @@ def bfgs(
         x = x_new
         grad = grad_new
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            obj = objective_fn(x) if objective_fn else grad_norm
-            progress = Progress(iteration + 1, obj, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, obj, iteration + 1, evals, Status.FEASIBLE)
+        obj = objective_fn(x) if objective_fn else grad_norm
+        if report_progress(on_progress, progress_interval, iteration + 1, obj, obj, evals):
+            return Result(x, obj, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(_dot(grad, grad))
     obj = objective_fn(x) if objective_fn else grad_norm
@@ -303,11 +302,9 @@ def lbfgs(
         x = x_new
         grad = grad_new
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            obj = objective_fn(x) if objective_fn else grad_norm
-            progress = Progress(iteration + 1, obj, None, evals)
-            if on_progress(progress) is True:
-                return Result(x, obj, iteration + 1, evals, Status.FEASIBLE)
+        obj = objective_fn(x) if objective_fn else grad_norm
+        if report_progress(on_progress, progress_interval, iteration + 1, obj, obj, evals):
+            return Result(x, obj, iteration + 1, evals, Status.FEASIBLE)
 
     grad_norm = sqrt(_dot(grad, grad))
     obj = objective_fn(x) if objective_fn else grad_norm

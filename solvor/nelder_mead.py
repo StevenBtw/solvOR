@@ -23,7 +23,8 @@ combine with random restarts or use differential_evolution.
 
 from collections.abc import Callable, Sequence
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["nelder_mead"]
 
@@ -42,8 +43,7 @@ def nelder_mead(
 ) -> Result:
     """Derivative-free optimization using simplex reflections."""
     n = len(x0)
-    sign = 1 if minimize else -1
-    evals = 0
+    evaluate = Evaluator(objective_fn, minimize)
 
     # Nelder-Mead parameters
     if adaptive:
@@ -58,11 +58,6 @@ def nelder_mead(
         gamma = 2.0  # expansion
         rho = 0.5  # contraction
         sigma = 0.5  # shrink
-
-    def evaluate(x: list[float]) -> float:
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(x)
 
     # Build initial simplex: x0 plus n vertices offset in each direction
     simplex: list[list[float]] = [list(x0)]
@@ -145,19 +140,17 @@ def nelder_mead(
                     # Shrink toward best
                     _shrink(simplex, values, sigma, evaluate)
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            best = values[0] * sign
-            progress = Progress(iteration, best, None, evals)
-            if on_progress(progress) is True:
-                return Result(simplex[0], best, iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration,
+                          evaluate.to_user(values[0]), evaluate.to_user(values[0]), evaluate.evals):
+            return Result(simplex[0], evaluate.to_user(values[0]), iteration, evaluate.evals, Status.FEASIBLE)
 
     # Find best vertex
     best_idx = min(range(n + 1), key=lambda i: values[i])
     best_solution = simplex[best_idx]
-    best_objective = values[best_idx] * sign
+    best_objective = evaluate.to_user(values[best_idx])
 
     status = Status.OPTIMAL if iteration < max_iter else Status.MAX_ITER
-    return Result(best_solution, best_objective, iteration, evals, status)
+    return Result(best_solution, best_objective, iteration, evaluate.evals, status)
 
 
 def _shrink(
