@@ -39,4 +39,4 @@ Working examples solving real problems with solvOR.
 
 - **Start Simple** - Run the basic example first
 - **Understand the Encoding** - How is the problem represented?
-- **Check Status** - Always verify `result.status` before using the solution
+- **Check `result.ok`** - Always verify the solution is usable before accessing it

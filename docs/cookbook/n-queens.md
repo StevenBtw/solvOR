@@ -1,10 +1,10 @@
 # N-Queens
 
-Place N queens on an NxN chessboard with no conflicts.
+Place N queens on an NxN chessboard with no conflicts. The classic constraint satisfaction demo.
 
 ## The Problem
 
-Place N queens so no two queens attack each other. Queens attack along rows, columns, and diagonals.
+Place N queens so no two attack each other. Queens attack along rows, columns, and diagonals. For 8 queens there are 92 solutions. For 27 queens there are over 234 billion. The search space explodes, but constraints cut it down beautifully.
 
 ## Example
 

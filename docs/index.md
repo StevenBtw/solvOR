@@ -1,6 +1,6 @@
 # solvOR { .visually-hidden }
 
-![solvOR](assets/logo.svg){ .logo-hero }
+![solvOR logo](assets/logo.svg){ .logo-hero }
 
 **Solvor all your optimization needs.**
 
@@ -75,10 +75,12 @@ print(result.solution)  # [1, 0]
 
 ## Philosophy
 
-1. **Pure Python** - no external dependencies, runs anywhere
-2. **Readable** - each solver fits in one file you can understand
-3. **Consistent** - same Result format, same conventions
-4. **Practical** - solves real problems (and AoC puzzles)
+1. **Pure Python** - no numpy, no scipy, runs anywhere Python runs
+2. **Readable** - each solver fits in one file you can actually read
+3. **Consistent** - same Result format, same conventions across all solvers
+4. **Practical** - solves real problems and AoC puzzles, obviously
+
+Working > perfect. Readable > clever. Simple > general.
 
 [Get Started](getting-started/installation.md){ .md-button .md-button--primary }
 [Examples](examples/index.md){ .md-button }

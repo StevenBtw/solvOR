@@ -1,10 +1,10 @@
 # Assignment Problem
 
-Optimally assign workers to tasks minimizing total cost.
+Optimally assign workers to tasks minimizing total cost. The Hungarian algorithm solves this in O(n³), making it practical for thousands of workers.
 
 ## The Problem
 
-Given n workers and n tasks with a cost matrix, assign each worker to exactly one task (and vice versa) to minimize total cost.
+n workers, n tasks, a cost for each pairing. Assign each worker to exactly one task and vice versa. Minimize total cost. Unlike general matching, this is one of the few combinatorial problems with a fast exact algorithm.
 
 ## Example
 

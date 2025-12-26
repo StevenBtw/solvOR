@@ -1,10 +1,10 @@
 # Knapsack Problem
 
-Select items to maximize value within weight constraint.
+Select items to maximize value within weight constraint. The problem that made dynamic programming famous.
 
 ## The Problem
 
-Given items with values and weights, and a knapsack with limited capacity, select items to maximize total value without exceeding capacity.
+You're packing for a hike. Each item has value and weight. Your bag has a limit. What do you take? This is knapsack - and it's everywhere: budget allocation, cargo loading, cutting stock.
 
 ## Example
 

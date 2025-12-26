@@ -1,9 +1,10 @@
 """
 A* search for goal-directed shortest paths with heuristics.
 
-Use this when you have an estimate of distance to the goal. A* expands fewer
-nodes than Dijkstra by prioritizing promising directions. The heuristic must
-be admissible (never overestimate) for optimal results.
+Dijkstra explores in all directions like ripples in a pond. A* knows where it's
+going and prioritizes paths that look promising. Give it a heuristic (estimate
+to goal) and it expands far fewer nodes. The heuristic must be admissible (never
+overestimate) for optimal results.
 
     from solvor.a_star import astar, astar_grid
 

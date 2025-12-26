@@ -1,6 +1,6 @@
 # Algorithms
 
-solvOR packs 40+ algorithms into one library. Here's how to find the right one.
+40+ algorithms, one library. Here's how to find the right one for your problem.
 
 ## By Category
 

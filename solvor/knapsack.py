@@ -1,8 +1,10 @@
 """
 0/1 Knapsack solver using dynamic programming.
 
-Classic optimization problem: select items to maximize value without exceeding
-capacity. Each item can be taken or left (0/1), no fractional items.
+The problem that launched a thousand algorithms. Select items to maximize value
+without exceeding capacity. Each item is all-or-nothing (0/1), no cutting that
+gold bar in half. DP builds up the answer by asking "what's the best I can do
+with capacity w?" for every w from 0 to your limit.
 
     from solvor.knapsack import solve_knapsack
 
