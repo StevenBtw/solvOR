@@ -35,7 +35,8 @@ from collections.abc import Callable, Sequence
 from operator import attrgetter
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import Evaluator, report_progress
 
 __all__ = ["evolve"]
 
@@ -66,14 +67,8 @@ def evolve[T](
             diversity is low (stagnation), decrease when improving.
     """
     rng = Random(seed)
-    sign = 1 if minimize else -1
+    evaluate = Evaluator(objective_fn, minimize)
     pop_size = len(population)
-    evals = 0
-
-    def evaluate(sol):
-        nonlocal evals
-        evals += 1
-        return sign * objective_fn(sol)
 
     pop = [Individual(sol, evaluate(sol)) for sol in population]
     pop.sort(key=attrgetter("fitness"))
@@ -121,12 +116,9 @@ def evolve[T](
                     # Increase mutation when stagnating
                     current_mutation_rate = min(0.5, current_mutation_rate * 1.2)
 
-        if on_progress and progress_interval > 0 and (iteration + 1) % progress_interval == 0:
-            current_obj = pop[0].fitness * sign
-            best_so_far = best_fitness * sign
-            progress = Progress(iteration + 1, current_obj, best_so_far if best_so_far != current_obj else None, evals)
-            if on_progress(progress) is True:
-                return Result(best_solution, best_so_far, iteration + 1, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration + 1,
+                          evaluate.to_user(pop[0].fitness), evaluate.to_user(best_fitness), evaluate.evals):
+            return Result(best_solution, evaluate.to_user(best_fitness), iteration + 1, evaluate.evals, Status.FEASIBLE)
 
-    final_obj = best_fitness * sign
-    return Result(best_solution, final_obj, max_iter, evals, Status.FEASIBLE)
+    final_obj = evaluate.to_user(best_fitness)
+    return Result(best_solution, final_obj, max_iter, evaluate.evals, Status.FEASIBLE)
