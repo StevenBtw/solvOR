@@ -34,16 +34,18 @@ print(result.solution)  # {'x': 3, 'y': 5, 'z': 7} or similar
 
 ```python
 x = m.int_var(1, 9, 'x')      # Integer in [1, 9]
-b = m.bool_var('b')            # Boolean
+b = m.int_var(0, 1, 'b')      # Boolean (0 or 1)
 ```
 
 ### Adding Constraints
 
 ```python
-m.add(x + y == 10)             # Arithmetic
-m.add(x < y)                   # Comparison
+m.add(x + y == 10)             # Arithmetic equality
+m.add(x != y)                  # Inequality
 m.add(m.all_different([x, y, z]))  # Global constraint
 m.add(m.sum_eq([x, y, z], 15)) # Sum constraint
+m.add(m.sum_le([x, y], 10))    # Sum upper bound
+m.add(m.sum_ge([x, y], 5))     # Sum lower bound
 ```
 
 ### Solving

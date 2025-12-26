@@ -162,7 +162,7 @@ Population-based global search. Let a swarm of candidates explore for you. DE an
 
 ```python
 result = evolve(objective_fn=fitness, population=pop, crossover=cx, mutate=mut)
-result = differential_evolution(objective_fn, bounds=[(0, 10)] * n, pop_size=50)
+result = differential_evolution(objective_fn, bounds=[(0, 10)] * n, population_size=50)
 result = particle_swarm(objective_fn, bounds=[(0, 10)] * n, n_particles=30)
 ```
 

@@ -35,6 +35,7 @@ def dijkstra[S](
     max_iter: int = 1_000_000,
     max_cost: float | None = None,
 ) -> Result:
+    """Find shortest path in a weighted graph with non-negative edges."""
     is_goal = goal if callable(goal) else lambda s: s == goal
 
     g: dict[S, float] = {start: 0.0}

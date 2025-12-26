@@ -16,9 +16,11 @@ Dancing Links (Algorithm X). Solves exact cover using linked list "dancing". Nod
 def solve_exact_cover(
     matrix: Sequence[Sequence[int]],
     *,
+    columns: Sequence | None = None,
+    secondary: Sequence | None = None,
     find_all: bool = False,
     max_solutions: int | None = None,
-    secondary: Sequence[int] | None = None,
+    max_iter: int = 10_000_000,
 ) -> Result[tuple[int, ...] | list[tuple[int, ...]]]
 ```
 
@@ -27,9 +29,10 @@ def solve_exact_cover(
 | Parameter | Description |
 |-----------|-------------|
 | `matrix` | Binary matrix (0s and 1s) |
+| `columns` | Optional names for columns (default: 0, 1, 2, ...) |
+| `secondary` | Column names that can be covered 0 or 1 times (optional) |
 | `find_all` | If True, find all solutions |
 | `max_solutions` | Limit number of solutions |
-| `secondary` | Column indices that can be covered 0 or 1 times (optional) |
 
 ## Example
 

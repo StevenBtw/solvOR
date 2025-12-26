@@ -12,8 +12,8 @@ def objective(x):
 
 result = differential_evolution(
     objective,
-    bounds=[(−10, 10)] * 5,
-    pop_size=50,
+    bounds=[(-10, 10)] * 5,
+    population_size=50,
     max_iter=1000
 )
 print(result.solution)  # Close to [0, 0, 0, 0, 0]
@@ -24,9 +24,10 @@ print(result.solution)  # Close to [0, 0, 0, 0, 0]
 | Parameter | Description |
 |-----------|-------------|
 | `bounds` | List of (min, max) for each dimension |
-| `pop_size` | Population size (default: 10 × dimensions) |
-| `F` | Mutation scale (default: 0.8) |
-| `CR` | Crossover probability (default: 0.9) |
+| `population_size` | Population size (default: 15) |
+| `mutation` | Mutation scale (default: 0.8) |
+| `crossover` | Crossover probability (default: 0.7) |
+| `strategy` | Mutation strategy: `rand/1`, `best/1`, etc. (default: `rand/1`) |
 
 ## When to Use
 
