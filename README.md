@@ -357,12 +357,13 @@ result = solve_knapsack(values, weights, capacity=50)
 
 ### solve_bin_pack
 
-Bin packing with First Fit Decreasing. Minimize bins needed for items.
+Bin packing heuristics. Minimize bins needed for items.
 
 ```python
 items = [4, 8, 1, 4, 2, 1]
 result = solve_bin_pack(items, bin_capacity=10)
-# result.solution = [[8, 2], [4, 4, 1, 1]] - items per bin
+# result.solution = (1, 0, 0, 1, 0, 0) - bin index for each item
+# result.objective = 2 (number of bins)
 ```
 
 ### solve_job_shop

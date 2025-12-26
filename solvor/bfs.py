@@ -34,6 +34,7 @@ def bfs[S](
     *,
     max_iter: int = 1_000_000,
 ) -> Result:
+    """Breadth-first search, guarantees shortest path in unweighted graphs."""
     is_goal = (lambda s: s == goal) if not callable(goal) and goal is not None else goal
 
     parent: dict[S, S] = {}
@@ -70,6 +71,7 @@ def dfs[S](
     *,
     max_iter: int = 1_000_000,
 ) -> Result:
+    """Depth-first search, finds a path (not necessarily shortest)."""
     is_goal = (lambda s: s == goal) if not callable(goal) and goal is not None else goal
 
     parent: dict[S, S] = {}
