@@ -109,13 +109,16 @@ def evolve[T](
             best_fitness = pop[0].fitness
             improved = True
 
+        # Adaptive mutation: adjust rate based on progress
         if adaptive_mutation:
             if improved:
                 stagnation_count = 0
+                # Decrease mutation when improving
                 current_mutation_rate = max(0.01, current_mutation_rate * 0.95)
             else:
                 stagnation_count += 1
                 if stagnation_count >= 5:
+                    # Increase mutation when stagnating
                     current_mutation_rate = min(0.5, current_mutation_rate * 1.2)
 
         if on_progress and progress_interval > 0 and (gen + 1) % progress_interval == 0:

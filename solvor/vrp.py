@@ -125,7 +125,7 @@ class VRPState:
             return []
 
         times = []
-        t = self.dist(0, route[0])
+        t = self.dist(0, route[0])  # Travel from depot
 
         for i, cid in enumerate(route):
             c = self.customers[cid]
@@ -284,7 +284,7 @@ def worst_removal(state: VRPState, rng: Random, degree: float = 0.2) -> VRPState
     candidates = [c for _, c in costs]
 
     while len(to_remove) < n_remove and candidates:
-        p = rng.random() ** 2
+        p = rng.random() ** 2  # bias toward worst
         idx = min(int(p * len(candidates)), len(candidates) - 1)
         to_remove.add(candidates.pop(idx))
 

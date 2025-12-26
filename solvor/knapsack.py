@@ -44,28 +44,39 @@ def solve_knapsack(
 
     check_sequence_lengths((values, "values"), (weights, "weights"))
     check_non_negative(capacity, name="capacity")
-    
+
+    # Handle minimize by negating values
     sign = -1 if minimize else 1
     vals = [sign * v for v in values]
 
+    # Convert to integer capacity for DP (scale if needed)
     int_capacity, scale = _to_int_capacity(capacity, weights)
 
     if int_capacity == 0:
+        # No capacity, can't take anything
         return Result((), 0.0, 0, n, Status.OPTIMAL)
 
+    # Scale weights
     int_weights = [max(1, int(w * scale)) if w > 0 else 0 for w in weights]
+
+    # DP table: dp[w] = max value achievable with capacity w
     dp = [0.0] * (int_capacity + 1)
+
+    # Track which items were selected
+    # keep[i][w] = True if item i was taken at capacity w
     keep = [[False] * (int_capacity + 1) for _ in range(n)]
 
     for i in range(n):
         w_i = int_weights[i]
         v_i = vals[i]
 
+        # Traverse backwards to avoid using same item twice
         for w in range(int_capacity, w_i - 1, -1):
             if dp[w - w_i] + v_i > dp[w]:
                 dp[w] = dp[w - w_i] + v_i
                 keep[i][w] = True
 
+    # Backtrack to find selected items
     selected = []
     w = int_capacity
     for i in range(n - 1, -1, -1):
@@ -76,10 +87,13 @@ def solve_knapsack(
     selected.reverse()
     selected_tuple = tuple(selected)
 
+    # Compute actual objective with original values
     objective = sum(values[i] for i in selected)
 
+    # Verify weight constraint (in case of scaling errors)
     total_weight = sum(weights[i] for i in selected)
     if total_weight > capacity + 1e-9:
+        # Scaling caused infeasibility, fall back to greedy
         return _greedy_fallback(values, weights, capacity, minimize)
 
     return Result(selected_tuple, objective, 0, n, Status.OPTIMAL)
@@ -87,8 +101,10 @@ def solve_knapsack(
 
 def _to_int_capacity(capacity: float, weights: Sequence[float]) -> tuple[int, float]:
     """Convert capacity to integer, returning (int_capacity, scale_factor)."""
+    # Find minimum granularity needed
     all_vals = [capacity] + [w for w in weights if w > 0]
 
+    # Check if already integers
     if all(v == int(v) for v in all_vals):
         return int(capacity), 1.0
 
@@ -114,6 +130,7 @@ def _greedy_fallback(
     if n == 0:
         return Result((), 0.0, 0, 0, Status.FEASIBLE)
 
+    # Sort by value/weight ratio (or weight/value for minimize)
     indices = list(range(n))
     if minimize:
         # For minimize, prefer low value items that fit

@@ -18,6 +18,12 @@ the most promising branches.
     result = solve_milp(c, A, b, integers=[0, 2])
     result = solve_milp(c, A, b, integers=[0, 1], minimize=False)  # maximize
 
+    # warm start from previous solution (prunes search tree)
+    result = solve_milp(c, A, b, integers=[0, 2], warm_start=previous.solution)
+
+    # find multiple solutions (result.solutions contains all found)
+    result = solve_milp(c, A, b, integers=[0, 2], solution_limit=5)
+
 CP is more expressive for logical constraints like "all different" but
 doesn't optimize. SAT handles boolean satisfiability only. MILP is for
 when you have a clear linear objective and need the optimal value.
@@ -33,6 +39,7 @@ from typing import NamedTuple
 from solvor.simplex import Status as LPStatus
 from solvor.simplex import solve_lp
 from solvor.types import Result, Status
+from solvor.utils import check_integers_valid, check_matrix_dims, warn_large_coefficients
 
 __all__ = ["solve_milp"]
 
@@ -56,8 +63,14 @@ def solve_milp(
     max_iter: int = 10_000,
     max_nodes: int = 100_000,
     gap_tol: float = 1e-6,
+    warm_start: Sequence[float] | None = None,
+    solution_limit: int = 1,
 ) -> Result:
     n = len(c)
+    check_matrix_dims(c, A, b)
+    check_integers_valid(integers, n)
+    warn_large_coefficients(A)
+
     int_set = set(integers)
     total_iters = 0
 
@@ -75,6 +88,15 @@ def solve_milp(
 
     best_solution, best_obj = None, float("inf") if minimize else float("-inf")
     sign = 1 if minimize else -1
+    all_solutions: list[tuple] = []
+
+    # Use warm start as initial incumbent if provided and feasible
+    if warm_start is not None:
+        ws = tuple(warm_start)
+        if len(ws) == n and _is_feasible(ws, A, b, int_set, eps):
+            best_obj = sum(c[j] * ws[j] for j in range(n))
+            best_solution = ws
+            all_solutions.append(ws)
 
     frac_var = _most_fractional(root_result.solution, int_set, eps)
 
@@ -107,14 +129,29 @@ def solve_milp(
         frac_var = _most_fractional(result.solution, int_set, eps)
 
         if frac_var is None:
-            if sign * result.objective < sign * best_obj:
-                best_solution, best_obj = result.solution, result.objective
+            # Found an integer-feasible solution
+            sol = tuple(result.solution)
+            sol_obj = result.objective
 
-                if best_solution is not None:
-                    gap = _compute_gap(best_obj, node_bound / sign if node_bound != 0 else 0, minimize)
+            # Collect solution if within limit
+            if solution_limit > 1 and sol not in all_solutions:
+                all_solutions.append(sol)
+                if len(all_solutions) >= solution_limit:
+                    return Result(
+                        best_solution or sol,
+                        best_obj if best_solution else sol_obj,
+                        nodes_explored,
+                        total_iters,
+                        Status.FEASIBLE,
+                        solutions=tuple(all_solutions),
+                    )
 
-                    if gap < gap_tol:
-                        return Result(best_solution, best_obj, nodes_explored, total_iters)
+            if sign * sol_obj < sign * best_obj:
+                best_solution, best_obj = sol, sol_obj
+
+                gap = _compute_gap(best_obj, node_bound / sign if node_bound != 0 else 0, minimize)
+                if gap < gap_tol and solution_limit == 1:
+                    return Result(best_solution, best_obj, nodes_explored, total_iters)
 
             continue
 
@@ -137,6 +174,8 @@ def solve_milp(
         return Result(None, float("inf") if minimize else float("-inf"), nodes_explored, total_iters, Status.INFEASIBLE)
 
     status = Status.OPTIMAL if not tree else Status.FEASIBLE
+    if solution_limit > 1 and all_solutions:
+        return Result(best_solution, best_obj, nodes_explored, total_iters, status, solutions=tuple(all_solutions))
     return Result(best_solution, best_obj, nodes_explored, total_iters, status)
 
 
@@ -147,7 +186,7 @@ def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
     bound_rhs = []
 
     for j in range(n):
-        if lower[j] > eps:
+        if lower[j] > -float("inf"):
             row = [0.0] * n
             row[j] = -1.0
             bound_rows.append(row)
@@ -186,3 +225,21 @@ def _compute_gap(best_obj, bound, minimize):
         return abs(best_obj - bound)
 
     return abs(best_obj - bound) / abs(best_obj)
+
+
+def _is_feasible(x, A, b, int_set, eps):
+    """Check if solution satisfies constraints and integrality."""
+    n = len(x)
+    # Non-negativity
+    if any(x[j] < -eps for j in range(n)):
+        return False
+    # Integrality
+    for j in int_set:
+        if abs(x[j] - round(x[j])) > eps:
+            return False
+    # Constraints A @ x <= b
+    for i, row in enumerate(A):
+        lhs = sum(row[j] * x[j] for j in range(n))
+        if lhs > b[i] + eps:
+            return False
+    return True

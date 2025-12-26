@@ -27,6 +27,7 @@ Don't use this for: non-negative edges (use dijkstra), or all-pairs (floyd_warsh
 """
 
 from solvor.types import Result, Status
+from solvor.utils import check_edge_nodes, check_in_range, check_positive
 
 __all__ = ["bellman_ford"]
 
@@ -38,6 +39,12 @@ def bellman_ford(
     *,
     target: int | None = None,
 ) -> Result:
+    check_positive(n_nodes, name="n_nodes")
+    check_in_range(start, 0, n_nodes - 1, name="start")
+    check_edge_nodes(edges, n_nodes)
+    if target is not None:
+        check_in_range(target, 0, n_nodes - 1, name="target")
+
     dist = [float("inf")] * n_nodes
     parent = [-1] * n_nodes
     dist[start] = 0.0
