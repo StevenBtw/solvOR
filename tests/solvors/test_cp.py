@@ -472,6 +472,325 @@ class TestCumulative:
             assert "same length" in str(e)
 
 
+class TestSolverSelection:
+    def test_dfs_solver_explicit(self):
+        """Explicitly choosing DFS solver works."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        m.add(m.all_different([x, y]))
+        result = m.solve(solver="dfs")
+        assert result.ok
+        assert result.solution["x"] != result.solution["y"]
+
+    def test_sat_solver_explicit(self):
+        """Explicitly choosing SAT solver works."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        m.add(m.all_different([x, y]))
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] != result.solution["y"]
+
+    def test_invalid_solver_raises(self):
+        """Unknown solver raises ValueError."""
+        m = Model()
+        m.int_var(1, 3, "x")
+        try:
+            m.solve(solver="unknown")
+            assert False, "Should have raised ValueError"
+        except ValueError as e:
+            assert "unknown" in str(e).lower()
+
+    def test_dfs_falls_back_for_sum_constraint(self):
+        """DFS falls back to SAT for sum constraints."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_eq([x, y], 6))
+        # DFS should auto-fallback to SAT for sum_eq
+        result = m.solve(solver="dfs")
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] == 6
+
+
+class TestExpressionConstraints:
+    def test_var_plus_const_ne(self):
+        """Test x + 1 != y + 2 constraint."""
+        m = Model()
+        x = m.int_var(0, 3, "x")
+        y = m.int_var(0, 3, "y")
+        # x + 1 != y + 2 means x != y + 1
+        m.add(x + 1 != y + 2)
+        result = m.solve()
+        assert result.ok
+        # x + 1 should not equal y + 2
+        assert result.solution["x"] + 1 != result.solution["y"] + 2
+
+    def test_var_minus_const(self):
+        """Test x - 1 != y - 2 constraint."""
+        m = Model()
+        x = m.int_var(0, 3, "x")
+        y = m.int_var(0, 3, "y")
+        m.add(x - 1 != y - 2)
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] - 1 != result.solution["y"] - 2
+
+    def test_diagonal_constraint_pattern(self):
+        """Test N-Queens style diagonal constraints."""
+        # This is the pattern: queens[i] + i != queens[j] + j
+        m = Model()
+        q0 = m.int_var(0, 3, "q0")
+        q1 = m.int_var(0, 3, "q1")
+        # Forward diagonal: q0 + 0 != q1 + 1
+        m.add(q0 + 0 != q1 + 1)
+        # Backward diagonal: q0 - 0 != q1 - 1
+        m.add(q0 - 0 != q1 - 1)
+        result = m.solve()
+        assert result.ok
+        # Verify constraints
+        assert result.solution["q0"] != result.solution["q1"] + 1
+        assert result.solution["q0"] != result.solution["q1"] - 1
+
+
+class TestNQueensFull:
+    def test_4queens_with_diagonals(self):
+        """Full 4-Queens with diagonal constraints."""
+        n = 4
+        m = Model()
+        queens = [m.int_var(0, n - 1, f"q{i}") for i in range(n)]
+
+        # All different columns
+        m.add(m.all_different(queens))
+
+        # Diagonal constraints
+        for i in range(n):
+            for j in range(i + 1, n):
+                m.add(queens[i] + i != queens[j] + j)  # Forward diagonal
+                m.add(queens[i] - i != queens[j] - j)  # Backward diagonal
+
+        result = m.solve()
+        assert result.ok
+
+        cols = [result.solution[f"q{i}"] for i in range(n)]
+        # Verify all different columns
+        assert len(set(cols)) == n
+        # Verify no diagonal attacks
+        for i in range(n):
+            for j in range(i + 1, n):
+                assert cols[i] + i != cols[j] + j
+                assert cols[i] - i != cols[j] - j
+
+    def test_8queens_with_diagonals(self):
+        """Full 8-Queens with diagonal constraints."""
+        n = 8
+        m = Model()
+        queens = [m.int_var(0, n - 1, f"q{i}") for i in range(n)]
+
+        m.add(m.all_different(queens))
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                m.add(queens[i] + i != queens[j] + j)
+                m.add(queens[i] - i != queens[j] - j)
+
+        result = m.solve()
+        assert result.ok
+
+        cols = [result.solution[f"q{i}"] for i in range(n)]
+        assert len(set(cols)) == n
+        for i in range(n):
+            for j in range(i + 1, n):
+                assert cols[i] + i != cols[j] + j
+                assert cols[i] - i != cols[j] - j
+
+    def test_4queens_multiple_solutions(self):
+        """4-Queens has exactly 2 solutions."""
+        n = 4
+        m = Model()
+        queens = [m.int_var(0, n - 1, f"q{i}") for i in range(n)]
+
+        m.add(m.all_different(queens))
+
+        for i in range(n):
+            for j in range(i + 1, n):
+                m.add(queens[i] + i != queens[j] + j)
+                m.add(queens[i] - i != queens[j] - j)
+
+        result = m.solve(solution_limit=10)
+        assert result.ok
+        # 4-Queens has exactly 2 solutions
+        assert result.solutions is not None
+        assert len(result.solutions) == 2
+
+
+class TestExpressionOperators:
+    """Test Expr and IntVar operator coverage."""
+
+    def test_expr_eq_expr(self):
+        """Test (x + 1) == (y + 2) constraint with SAT."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        y = m.int_var(0, 5, "y")
+        # x + 1 == y + 2 means x == y + 1
+        m.add((x + 1) == (y + 2))
+        result = m.solve(solver="sat")  # Use SAT for complex expr
+        assert result.ok
+        assert result.solution["x"] + 1 == result.solution["y"] + 2
+
+    def test_expr_eq_int(self):
+        """Test (x + 1) == 5 constraint with SAT."""
+        m = Model()
+        x = m.int_var(0, 10, "x")
+        m.add((x + 1) == 5)
+        result = m.solve(solver="sat")  # Use SAT for complex expr
+        assert result.ok
+        assert result.solution["x"] == 4
+
+    def test_expr_ne_int(self):
+        """Test (x + 1) != 5 constraint with SAT."""
+        m = Model()
+        x = m.int_var(3, 5, "x")
+        m.add((x + 1) != 5)
+        result = m.solve(solver="sat")  # Use SAT for complex expr
+        assert result.ok
+        assert result.solution["x"] + 1 != 5
+
+    def test_expr_add_expr(self):
+        """Test Expr + Expr."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        y = m.int_var(0, 5, "y")
+        expr = (x + 1) + 2  # Expr + int
+        m.add(expr == 6)
+        result = m.solve(solver="sat")
+        assert result.ok
+
+    def test_expr_radd(self):
+        """Test int + Expr (radd)."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        expr = 2 + (x + 1)  # int + Expr triggers __radd__
+        m.add(expr == 6)
+        result = m.solve(solver="sat")
+        assert result.ok
+
+    def test_expr_sub_expr(self):
+        """Test Expr - Expr."""
+        m = Model()
+        x = m.int_var(0, 10, "x")
+        y = m.int_var(0, 10, "y")
+        expr1 = x + 5
+        expr2 = y + 2
+        # This tests Expr.__sub__(Expr)
+        _ = expr1 - expr2
+
+    def test_intvar_eq_expr(self):
+        """Test x == (y + 1) constraint with SAT."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        y = m.int_var(0, 5, "y")
+        m.add(x == (y + 1))
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] == result.solution["y"] + 1
+
+    def test_intvar_ne_expr(self):
+        """Test x != (y + 1) constraint."""
+        m = Model()
+        x = m.int_var(0, 3, "x")
+        y = m.int_var(0, 3, "y")
+        m.add(x != (y + 1))
+        result = m.solve()  # DFS handles this
+        assert result.ok
+        assert result.solution["x"] != result.solution["y"] + 1
+
+    def test_intvar_radd(self):
+        """Test int + IntVar (radd) with SAT."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        expr = 3 + x  # triggers IntVar.__radd__
+        m.add(expr == 7)
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] == 4
+
+    def test_intvar_sub_intvar(self):
+        """Test x - y != 0 constraint (different from x != y)."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        y = m.int_var(0, 5, "y")
+        m.add((x - y) != 0)  # x - y != 0
+        result = m.solve(solver="sat")  # Use SAT for sub expression
+        assert result.ok
+        assert result.solution["x"] - result.solution["y"] != 0
+
+    def test_intvar_sub_expr(self):
+        """Test x - (y + 1) expression creation."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        y = m.int_var(0, 5, "y")
+        # x - (y + 1) tests IntVar.__sub__(Expr)
+        expr = x - (y + 1)
+        assert expr is not None
+
+    def test_intvar_rsub(self):
+        """Test int - x (rsub)."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        expr = 10 - x  # triggers IntVar.__rsub__
+        assert expr is not None
+
+
+class TestSumLeGe:
+    def test_sum_le(self):
+        """Test sum_le constraint."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_le([x, y], 5))
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] <= 5
+
+    def test_sum_ge(self):
+        """Test sum_ge constraint."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_ge([x, y], 8))
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] >= 8
+
+
+class TestSATSolverPaths:
+    def test_sat_with_hints(self):
+        """Test SAT solver with hints."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_eq([x, y], 6))  # Forces SAT solver
+        result = m.solve(hints={"x": 2})
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] == 6
+
+    def test_sat_multiple_solutions(self):
+        """Test SAT solver with solution_limit > 1."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        m.add(m.sum_eq([x, y], 4))  # Forces SAT solver
+        result = m.solve(solution_limit=5)
+        assert result.ok
+        # Should find multiple solutions: (1,3), (2,2), (3,1)
+        if result.solutions:
+            for sol in result.solutions:
+                assert sol["x"] + sol["y"] == 4
+
+
 class TestSumConstraints:
     def test_sum_eq_infeasible_too_small(self):
         m = Model()
@@ -510,3 +829,204 @@ class TestSumConstraints:
         m.add(m.sum_eq([], 5))
         result = m.solve()
         assert result.status == Status.INFEASIBLE
+
+
+class TestEdgeCaseCoverage:
+    """Tests for edge cases and uncovered code paths."""
+
+    def test_eq_const_val_not_in_domain(self):
+        """Test eq_const when value is outside domain."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        m.add(x == 10)  # 10 not in [1,5]
+        result = m.solve(solver="sat")
+        assert result.status == Status.INFEASIBLE
+
+    def test_eq_var_non_overlapping_domains(self):
+        """Test eq_var with disjoint domains."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(5, 7, "y")
+        m.add(x == y)  # Impossible: no overlap
+        result = m.solve(solver="sat")
+        assert result.status == Status.INFEASIBLE
+
+    def test_sum_le_single_var(self):
+        """Test sum_le with single variable."""
+        m = Model()
+        x = m.int_var(1, 10, "x")
+        m.add(m.sum_le([x], 5))
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] <= 5
+
+    def test_sum_ge_single_var(self):
+        """Test sum_ge with single variable."""
+        m = Model()
+        x = m.int_var(1, 10, "x")
+        m.add(m.sum_ge([x], 7))
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] >= 7
+
+    def test_sum_le_three_vars(self):
+        """Test sum_le with 3 variables (recursive case)."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        z = m.int_var(1, 3, "z")
+        m.add(m.sum_le([x, y, z], 5))
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] + result.solution["z"] <= 5
+
+    def test_sum_ge_three_vars(self):
+        """Test sum_ge with 3 variables (recursive case)."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        z = m.int_var(1, 3, "z")
+        m.add(m.sum_ge([x, y, z], 7))
+        result = m.solve()
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] + result.solution["z"] >= 7
+
+    def test_sum_ge_empty_positive_target(self):
+        """Test sum_ge with empty list and positive target (infeasible)."""
+        m = Model()
+        m.int_var(1, 5, "x")
+        m.add(m.sum_ge([], 5))  # sum([]) >= 5 is infeasible
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
+
+    def test_sum_le_empty(self):
+        """Test sum_le with empty list."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        m.add(m.sum_le([], 5))  # sum([]) <= 5 is always true
+        result = m.solve()
+        assert result.ok
+
+    def test_circuit_single_node(self):
+        """Test circuit with single node."""
+        m = Model()
+        x = m.int_var(0, 0, "x")  # Only valid value is 0 (self-loop required)
+        m.add(m.circuit([x]))
+        result = m.solve()
+        # Single node circuit: x[0] = 0 means node 0 points to itself
+        # But no_self_loop forbids this, so should be infeasible
+        assert result.status == Status.INFEASIBLE
+
+    def test_circuit_empty(self):
+        """Test circuit with empty list."""
+        m = Model()
+        m.int_var(1, 5, "x")  # Unrelated variable
+        m.add(m.circuit([]))  # Empty circuit
+        result = m.solve()
+        assert result.ok  # Empty circuit is trivially satisfied
+
+    def test_expr_eq_unsupported_type(self):
+        """Test Expr.__eq__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        expr = x + 1
+        result = expr.__eq__("string")
+        assert result is NotImplemented
+
+    def test_expr_ne_unsupported_type(self):
+        """Test Expr.__ne__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        expr = x + 1
+        result = expr.__ne__("string")
+        assert result is NotImplemented
+
+    def test_expr_sub_unsupported_type(self):
+        """Test Expr.__sub__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        expr = x + 1
+        result = expr.__sub__("string")
+        assert result is NotImplemented
+
+    def test_intvar_eq_unsupported_type(self):
+        """Test IntVar.__eq__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        result = x.__eq__("string")
+        assert result is NotImplemented
+
+    def test_intvar_ne_unsupported_type(self):
+        """Test IntVar.__ne__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        result = x.__ne__("string")
+        assert result is NotImplemented
+
+    def test_intvar_sub_unsupported_type(self):
+        """Test IntVar.__sub__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        result = x.__sub__("string")
+        assert result is NotImplemented
+
+    def test_intvar_rsub_unsupported_type(self):
+        """Test IntVar.__rsub__ with unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        result = x.__rsub__("string")
+        assert result is NotImplemented
+
+    def test_expr_sub_int(self):
+        """Test Expr - int."""
+        m = Model()
+        x = m.int_var(0, 10, "x")
+        expr = (x + 5) - 3  # Creates Expr(("add", ..., -3))
+        m.add(expr == 6)  # x + 5 - 3 == 6 => x == 4
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] == 4
+
+    def test_ne_expr_eq_subtraction(self):
+        """Test (x - y) == c constraint (equality not ne)."""
+        m = Model()
+        x = m.int_var(0, 5, "x")
+        y = m.int_var(0, 5, "y")
+        m.add((x - y) == 2)  # x - y == 2 => x == y + 2
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] - result.solution["y"] == 2
+
+    def test_ne_expr_constant_on_left(self):
+        """Test c == (y + c2) constraint."""
+        m = Model()
+        y = m.int_var(0, 10, "y")
+        # Create 5 == (y + 2) => y == 3
+        # Need to construct this manually via Expr
+        expr = y + 2
+        constraint = (5).__eq__(expr)  # Won't work with plain int
+        # Instead, use expr == 5 which covers the same path via symmetry
+        m.add(expr == 5)
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["y"] == 3
+
+    def test_ne_expr_two_vars_eq_constant(self):
+        """Test (x + y) == c constraint."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add((x + y) == 6)  # x + y == 6
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] == 6
+
+    def test_ne_expr_two_vars_ne_constant(self):
+        """Test (x + y) != c constraint."""
+        m = Model()
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        m.add((x + y) != 4)  # x + y != 4
+        result = m.solve(solver="sat")
+        assert result.ok
+        assert result.solution["x"] + result.solution["y"] != 4

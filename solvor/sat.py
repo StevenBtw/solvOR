@@ -17,13 +17,11 @@ boolean constraints, find an assignment that satisfies all of them.
     result = solve_sat([[1, 2], [-1, 3], [-2, -3]])
     result = solve_sat(clauses, solution_limit=10)  # Find multiple solutions
 
-This is the engine behind CP. Constraint programming encodes integer variables
-as booleans and feeds them here. For exact cover problems specifically, DLX
-is more efficient than encoding to SAT.
+For problems with integer domains, use CP instead, it's faster and easier.
+For exact cover problems, DLX is more efficient than encoding to SAT.
 
 Don't use this for: optimization (use MILP), continuous variables (use simplex
-or gradient), or when integer domains are more natural (use CP, which handles
-the boolean encoding for you).
+or gradient methods).
 """
 
 from collections.abc import Sequence

@@ -48,6 +48,7 @@ def astar[S](
     max_iter: int = 1_000_000,
     max_cost: float | None = None,
 ) -> Result:
+    """A* search with heuristic guidance, returns optimal path when weight=1."""
     is_goal = goal if callable(goal) else lambda s: s == goal
 
     g: dict[S, float] = {start: 0.0}
@@ -108,6 +109,7 @@ def astar_grid(
     weight: float = 1.0,
     max_iter: int = 1_000_000,
 ) -> Result:
+    """A* for 2D grids with built-in heuristics and neighbor generation."""
     rows = len(grid)
     cols = len(grid[0]) if rows else 0
     blocked_set = {blocked} if isinstance(blocked, int) else set(blocked)

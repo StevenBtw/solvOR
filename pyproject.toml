@@ -51,7 +51,7 @@ line-length = 120
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=solvor --cov-report=term-missing --cov-fail-under=88 -m 'not examples'"
+addopts = "--cov=solvor --cov-report=term-missing --cov-fail-under=88"
 testpaths = ["tests"]
 markers = [
     "examples: all example tests (disabled by default)",

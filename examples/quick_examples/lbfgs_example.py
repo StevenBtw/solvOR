@@ -15,6 +15,6 @@ def gradient(x):
 
 
 x0 = [-1.0, 1.0]
-result = lbfgs(gradient, x0, memory=10, max_iter=1000)
+result = lbfgs(gradient, x0, m=10, max_iter=1000)
 print(f"Minimum at: {[round(v, 4) for v in result.solution]}")
 print(f"Iterations: {result.iterations}")
