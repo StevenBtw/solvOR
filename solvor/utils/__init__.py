@@ -7,12 +7,14 @@ Utility functions and data structures for optimization.
 
 from solvor.utils.data_structures import FenwickTree, UnionFind
 from solvor.utils.helpers import (
+    Evaluator,
     assignment_cost,
     debug,
     default_progress,
     is_feasible,
     pairwise_swap_neighbors,
     random_permutation,
+    report_progress,
     timed_progress,
 )
 from solvor.utils.validate import (
@@ -31,6 +33,7 @@ from solvor.utils.validate import (
 __all__ = [
     "FenwickTree",
     "UnionFind",
+    "Evaluator",
     "debug",
     "assignment_cost",
     "is_feasible",
@@ -38,6 +41,7 @@ __all__ = [
     "pairwise_swap_neighbors",
     "timed_progress",
     "default_progress",
+    "report_progress",
     "check_matrix_dims",
     "check_sequence_lengths",
     "check_bounds",
