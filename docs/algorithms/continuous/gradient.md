@@ -48,7 +48,7 @@ Adapts learning rate per parameter using RMS of gradients.
 ```python
 from solvor import rmsprop
 
-result = rmsprop(grad, x0=[5.0, 5.0], lr=0.01, beta=0.9)
+result = rmsprop(grad, x0=[5.0, 5.0], lr=0.01, decay=0.9)
 ```
 
 Useful when parameters have different gradient scales.
