@@ -19,14 +19,14 @@ class Status(IntEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class Result:
-    solution: object
+class Result[T]:
+    solution: T
     objective: float
     iterations: int = 0
     evaluations: int = 0
     status: Status = Status.OPTIMAL
     error: str | None = None
-    solutions: tuple | None = None  # Multiple solutions when solution_limit > 1
+    solutions: tuple[T, ...] | None = None  # Multiple solutions when solution_limit > 1
 
     @property
     def ok(self) -> bool:
