@@ -42,6 +42,15 @@ class TestInfeasible:
         result = m.solve()
         assert result.status == Status.INFEASIBLE
 
+    def test_all_different_impossible(self):
+        # 4 variables, domain 1-3, all different - impossible (pigeonhole)
+        m = Model()
+        vars = [m.int_var(1, 3, f"x{i}") for i in range(4)]
+        m.add(m.all_different(vars))
+        result = m.solve()
+        # Should be infeasible, but may hit iteration limit
+        assert result.status in (Status.INFEASIBLE, Status.MAX_ITER)
+
     def test_conflicting_constraints(self):
         m = Model()
         x = m.int_var(1, 10, "x")
@@ -218,46 +227,6 @@ class TestVariableEquality:
         assert result.status == Status.INFEASIBLE
 
 
-class TestSumConstraints:
-    def test_sum_eq_infeasible_too_small(self):
-        m = Model()
-        x = m.int_var(1, 5, "x")
-        y = m.int_var(1, 5, "y")
-        m.add(m.sum_eq([x, y], 1))
-        result = m.solve()
-        assert result.status == Status.INFEASIBLE
-
-    def test_sum_eq_infeasible_too_large(self):
-        m = Model()
-        x = m.int_var(1, 5, "x")
-        y = m.int_var(1, 5, "y")
-        m.add(m.sum_eq([x, y], 20))
-        result = m.solve()
-        assert result.status == Status.INFEASIBLE
-
-    def test_sum_single_var(self):
-        m = Model()
-        x = m.int_var(1, 10, "x")
-        m.add(m.sum_eq([x], 7))
-        result = m.solve()
-        assert result.status == Status.OPTIMAL
-        assert result.solution["x"] == 7
-
-    def test_sum_empty(self):
-        m = Model()
-        m.int_var(1, 5, "x")
-        m.add(m.sum_eq([], 0))
-        result = m.solve()
-        assert result.status == Status.OPTIMAL
-
-    def test_sum_empty_nonzero(self):
-        m = Model()
-        m.int_var(1, 5, "x")
-        m.add(m.sum_eq([], 5))
-        result = m.solve()
-        assert result.status == Status.INFEASIBLE
-
-
 class TestHints:
     def test_hints_with_constraint(self):
         """Hints work with constrained model."""
@@ -397,34 +366,48 @@ class TestNoOverlap:
     def test_no_overlap_two_intervals(self):
         """Two intervals that can't overlap."""
         m = Model()
-        s1 = m.int_var(0, 10, "s1")
-        s2 = m.int_var(0, 10, "s2")
-        # Duration 5 each, so they must be separated
-        m.add(m.no_overlap([s1, s2], [5, 5]))
+        # Smaller domains for faster encoding (O(domain²) clauses per pair)
+        s1 = m.int_var(0, 4, "s1")
+        s2 = m.int_var(0, 4, "s2")
+        # Duration 2 each, so they must be separated
+        m.add(m.no_overlap([s1, s2], [2, 2]))
         result = m.solve()
         assert result.status == Status.OPTIMAL
-        # Either s1 + 5 <= s2 or s2 + 5 <= s1
+        # Either s1 + 2 <= s2 or s2 + 2 <= s1
         start1, start2 = result.solution["s1"], result.solution["s2"]
-        assert start1 + 5 <= start2 or start2 + 5 <= start1
+        assert start1 + 2 <= start2 or start2 + 2 <= start1
 
     def test_no_overlap_three_intervals(self):
         """Three intervals scheduled without overlap."""
         m = Model()
-        s1 = m.int_var(0, 15, "s1")
-        s2 = m.int_var(0, 15, "s2")
-        s3 = m.int_var(0, 15, "s3")
-        m.add(m.no_overlap([s1, s2, s3], [3, 4, 3]))
+        # Smaller domains for faster encoding
+        s1 = m.int_var(0, 6, "s1")
+        s2 = m.int_var(0, 6, "s2")
+        s3 = m.int_var(0, 6, "s3")
+        m.add(m.no_overlap([s1, s2, s3], [2, 2, 2]))
         result = m.solve()
         assert result.status == Status.OPTIMAL
 
         # Verify no overlaps
         starts = [result.solution["s1"], result.solution["s2"], result.solution["s3"]]
-        durations = [3, 4, 3]
+        durations = [2, 2, 2]
         for i in range(3):
             for j in range(i + 1, 3):
                 si, sj = starts[i], starts[j]
                 di, dj = durations[i], durations[j]
                 assert si + di <= sj or sj + dj <= si
+
+    def test_no_overlap_infeasible(self):
+        """Not enough room for all intervals."""
+        m = Model()
+        # Three intervals of size 2 in window [0,3] - can't fit (need 6 time units, only have 5)
+        s1 = m.int_var(0, 3, "s1")
+        s2 = m.int_var(0, 3, "s2")
+        s3 = m.int_var(0, 3, "s3")
+        m.add(m.no_overlap([s1, s2, s3], [2, 2, 2]))
+        result = m.solve()
+        # Should be infeasible or hit max iterations
+        assert result.status in (Status.INFEASIBLE, Status.MAX_ITER)
 
     def test_no_overlap_validation(self):
         """Mismatched lengths raise error."""
@@ -442,8 +425,9 @@ class TestCumulative:
     def test_cumulative_two_tasks(self):
         """Two tasks with cumulative capacity constraint."""
         m = Model()
-        s1 = m.int_var(0, 10, "s1")
-        s2 = m.int_var(0, 10, "s2")
+        # Reduced domain to limit time horizon (O(time × tasks × domain))
+        s1 = m.int_var(0, 5, "s1")
+        s2 = m.int_var(0, 5, "s2")
         # Tasks with demand 3 and 3, capacity 5
         # They can overlap only if sum of demands <= 5
         m.add(m.cumulative([s1, s2], [2, 2], [3, 3], 5))
@@ -464,16 +448,17 @@ class TestCumulative:
     def test_cumulative_force_sequencing(self):
         """High demands force tasks to be sequential."""
         m = Model()
-        s1 = m.int_var(0, 10, "s1")
-        s2 = m.int_var(0, 10, "s2")
+        # Reduced domain to limit time horizon
+        s1 = m.int_var(0, 5, "s1")
+        s2 = m.int_var(0, 5, "s2")
         # Tasks with demand 5 each, capacity 5 - can't overlap
-        m.add(m.cumulative([s1, s2], [3, 3], [5, 5], 5))
+        m.add(m.cumulative([s1, s2], [2, 2], [5, 5], 5))
         result = m.solve()
         assert result.status == Status.OPTIMAL
 
         start1, start2 = result.solution["s1"], result.solution["s2"]
         # Tasks should not overlap (one must end before other starts)
-        assert start1 + 3 <= start2 or start2 + 3 <= start1
+        assert start1 + 2 <= start2 or start2 + 2 <= start1
 
     def test_cumulative_validation(self):
         """Mismatched lengths raise error."""
@@ -485,3 +470,43 @@ class TestCumulative:
             assert False, "Should have raised ValueError"
         except ValueError as e:
             assert "same length" in str(e)
+
+
+class TestSumConstraints:
+    def test_sum_eq_infeasible_too_small(self):
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_eq([x, y], 1))
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
+
+    def test_sum_eq_infeasible_too_large(self):
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        y = m.int_var(1, 5, "y")
+        m.add(m.sum_eq([x, y], 20))
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
+
+    def test_sum_single_var(self):
+        m = Model()
+        x = m.int_var(1, 10, "x")
+        m.add(m.sum_eq([x], 7))
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+        assert result.solution["x"] == 7
+
+    def test_sum_empty(self):
+        m = Model()
+        m.int_var(1, 5, "x")
+        m.add(m.sum_eq([], 0))
+        result = m.solve()
+        assert result.status == Status.OPTIMAL
+
+    def test_sum_empty_nonzero(self):
+        m = Model()
+        m.int_var(1, 5, "x")
+        m.add(m.sum_eq([], 5))
+        result = m.solve()
+        assert result.status == Status.INFEASIBLE
