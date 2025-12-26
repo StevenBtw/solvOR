@@ -17,15 +17,18 @@ Solvor all your optimization needs.
 | Category | Solvors | Use Case |
 |----------|---------|----------|
 | **Linear/Integer** | `solve_lp`, `solve_milp` | Resource allocation, scheduling |
-| **Constraint** | `solve_sat`, `Model` | Sudoku, configuration, puzzles |
-| **Local Search** | `anneal`, `tabu_search` | TSP, combinatorial optimization |
-| **Population** | `evolve` | When you want nature to do the work |
-| **Continuous** | `gradient_descent`, `momentum`, `adam` | ML, curve fitting |
-| **Black-box** | `bayesian_opt` | Hyperparameter tuning, expensive functions |
+| **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
+| **Combinatorial** | `solve_knapsack`, `solve_binpack`, `solve_jobshop`, `solve_vrptw` | Packing, scheduling, routing |
+| **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
+| **Population** | `evolve`, `differential_evolution`, `particle_swarm` | Global search, nature-inspired |
+| **Gradient** | `gradient_descent`, `momentum`, `rmsprop`, `adam` | ML, curve fitting |
+| **Quasi-Newton** | `bfgs`, `lbfgs` | Fast convergence, smooth functions |
+| **Derivative-Free** | `nelder_mead`, `powell`, `bayesian_opt` | Black-box, expensive functions |
 | **Pathfinding** | `bfs`, `dfs`, `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | Shortest paths, graph traversal |
 | **Graph** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | Flow, MST, connectivity |
 | **Assignment** | `solve_assignment`, `hungarian`, `network_simplex` | Matching, min-cost flow |
 | **Exact Cover** | `solve_exact_cover` | N-Queens, tiling puzzles |
+| **Utilities** | `FenwickTree`, `UnionFind` | Data structures for algorithms |
 
 ---
 
@@ -119,7 +122,7 @@ result = m.solve()
 <summary><strong>Metaheuristics</strong></summary>
 
 ### anneal
-Simulated annealing, accepts worse solutions probabilistically.
+Simulated annealing, sometimes you have to go downhill to find a higher peak.
 
 ```python
 result = anneal(
@@ -132,7 +135,7 @@ result = anneal(
 ```
 
 ### tabu_search
-Greedy local search with memory. Prevents cycling back to recent solutions, forcing exploration of new territory. More deterministic than anneal.
+Greedy local search with a "don't go back there" list. Simple but surprisingly effective.
 
 ```python
 result = tabu_search(
@@ -143,17 +146,21 @@ result = tabu_search(
 )
 ```
 
-### evolve
-Population-based search. More overhead than anneal/tabu, but better diversity and parallelizable.
+### lns / alns
+Large Neighborhood Search, destroy part of your solution and rebuild it better. ALNS learns which operators work best.
 
 ```python
-result = evolve(
-    objective_fn=fitness,
-    population=initial_pop,
-    crossover=my_crossover,
-    mutate=my_mutate,
-    max_gen=100
-)
+result = lns(initial, objective_fn, destroy_ops, repair_ops, max_iter=1000)
+result = alns(initial, objective_fn, destroy_ops, repair_ops, max_iter=1000)  # adaptive
+```
+
+### evolve / differential_evolution / particle_swarm
+Population-based global search. Let a swarm of candidates explore for you. DE and PSO work on continuous spaces.
+
+```python
+result = evolve(objective_fn=fitness, population=pop, crossover=cx, mutate=mut)
+result = differential_evolution(objective_fn, bounds=[(0, 10)] * n, pop_size=50)
+result = particle_swarm(objective_fn, bounds=[(0, 10)] * n, n_particles=30)
 ```
 
 </details>
@@ -161,25 +168,40 @@ result = evolve(
 <details>
 <summary><strong>Continuous Optimization</strong></summary>
 
-### gradient_descent / momentum / adam
-Follow the slope downhill. Great for polishing solutions from other methods if your objective is differentiable. Adam adapts learning rates per parameter - usually the default choice.
+### Gradient-Based
+
+`gradient_descent`, `momentum`, `rmsprop`, `adam` - follow the slope. Adam adapts learning rates per parameter.
 
 ```python
 def grad_fn(x):
     return [2 * x[0], 2 * x[1]]  # gradient of x^2 + y^2
 
 result = adam(grad_fn, x0=[5.0, 5.0])
-print(result.solution)  # [~0, ~0]
+```
+
+### Quasi-Newton
+
+`bfgs`, `lbfgs` - approximate Hessian for faster convergence. L-BFGS uses limited memory.
+
+```python
+result = bfgs(objective_fn, grad_fn, x0=[5.0, 5.0])
+result = lbfgs(objective_fn, grad_fn, x0=[5.0, 5.0], memory=10)
+```
+
+### Derivative-Free
+
+`nelder_mead`, `powell` - no gradients needed. Good for noisy, non-smooth, or "I have no idea what this function looks like" situations.
+
+```python
+result = nelder_mead(objective_fn, x0=[5.0, 5.0])
+result = powell(objective_fn, x0=[5.0, 5.0])
 ```
 
 ### bayesian_opt
-When each evaluation is expensive (think hyperparameter tuning, simulations). Builds a surrogate model to guess where to sample next instead of brute-forcing.
+
+When each evaluation is expensive. Builds a surrogate model to sample intelligently. Perfect for hyperparameter tuning or when your simulation takes 10 minutes per run.
 
 ```python
-def expensive_fn(x):
-    # imagine this takes 10 minutes to evaluate
-    return (x[0] - 0.3)**2 + (x[1] - 0.7)**2
-
 result = bayesian_opt(expensive_fn, bounds=[(0, 1), (0, 1)], max_iter=30)
 ```
 
@@ -221,14 +243,14 @@ result = astar_grid(grid, start=(0, 0), goal=(2, 3))
 ```
 
 ### bellman_ford
-Handles negative edge weights. Slower than Dijkstra but detects negative cycles.
+Handles negative edge weights. Slower than Dijkstra but detects negative cycles, which is useful when costs can go negative.
 
 ```python
 result = bellman_ford(start=0, edges=[(0, 1, 5), (1, 2, -3), ...], n_nodes=4)
 ```
 
 ### floyd_warshall
-All-pairs shortest paths. O(n³) but gives you every shortest path at once.
+All-pairs shortest paths. O(n³) but gives you every shortest path at once. Worth it when you need the full picture.
 
 ```python
 result = floyd_warshall(n_nodes=4, edges=[(0, 1, 3), (1, 2, 1), ...])
@@ -300,7 +322,7 @@ result = hungarian(costs, minimize=False)
 <summary><strong>Exact Cover</strong></summary>
 
 ### solve_exact_cover
-For "place these pieces without overlap" or "fill this grid with exactly one of each" problems. Sudoku, pentomino tiling, scheduling where every slot must be filled exactly once.
+For "place these pieces without overlap" problems. Sudoku, pentomino tiling, N-Queens, or any puzzle where you stare at a grid wondering why nothing fits.
 
 ```python
 # Tiling problem: cover all columns with non-overlapping rows
@@ -312,6 +334,54 @@ matrix = [
 ]
 result = solve_exact_cover(matrix)
 # result.solution = (0, 2) or (1, 3) - rows that cover all columns exactly once
+```
+
+</details>
+
+<details>
+<summary><strong>Combinatorial Solvers</strong></summary>
+
+### solve_knapsack
+
+The classic "what fits in your bag" problem. Select items to maximize value within capacity.
+
+```python
+values = [60, 100, 120]
+weights = [10, 20, 30]
+result = solve_knapsack(values, weights, capacity=50)
+# result.solution = [1, 1, 1] - which items to take
+```
+
+### solve_binpack
+
+Bin packing with First Fit Decreasing. Minimize bins needed for items.
+
+```python
+items = [4, 8, 1, 4, 2, 1]
+result = solve_binpack(items, bin_capacity=10)
+# result.solution = [[8, 2], [4, 4, 1, 1]] - items per bin
+```
+
+### solve_jobshop
+
+Job shop scheduling. Minimize makespan for jobs on machines.
+
+```python
+# jobs[i] = [(machine, duration), ...] - operations for job i
+jobs = [[(0, 3), (1, 2)], [(1, 2), (0, 4)]]
+result = solve_jobshop(jobs, n_machines=2)
+```
+
+### solve_vrptw
+
+Vehicle Routing with Time Windows. Serve customers with capacity and time constraints.
+
+```python
+from solvor import Customer, solve_vrptw
+
+customers = [Customer(x=0, y=0, demand=0, ready=0, due=100, service=0)]  # depot
+customers += [Customer(x=i, y=i, demand=10, ready=0, due=50, service=5) for i in range(1, 5)]
+result = solve_vrptw(customers, vehicle_capacity=30, n_vehicles=2)
 ```
 
 </details>
@@ -338,13 +408,21 @@ Result(
 
 | Problem | Solvor |
 |---------|--------|
-| Linear constraints, continuous variables | `solve_lp` |
-| Linear constraints, some integers | `solve_milp` |
+| Linear constraints, continuous | `solve_lp` |
+| Linear constraints, integers | `solve_milp` |
 | Boolean satisfiability | `solve_sat` |
-| Discrete variables, complex constraints | `Model` |
-| Combinatorial, good initial solution | `tabu_search`, `anneal` |
-| Combinatorial, no clue where to start | `evolve` |
-| Smooth, differentiable | `adam` |
+| Discrete vars, complex constraints | `Model` |
+| Knapsack, subset selection | `solve_knapsack` |
+| Bin packing | `solve_binpack` |
+| Job shop scheduling | `solve_jobshop` |
+| Vehicle routing | `solve_vrptw` |
+| Combinatorial, local search | `tabu_search`, `anneal` |
+| Combinatorial, destroy-repair | `lns`, `alns` |
+| Global search, continuous | `differential_evolution`, `particle_swarm` |
+| Global search, discrete | `evolve` |
+| Smooth, differentiable, fast | `bfgs`, `lbfgs` |
+| Smooth, differentiable, ML | `adam`, `rmsprop` |
+| Non-smooth, no gradients | `nelder_mead`, `powell` |
 | Expensive black-box | `bayesian_opt` |
 | Shortest path, unweighted | `bfs`, `dfs` |
 | Shortest path, weighted | `dijkstra`, `astar` |
@@ -352,8 +430,7 @@ Result(
 | All-pairs shortest paths | `floyd_warshall` |
 | Minimum spanning tree | `kruskal`, `prim` |
 | Maximum flow | `max_flow` |
-| Min-cost flow, small | `min_cost_flow` |
-| Min-cost flow, large | `network_simplex` |
+| Min-cost flow | `min_cost_flow`, `network_simplex` |
 | Assignment, matching | `hungarian`, `solve_assignment` |
 | Exact cover, tiling | `solve_exact_cover` |
 
@@ -361,10 +438,10 @@ Result(
 
 ## Philosophy
 
-1. **Pure Python:** no numpy, no scipy, no compiled extensions
+1. **Pure Python:** no numpy, no scipy, no compiled extensions. Copy it, change it, break it, learn from it.
 2. **Readable:** each solvor fits in one file you can actually read
 3. **Consistent:** same Result format, same minimize/maximize convention
-4. **Practical:** solves real problems (or AoC puzzles)
+4. **Practical:** solves real problems (and AoC puzzles, obviously)
 
 ---
 
