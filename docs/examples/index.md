@@ -34,12 +34,12 @@ python examples/real_world/nurse_scheduling.py
 
 Examples print their results and explain the problem being solved.
 
-## Benchmark Data
+## Reference Data
 
-All benchmark instances are from well-known open-source repositories:
+Examples use well-known problem instances from the OR community:
 
-- **TSPLIB**: Classic TSP instances
-- **Solomon VRPTW**: Vehicle routing benchmarks
-- **OR-Library**: Job shop scheduling
+- **TSPLIB**: TSP instances (att48 - 48 US capitals)
+- **Solomon**: Vehicle routing with time windows (R101)
+- **Fisher-Thompson**: Job shop scheduling (ft06)
 - **Falkenauer**: Bin packing instances
-- **ITC 2007**: Timetabling competition
+- **ITC 2007**: University timetabling

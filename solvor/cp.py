@@ -1,11 +1,10 @@
 """
 CP-SAT Solver, constraint programming with a SAT backend.
 
-Use this for puzzles and scheduling with "all different", arithmetic constraints,
-and logical combinations. Sudoku, N-Queens, nurse rostering, timetabling. The
-solver encodes your integer variables and constraints into SAT clauses, then
-hands it off to the SAT solver. You get the expressiveness of CP with the
-raw solving power of modern SAT.
+Write constraints like a human ("all different", "x + y == 10"), and the solver
+translates them into the boolean logic that SAT solvers devour. Perfect for
+puzzles and scheduling: Sudoku, N-Queens, nurse rostering, timetabling. You get
+the expressiveness of CP with the raw solving power of modern SAT.
 
 Don't use this for: optimization problems (use milp), pure linear problems
 (simplex is simpler and faster), or trivially small problems where the encoding

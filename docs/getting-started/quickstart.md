@@ -15,8 +15,8 @@ from solvor import solve_lp
 
 result = solve_lp(
     c=[-3, -2],  # Negative because we minimize (so -max = min)
-    A_ub=[[1, 1], [1, 0], [0, 1]],  # Constraints: x+y <= 4, x <= 2, y <= 3
-    b_ub=[4, 2, 3]
+    A=[[1, 1], [1, 0], [0, 1]],  # Constraints: x+y <= 4, x <= 2, y <= 3
+    b=[4, 2, 3]
 )
 
 print(f"Make {result.solution[0]:.0f} chairs and {result.solution[1]:.0f} tables")
@@ -40,7 +40,7 @@ from solvor import solve_sat
 clauses = [[1, 2], [-1, 3], [-2, -3]]
 result = solve_sat(clauses)
 
-if result.status.is_success:
+if result.ok:
     print(f"Satisfiable: {result.solution}")
 else:
     print("Unsatisfiable")
@@ -52,13 +52,13 @@ else:
 from solvor import dijkstra
 
 graph = {
-    'A': {'B': 1, 'C': 4},
-    'B': {'C': 2, 'D': 5},
-    'C': {'D': 1},
-    'D': {}
+    'A': [('B', 1), ('C', 4)],
+    'B': [('C', 2), ('D', 5)],
+    'C': [('D', 1)],
+    'D': []
 }
 
-result = dijkstra(graph, 'A', 'D')
+result = dijkstra('A', 'D', lambda n: graph.get(n, []))
 print(f"Path: {result.solution}")  # ['A', 'B', 'C', 'D']
 print(f"Distance: {result.objective}")  # 4
 ```
@@ -68,11 +68,11 @@ print(f"Distance: {result.objective}")  # 4
 ```python
 from solvor import solve_knapsack
 
-weights = [2, 3, 4, 5]
 values = [3, 4, 5, 6]
+weights = [2, 3, 4, 5]
 capacity = 8
 
-result = solve_knapsack(weights, values, capacity)
+result = solve_knapsack(values, weights, capacity)
 print(f"Selected items: {result.solution}")  # Indices of selected items
 print(f"Total value: {result.objective}")
 ```
@@ -81,19 +81,21 @@ print(f"Total value: {result.objective}")
 
 All solvers return a `Result` object with:
 
-- `status` - Success/failure status with `.is_success` property
+- `ok` - True if solution is usable (OPTIMAL or FEASIBLE)
+- `status` - Status enum (OPTIMAL, FEASIBLE, INFEASIBLE, UNBOUNDED, MAX_ITER)
 - `solution` - The solution (format depends on solver)
 - `objective` - Objective function value (if applicable)
 - `iterations` - Number of iterations/steps taken
+- `error` - Error message if failed (None on success)
 
 ```python
-result = solve_lp(c=[-1, -1], A_ub=[[1, 1]], b_ub=[10])
+result = solve_lp(c=[-1, -1], A=[[1, 1]], b=[10])
 
-if result.status.is_success:
+if result.ok:
     print(f"Solved in {result.iterations} iterations")
     print(f"Solution: {result.solution}")
 else:
-    print(f"Failed: {result.status}")
+    print(f"Failed: {result.status}, {result.error}")
 ```
 
 ## Next Steps

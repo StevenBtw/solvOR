@@ -16,14 +16,16 @@ def solve_milp(
     c: Sequence[float],
     A: Sequence[Sequence[float]],
     b: Sequence[float],
+    integers: Sequence[int],
     *,
-    integers: Sequence[int] | None = None,
     minimize: bool = True,
-    max_iter: int = 100_000,
-    max_solutions: int | None = None,
+    eps: float = 1e-6,
+    max_iter: int = 10_000,
+    max_nodes: int = 100_000,
+    gap_tol: float = 1e-6,
     warm_start: Sequence[float] | None = None,
-    eps: float = 1e-10,
-) -> Result[list[float]]
+    solution_limit: int = 1,
+) -> Result[tuple[float, ...]]
 ```
 
 ## Parameters
@@ -33,12 +35,14 @@ def solve_milp(
 | `c` | Objective coefficients |
 | `A` | Constraint matrix (Ax ≤ b) |
 | `b` | Constraint right-hand sides |
-| `integers` | Indices of variables that must be integers |
+| `integers` | Indices of variables that must be integers (required) |
 | `minimize` | If False, maximize instead |
-| `max_iter` | Maximum branch-and-bound iterations |
-| `max_solutions` | Stop after finding this many solutions |
-| `warm_start` | Initial solution to start from |
-| `eps` | Numerical tolerance |
+| `eps` | Numerical tolerance for integrality |
+| `max_iter` | Maximum LP iterations per node |
+| `max_nodes` | Maximum branch-and-bound nodes to explore |
+| `gap_tol` | Stop when gap between bound and incumbent is below this |
+| `warm_start` | Initial feasible solution to start from |
+| `solution_limit` | Stop after finding this many solutions |
 
 ## Example
 
@@ -53,8 +57,18 @@ result = solve_milp(
     integers=[0],
     minimize=False
 )
-print(result.solution)  # [4, 0]
-print(result.objective)  # 12
+print(result.solution)  # (4.0, 0.0)
+print(result.objective)  # 12.0
+```
+
+## Finding Multiple Solutions
+
+```python
+# Find up to 5 different solutions
+result = solve_milp(c, A, b, integers=[0, 1], solution_limit=5)
+if result.solutions:
+    for i, sol in enumerate(result.solutions):
+        print(f"Solution {i+1}: {sol}")
 ```
 
 ## Binary Variables
@@ -77,6 +91,7 @@ result = solve_milp(c, A + [[1, 0]], b + [1], integers=[0])
 1. **Start with LP relaxation.** Solve as LP first. If the solution is already integer, you're done. The LP objective is a bound on the optimal integer objective.
 2. **Tight formulations.** Adding redundant constraints that tighten the LP relaxation speeds up MILP solving.
 3. **Warm starting.** Pass a known feasible solution via `warm_start` to prune early.
+4. **Gap tolerance.** For large problems, set `gap_tol=0.01` to accept solutions within 1% of optimal.
 
 ## See Also
 

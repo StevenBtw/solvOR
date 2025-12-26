@@ -8,11 +8,14 @@ Greedy local search with memory. Always picks the best neighbor, but maintains a
 def tabu_search[T, M](
     initial: T,
     objective_fn: Callable[[T], float],
-    neighbors: Callable[[T], Iterable[tuple[M, T]]],
+    neighbors: Callable[[T], Sequence[tuple[M, T]]],
     *,
+    minimize: bool = True,
     cooldown: int = 10,
-    max_iter: int = 100_000,
-    on_progress: Callable[[Progress], bool | None] | None = None,
+    max_iter: int = 1000,
+    max_no_improve: int = 100,
+    seed: int | None = None,
+    on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result[T]
 ```
@@ -22,10 +25,15 @@ def tabu_search[T, M](
 | Parameter | Description |
 |-----------|-------------|
 | `initial` | Starting solution |
-| `objective_fn` | Function to minimize |
-| `neighbors` | Returns (move, solution) pairs |
+| `objective_fn` | Function to minimize (or maximize if `minimize=False`) |
+| `neighbors` | Returns (move, solution) pairs - move must be hashable |
+| `minimize` | If False, maximize instead |
 | `cooldown` | How long a move stays forbidden |
 | `max_iter` | Maximum iterations |
+| `max_no_improve` | Stop if no improvement for this many iterations |
+| `seed` | Random seed for reproducibility |
+| `on_progress` | Progress callback (return True to stop) |
+| `progress_interval` | Call progress every N iterations (0 = disabled) |
 
 ## Example
 
@@ -38,11 +46,13 @@ def objective(perm):
 
 def neighbors(perm):
     # Generate all 2-opt swaps
+    moves = []
     for i in range(len(perm)):
         for j in range(i+2, len(perm)):
             new = list(perm)
             new[i], new[j] = new[j], new[i]
-            yield (i, j), tuple(new)
+            moves.append(((i, j), tuple(new)))
+    return moves
 
 result = tabu_search([0, 3, 1, 4, 2], objective, neighbors, cooldown=5)
 print(result.solution)

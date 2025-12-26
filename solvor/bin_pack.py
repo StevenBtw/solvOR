@@ -1,12 +1,12 @@
 """
 Bin Packing solver using heuristic algorithms.
 
-Pack items into the minimum number of bins without exceeding capacity.
-Classic combinatorial optimization problem with applications in:
-- Cutting stock (minimize material waste)
-- Container loading
-- Memory allocation
-- Task scheduling on identical machines
+Pack items into the minimum number of bins without exceeding capacity. NP-hard,
+but heuristics get surprisingly close to optimal. Best-fit-decreasing (put big
+items first, fill gaps with small ones) is within 11/9 OPT + 6/9 of optimal,
+proven in 1973. Good enough for most real-world packing.
+
+Applications: cutting stock, container loading, memory allocation, VM placement.
 
     from solvor import solve_bin_pack
 

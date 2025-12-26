@@ -1,6 +1,6 @@
 # Choosing a Solver
 
-Use this decision tree to find the right solver for your problem.
+40+ algorithms is a lot. Use this decision tree to find the right one without reading all the docs.
 
 ## Quick Decision Tree
 

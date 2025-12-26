@@ -1,9 +1,10 @@
 """
 Job Shop Scheduling solver using dispatching rules and local search.
 
-Classic scheduling problem: n jobs, each with a sequence of operations on
-different machines. Each operation has a specific machine and duration.
-Goal is to minimize makespan (total completion time).
+The factory floor puzzle: n jobs, each needing a specific sequence of machines.
+Job A needs drill then lathe then mill. Job B needs lathe then drill then paint.
+Machines can only handle one job at a time. Minimize total time to finish everything.
+NP-hard, but dispatching rules get you 80% of the way there surprisingly fast.
 
     from solvor import solve_job_shop
 
