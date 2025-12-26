@@ -42,6 +42,7 @@ def max_flow[Node](
     source: Node,
     sink: Node,
 ) -> Result:
+    """Find maximum flow from source to sink using Ford-Fulkerson with BFS."""
     capacity = defaultdict(lambda: defaultdict(int))
     for u in graph:
         for v, cap, *_ in graph[u]:
@@ -95,6 +96,7 @@ def min_cost_flow[Node](
     sink: Node,
     demand: int,
 ) -> Result:
+    """Route demand units from source to sink at minimum total cost."""
     capacity = defaultdict(lambda: defaultdict(int))
     cost = defaultdict(lambda: defaultdict(lambda: float("inf")))
     nodes = set()
@@ -173,6 +175,7 @@ def min_cost_flow[Node](
 def solve_assignment(
     cost_matrix: Sequence[Sequence[float]],
 ) -> Result:
+    """Solve assignment problem via min-cost flow reduction."""
     n = len(cost_matrix)
     m = len(cost_matrix[0]) if n > 0 else 0
 
