@@ -11,7 +11,7 @@ values = [60, 100, 120]
 weights = [10, 20, 30]
 
 result = solve_knapsack(values, weights, capacity=50)
-print(result.solution)   # [1, 1, 1] - which items to take
+print(result.solution)   # (1, 2) - indices of selected items
 print(result.objective)  # 220 - total value
 ```
 
@@ -19,15 +19,17 @@ print(result.objective)  # 220 - total value
 
 ```python
 def solve_knapsack(
-    values: Sequence[int | float],
-    weights: Sequence[int | float],
-    capacity: int | float,
-) -> Result[list[int]]
+    values: Sequence[float],
+    weights: Sequence[float],
+    capacity: float,
+    *,
+    minimize: bool = False,
+) -> Result[tuple[int, ...]]
 ```
 
 ## Returns
 
-- `solution`: List of 0/1 indicating which items are selected
+- `solution`: Tuple of indices of selected items (e.g., `(1, 2)` means items 1 and 2 were selected)
 - `objective`: Total value of selected items
 
 ## Complexity

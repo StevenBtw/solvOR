@@ -14,7 +14,7 @@ jobs = [
     [(1, 4), (2, 3)]
 ]
 
-result = solve_job_shop(jobs, n_machines=3)
+result = solve_job_shop(jobs)
 print(result.objective)  # Makespan
 print(result.solution)   # Schedule
 ```
