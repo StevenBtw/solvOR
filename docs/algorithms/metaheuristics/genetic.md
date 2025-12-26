@@ -11,7 +11,7 @@ def evolve[T](
     crossover: Callable[[T, T], T],
     mutate: Callable[[T], T],
     *,
-    generations: int = 100,
+    max_iter: int = 100,
     elite_size: int = 2,
     mutation_rate: float = 0.1,
     adaptive_mutation: bool = False,
@@ -28,7 +28,7 @@ def evolve[T](
 | `population` | Initial population of solutions |
 | `crossover` | Combine two parents into child |
 | `mutate` | Randomly modify a solution |
-| `generations` | Number of generations |
+| `max_iter` | Number of generations |
 | `elite_size` | Keep best N across generations |
 | `mutation_rate` | Probability of mutation |
 | `adaptive_mutation` | Increase rate when stuck |
@@ -53,7 +53,7 @@ def mutate(x):
     return x
 
 population = [[random.uniform(-10, 10) for _ in range(5)] for _ in range(50)]
-result = evolve(fitness, population, crossover, mutate, generations=100)
+result = evolve(fitness, population, crossover, mutate, max_iter=100)
 print(result.solution)  # Close to [0, 0, 0, 0, 0]
 ```
 
