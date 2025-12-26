@@ -39,6 +39,7 @@ def bellman_ford(
     *,
     target: int | None = None,
 ) -> Result:
+    """Shortest paths with negative weights, detects negative cycles."""
     check_positive(n_nodes, name="n_nodes")
     check_in_range(start, 0, n_nodes - 1, name="start")
     check_edge_nodes(edges, n_nodes)
