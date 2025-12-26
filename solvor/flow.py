@@ -42,7 +42,7 @@ def max_flow[Node](
     source: Node,
     sink: Node,
 ) -> Result:
-    """Find maximum flow from source to sink using Ford-Fulkerson with BFS."""
+    """Find maximum flow from source to sink using Ford-Fulkerson (FFA) with BFS."""
     capacity = defaultdict(lambda: defaultdict(int))
     for u in graph:
         for v, cap, *_ in graph[u]:
