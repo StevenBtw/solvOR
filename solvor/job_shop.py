@@ -27,7 +27,8 @@ with local search provide good approximate solutions.
 from collections.abc import Sequence
 from random import Random
 
-from solvor.types import Progress, ProgressCallback, Result, Status
+from solvor.types import ProgressCallback, Result, Status
+from solvor.utils.helpers import report_progress
 
 __all__ = ["solve_job_shop"]
 
@@ -130,10 +131,8 @@ def solve_job_shop(
         if no_improve >= max_no_improve:
             break
 
-        if on_progress and progress_interval > 0 and iteration % progress_interval == 0:
-            progress = Progress(iteration, float(best_makespan), None, evals)
-            if on_progress(progress) is True:
-                return Result(best_schedule, float(best_makespan), iteration, evals, Status.FEASIBLE)
+        if report_progress(on_progress, progress_interval, iteration, float(best_makespan), float(best_makespan), evals):
+            return Result(best_schedule, float(best_makespan), iteration, evals, Status.FEASIBLE)
 
     return Result(best_schedule, float(best_makespan), iteration, evals, Status.FEASIBLE)
 
