@@ -496,13 +496,14 @@ All solvers return a frozen dataclass:
 
 ```python
 @dataclass(frozen=True, slots=True)
-class Result:
-    solution: object
+class Result[T]:
+    solution: T
     objective: float
     iterations: int = 0
     evaluations: int = 0
     status: Status = Status.OPTIMAL
     error: str | None = None
+    solutions: tuple[T, ...] | None = None  # Multiple solutions when solution_limit > 1
 
     @property
     def ok(self) -> bool:
@@ -581,7 +582,7 @@ Tests are organized into two categories:
 
 ```text
 tests/
-├── solvers/     # Solver unit tests (run by default)
+├── solvors/     # Solver unit tests (run by default)
 │   ├── test_simplex.py
 │   ├── test_milp.py
 │   └── ...

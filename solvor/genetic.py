@@ -16,15 +16,14 @@ overhead, but better diversity and less likely to get trapped.
     result = evolve(objective_fn, pop, cross, mut, minimize=False)  # maximize
 
 Parameters:
-    objective_fn  : solution -> float, your fitness function
-    population    : list of starting solutions, bigger = more diversity but slower
-    crossover     : (parent1, parent2) -> child, how solutions combine - this matters
-                    a lot, bad crossover = expensive random search
-    mutate        : solution -> solution, small random changes - keep it subtle
-    elite_size    : survivors per generation, too high = stagnation (default: 2)
-    mutation_rate : how often to mutate, too low = premature convergence (default: 0.1)
-    max_iter      : iterations/generations to run (default: 100)
-    tournament_k  : selection pressure, higher = greedier (default: 3)
+    objective_fn (Callable[[T], float]): fitness function mapping a solution to a score
+    population (Sequence[T]): starting solutions, bigger = more diversity but slower
+    crossover (Callable[[T, T], T]): combine two parents into one child; this matters a lot
+    mutate (Callable[[T], T]): small random changes to a solution; keep it subtle
+    elite_size (int): survivors per generation, too high = stagnation (default: 2)
+    mutation_rate (float): how often to mutate (default: 0.1)
+    max_iter (int): iterations/generations to run (default: 100)
+    tournament_k (int): selection pressure, higher = greedier (default: 3)
 
 Don't use this for: problems with gradient info (use gradient descent), convex
 problems (use simplex), or discrete structured problems (use CP/SAT).

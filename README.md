@@ -28,7 +28,7 @@ Solvor all your optimization needs.
 | **Gradient** | `gradient_descent`, `momentum`, `rmsprop`, `adam` | ML, curve fitting |
 | **Quasi-Newton** | `bfgs`, `lbfgs` | Fast convergence, smooth functions |
 | **Derivative-Free** | `nelder_mead`, `powell`, `bayesian_opt` | Black-box, expensive functions |
-| **Pathfinding** | `bfs`, `dfs`, `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | Shortest paths, graph traversal |
+| **Pathfinding** | `bfs`, `dfs`, `dijkstra`, `astar`, `astar_grid`, `bellman_ford`, `floyd_warshall` | Shortest paths, graph traversal |
 | **Graph** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | Flow, MST, connectivity |
 | **Assignment** | `solve_assignment`, `solve_hungarian`, `network_simplex` | Matching, min-cost flow |
 | **Exact Cover** | `solve_exact_cover` | N-Queens, tiling puzzles |
@@ -394,7 +394,7 @@ result = solve_vrptw(customers, vehicle_capacity=30, n_vehicles=2)
 
 ## Result Format
 
-All solvors return a consistent `Result` namedtuple:
+All solvors return a consistent `Result` dataclass:
 
 ```python
 Result(
@@ -402,7 +402,9 @@ Result(
     objective,    # objective value
     iterations,   # solver iterations (pivots, generations, etc.)
     evaluations,  # function evaluations
-    status        # OPTIMAL, FEASIBLE, INFEASIBLE, UNBOUNDED, MAX_ITER
+    status,       # OPTIMAL, FEASIBLE, INFEASIBLE, UNBOUNDED, MAX_ITER
+    error,        # error message if failed (None on success)
+    solutions,    # multiple solutions when solution_limit > 1
 )
 ```
 
