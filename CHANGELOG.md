@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.4.8] - 2025-12-25
+
+Examples! Finally they all work (and can be used as extra tests! optional for now). Also some last changes to solvors that didn't play nice with some of the wikipedia examples. 0.5.0 will be next, which will be considered a "beta" where 0.4.x releases are "alpha". Development cycle will slow down after that, extra maintainers are welcome!
+
+### Added
+
+- **We need examples, lots of examples:**
+  - `quick_examples/` minimal working code for every solver, copy-paste ready
+  - `classic/` TSP, knapsack, bin packing, job shop, VRP benchmarks
+  - `puzzles/` sudoku, n-queens, zebra puzzle, pentomino, magic square
+  - `linear_programming/` diet problem, portfolio optimization, blending
+  - `machine_learning/` gradient descent for regression (yes it works)
+  - `real_world/` nurse scheduling that actually respects constraints
+
+- `py.typed` marker for type checker support
+
+### Changed
+
+- **WIKILEAKS:** Wiki completely up to date, using quick examples from the repo now for consistency. Lots of copy-pasting.
+
+- **Full tests overhaul:** Tests reorganized into `tests/solvers/` and `tests/examples/`, grouped example tests into folder categories. More copy-pasting.
+
+- **CI simplified** the per-solver conditional testing was clever but unmaintainable, just run everything now, tweaked some of the slower tests.
+
+- **Input validation added to graph algorithms and MILP:** bellman_ford, floyd_warshall, mst and milp now tell you what's wrong instead of crashing.
+
+- **Extra parameters:** I don't want to add too many parameters and complexity, but added warm_start to milp and a solution limit. Added `allow_forest=True` for kruskals, which returns minimum spanning forest instead of giving up.
+
+- **README & CONTRIBUTING:** Up-to-date again, were lagging behind with new solvers and parameters, CI changes and more. Should be consistent with the repo's content again.
 
 ## [0.4.7] - 2025-12-25
 
@@ -20,7 +49,7 @@ Santa's been busy, a lot more solvors, focussing on more real world problems, go
 - `vrp` vehicle routing problem
 - `lns` large neighborhood search
 - `differential_evolution` evolution strategy for continuous optimization
-- `particle_swarm` swarm intelligence (just peer pressure for algorithms), also includes "velocity clamping" so particles don't yeet into infinity, which the textbook examples aparently do
+- `particle_swarm` swarm intelligence (just peer pressure for algorithms), also includes "velocity clamping" so particles don't yeet into infinity, which the textbook examples apparently do
 - `knapsack` the classic packing problem
 - `bin_pack` fit items into bins
 
@@ -210,6 +239,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.4.8]: https://github.com/StevenBtw/solvor/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/StevenBtw/solvor/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/StevenBtw/solvor/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/StevenBtw/solvor/compare/v0.4.4...v0.4.5
