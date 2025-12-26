@@ -1,6 +1,6 @@
 # solve_bin_pack
 
-Bin packing with First Fit Decreasing. Minimize bins needed to fit items.
+Bin packing heuristics. Minimize bins needed to fit items.
 
 ## Example
 
@@ -10,7 +10,7 @@ from solvor import solve_bin_pack
 items = [4, 8, 1, 4, 2, 1]
 
 result = solve_bin_pack(items, bin_capacity=10)
-print(result.solution)   # [[8, 2], [4, 4, 1, 1]]
+print(result.solution)   # (1, 0, 0, 1, 0, 0) - bin index for each item
 print(result.objective)  # 2 bins
 ```
 
@@ -18,24 +18,28 @@ print(result.objective)  # 2 bins
 
 ```python
 def solve_bin_pack(
-    items: Sequence[int | float],
-    bin_capacity: int | float,
-) -> Result[list[list[int | float]]]
+    item_sizes: Sequence[float],
+    bin_capacity: float,
+    *,
+    algorithm: str = "best-fit-decreasing",
+) -> Result[tuple[int, ...]]
 ```
 
 ## Returns
 
-- `solution`: List of bins, each bin is a list of item sizes
+- `solution`: Tuple of bin assignments, `solution[i]` = bin index for item i
 - `objective`: Number of bins used
 
-## Algorithm
+## Algorithms
 
-First Fit Decreasing:
-1. Sort items by size (descending)
-2. For each item, put it in the first bin that fits
-3. If no bin fits, open a new bin
+- `first-fit`: Place item in first bin that fits
+- `best-fit`: Place item in bin with least remaining space
+- `first-fit-decreasing`: Sort items descending, then first-fit
+- `best-fit-decreasing`: Sort items descending, then best-fit (default)
 
-**Guarantee:** At most 11/9 × OPT + 6/9 bins (asymptotically optimal).
+Decreasing variants typically produce better results.
+
+**Guarantee:** Best-fit-decreasing uses at most 11/9 × OPT + 6/9 bins.
 
 ## See Also
 
