@@ -84,6 +84,7 @@ def anneal[T](
     on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result:
+    """Simulated annealing with configurable cooling schedule."""
     rng = Random(seed)
     evaluate = Evaluator(objective_fn, minimize)
 
