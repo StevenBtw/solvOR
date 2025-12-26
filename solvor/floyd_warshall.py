@@ -20,6 +20,7 @@ and usually faster in practice.
 """
 
 from solvor.types import Result, Status
+from solvor.utils import check_edge_nodes, check_positive
 
 __all__ = ["floyd_warshall"]
 
@@ -30,6 +31,9 @@ def floyd_warshall(
     *,
     directed: bool = True,
 ) -> Result:
+    check_positive(n_nodes, name="n_nodes")
+    check_edge_nodes(edges, n_nodes)
+
     n = n_nodes
     dist = [[float("inf")] * n for _ in range(n)]
 

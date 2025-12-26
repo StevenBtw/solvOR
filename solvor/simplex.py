@@ -27,6 +27,7 @@ from array import array
 from collections.abc import Sequence
 
 from solvor.types import Result, Status
+from solvor.utils import check_matrix_dims, warn_large_coefficients
 
 __all__ = ["solve_lp"]
 
@@ -40,6 +41,10 @@ def solve_lp(
     eps: float = 1e-10,
     max_iter: int = 100_000,
 ) -> Result:
+    """Solve linear program: minimize c @ x subject to A @ x <= b, x >= 0."""
+    check_matrix_dims(c, A, b)
+    warn_large_coefficients(A)
+
     m, n = len(b), len(c)
     weights = list(c) if minimize else [-ci for ci in c]
 
@@ -71,7 +76,6 @@ def solve_lp(
 
 
 def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
-    n_cols = len(matrix[0])
     n_total = n + m
     art_cols = []
 
@@ -79,7 +83,9 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
 
     for i in range(m):
         if matrix[i][-1] < -eps:
-            for j in range(n_cols):
+            # Flip entire row including RHS (use current length, not cached)
+            row_len = len(matrix[i])
+            for j in range(row_len):
                 matrix[i][j] *= -1
 
             art_col = n_total + len(art_cols)
