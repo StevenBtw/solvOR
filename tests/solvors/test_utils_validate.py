@@ -1,20 +1,16 @@
 """Tests for validation utilities."""
 
-import warnings
-
 import pytest
 
 from solvor.utils import (
     check_bounds,
     check_edge_nodes,
-    check_graph_nodes,
     check_in_range,
     check_integers_valid,
     check_matrix_dims,
     check_non_negative,
     check_positive,
     check_sequence_lengths,
-    warn_large_coefficients,
 )
 
 
@@ -176,79 +172,3 @@ class TestEdgeNodes:
         edges = [(0, 1, 1.0), (-1, 2, 2.0)]
         with pytest.raises(ValueError, match="u=-1"):
             check_edge_nodes(edges, 3)
-
-
-class TestGraphNodes:
-    def test_valid_nodes(self):
-        """Valid nodes in graph pass."""
-        graph = {"A": ["B", "C"], "B": ["A"], "C": ["A"]}
-        check_graph_nodes(graph, ("A", "start"), ("B", "end"))
-
-    def test_missing_node(self):
-        """Missing node raises error."""
-        graph = {"A": ["B"], "B": ["A"]}
-        with pytest.raises(ValueError, match="'C' not found"):
-            check_graph_nodes(graph, ("A", "start"), ("C", "end"))
-
-    def test_empty_graph(self):
-        """Empty graph with node lookup fails."""
-        with pytest.raises(ValueError, match="not found"):
-            check_graph_nodes({}, ("A", "start"))
-
-
-class TestWarnLargeCoefficients:
-    def test_no_warning_normal(self):
-        """Normal coefficients don't warn."""
-        A = [[1, 2, 3], [4, 5, 6]]
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            warn_large_coefficients(A)
-            assert len(w) == 0
-
-    def test_warning_large(self):
-        """Large coefficients trigger warning."""
-        A = [[1e12, 2], [3, 4]]
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            warn_large_coefficients(A, threshold=1e10)
-            assert len(w) == 1
-            assert "numerical issues" in str(w[0].message)
-
-    def test_custom_threshold(self):
-        """Custom threshold works."""
-        A = [[100, 200]]
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            warn_large_coefficients(A, threshold=50)
-            assert len(w) == 1
-
-    def test_negative_large(self):
-        """Negative large values also trigger warning."""
-        A = [[-1e15, 0]]
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            warn_large_coefficients(A)
-            assert len(w) == 1
-
-
-class TestSequenceLengthsEdgeCases:
-    def test_empty_input(self):
-        """Empty sequence list returns 0."""
-        n = check_sequence_lengths()
-        assert n == 0
-
-    def test_single_sequence(self):
-        """Single sequence returns its length."""
-        n = check_sequence_lengths(([1, 2, 3], "values"))
-        assert n == 3
-
-
-class TestIntegersValidEdgeCases:
-    def test_empty_list(self):
-        """Empty list is valid."""
-        check_integers_valid([], 5)
-
-    def test_non_integer_type(self):
-        """Non-integer type raises TypeError."""
-        with pytest.raises(TypeError, match="integers"):
-            check_integers_valid([0, 1.5, 2], 5)

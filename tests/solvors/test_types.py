@@ -45,9 +45,9 @@ class TestResult:
 
         import solvor.types
 
-        importlib.reload(solvors.types)
+        importlib.reload(solvor.types)
 
-        result = solvors.types.Result(solution=[1, 2], objective=10.0, iterations=5, status=solvors.types.Status.OPTIMAL)
+        result = solvor.types.Result(solution=[1, 2], objective=10.0, iterations=5, status=solvor.types.Status.OPTIMAL)
         result.log("test: ")
         captured = capsys.readouterr()
         assert "OPTIMAL" in captured.out
@@ -56,7 +56,7 @@ class TestResult:
 
         # Cleanup: reload without DEBUG
         monkeypatch.delenv("DEBUG", raising=False)
-        importlib.reload(solvors.types)
+        importlib.reload(solvor.types)
 
     def test_result_log_with_error(self, capsys, monkeypatch):
         monkeypatch.setenv("DEBUG", "1")
@@ -64,13 +64,13 @@ class TestResult:
 
         import solvor.types
 
-        importlib.reload(solvors.types)
+        importlib.reload(solvor.types)
 
-        result = solvors.types.Result(
+        result = solvor.types.Result(
             solution=None,
             objective=0,
             iterations=100,
-            status=solvors.types.Status.INFEASIBLE,
+            status=solvor.types.Status.INFEASIBLE,
             error="constraint violated",
         )
         result.log()
@@ -80,7 +80,7 @@ class TestResult:
 
         # Cleanup
         monkeypatch.delenv("DEBUG", raising=False)
-        importlib.reload(solvors.types)
+        importlib.reload(solvor.types)
 
 
 class TestProgress:
