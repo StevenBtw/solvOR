@@ -38,6 +38,7 @@ between this approach and full MILP: https://github.com/Z3Prover/z3
 """
 
 from itertools import combinations
+from typing import Any
 
 from solvor.sat import Status as SATStatus
 from solvor.sat import solve_sat
@@ -616,8 +617,8 @@ class Model:
         hints: dict[str, int] | None = None,
         solution_limit: int = 1,
         solver: str = "dfs",
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> Result:
         """Solve the constraint satisfaction problem.
 
         Args:
