@@ -24,11 +24,11 @@ What broke, what got fixed, and what's new. The optimization journey, documented
 
 **solvOR** is now in beta!
 
-Documentation finally has a proper home. Moved everything from the wiki to MkDocs, deployed at [solver.ai](https://solver.ai). The wiki now just points there.
+Documentation finally has a proper home. Moved everything from the wiki to MkDocs, deployed at [solvOR.ai](https://solvOR.ai). The wiki now just points there.
 
 ### Added
 
-- Documentation site at [solver.ai](https://solver.ai). MkDocs with Material theme, dark mode by default (as it should be). Getting started, algorithm reference (40+ pages), cookbook with 18 worked examples, API docs, troubleshooting.
+- Documentation site at [solvOR.ai](https://solvOR.ai). MkDocs with Material theme, dark mode by default (as it should be). Getting started, algorithm reference (40+ pages), cookbook with 18 worked examples, API docs, troubleshooting.
 
 - GitHub Actions workflow for docs, auto-deploys to GitHub Pages on push to main.
 

@@ -1,5 +1,5 @@
 site_name: solvOR
-site_url: https://solver.ai
+site_url: https://solvOR.ai
 site_description: Pure Python optimization library - zero dependencies, maximum performance
 site_author: Steven Bytheway
 repo_url: https://github.com/StevenBtw/solvOR
@@ -98,7 +98,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/StevenBtw/solvOR
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/solvor/
+      link: https://pypi.org/project/solvOR/
   generator: false
   meta:
     - property: og:type

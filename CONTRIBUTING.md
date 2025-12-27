@@ -705,7 +705,7 @@ Type hints are required on public APIs but optional for internal helpers.
 
 ## Documentation
 
-Docs live in `docs/` and are built with MkDocs + Material theme. Deployed to [solver.ai](https://solver.ai) via GitHub Actions.
+Docs live in `docs/` and are built with MkDocs + Material theme. Deployed to [solvOR.ai](https://solvOR.ai) via GitHub Actions.
 
 ```bash
 # Serve locally
