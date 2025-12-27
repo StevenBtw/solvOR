@@ -13,6 +13,9 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: mixed-line-ending
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.10
