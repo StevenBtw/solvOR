@@ -453,7 +453,7 @@ Result(
 
 ## Documentation
 
-Full docs at **[solver.ai](https://solver.ai)** - getting started, algorithm reference, cookbook with worked examples, and troubleshooting.
+Full docs at **[solver.ai](https://solver.ai):** getting started, algorithm reference, cookbook with worked examples, and troubleshooting.
 
 ---
 
