@@ -1,6 +1,6 @@
 # anneal
 
-Simulated annealing. Accepts worse solutions probabilistically, cooling down over time. Like a ball rolling on a landscape, energetic enough early on to escape local valleys, settling into the best valley it finds.
+[Simulated annealing](https://en.wikipedia.org/wiki/Simulated_annealing). Accepts worse solutions probabilistically, cooling down over time. Like a ball rolling on a landscape, energetic enough early on to escape local valleys, settling into the best valley it finds.
 
 ## Signature
 

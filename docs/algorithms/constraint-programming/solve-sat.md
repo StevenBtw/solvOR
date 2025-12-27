@@ -1,6 +1,6 @@
 # solve_sat
 
-Boolean satisfiability. Feed it clauses in CNF (conjunctive normal form), get back a satisfying assignment. This is the engine under the hood of CP-SAT and many other solvers.
+Boolean satisfiability ([SAT](https://en.wikipedia.org/wiki/Boolean_satisfiability_problem)). Feed it clauses in CNF (conjunctive normal form), get back a satisfying assignment. This is the engine under the hood of constraint programming and many other solvers.
 
 ## When to Use
 
@@ -57,16 +57,18 @@ clauses = [[1], [2, 3], [-1, -2]]
 
 ## Complexity
 
-- **Time:** NP-complete
+- **Time:** NP-complete (the canonical NP-complete problem)
 - **Guarantees:** Finds a solution or proves none exists
+
+The solver uses [CDCL](https://en.wikipedia.org/wiki/Conflict-driven_clause_learning) (Conflict-Driven Clause Learning) with watched literals for efficient propagation.
 
 ## Tips
 
 1. **Variable numbering.** Variables must be positive integers. Use 1, 2, 3... not 0, 1, 2.
 2. **Unit propagation.** The solver handles this automatically. Single-literal clauses force assignments.
-3. **For complex constraints.** Use the `Model` class (CP-SAT) instead of encoding everything to CNF manually.
+3. **For complex constraints.** Use the `Model` class instead of encoding everything to CNF manually.
 
 ## See Also
 
-- [CP-SAT Model](cp-sat.md) - Higher-level constraint programming
+- [Model (CP)](cp.md) - Higher-level constraint programming
 - [solve_exact_cover](solve-exact-cover.md) - For exact cover problems

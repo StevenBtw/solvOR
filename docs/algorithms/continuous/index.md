@@ -42,7 +42,7 @@ When your objective is a smooth function and you have gradient information, you 
 ## When NOT to Use
 
 - **No gradient information** - Use metaheuristics
-- **Discrete variables** - Use MILP, CP-SAT
+- **Discrete variables** - Use MILP or constraint programming
 - **Massively non-convex** - Start with metaheuristics, refine with gradients
 
 ## Quick Example

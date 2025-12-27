@@ -18,7 +18,7 @@ Dedicated solvers for classic combinatorial optimization problems. When your pro
 - Your problem matches the solver's structure exactly
 - You want good solutions fast without modeling effort
 
-**Use general solvers (MILP, CP-SAT, metaheuristics) when:**
+**Use general solvers (MILP, constraint programming, metaheuristics) when:**
 
 - You have additional constraints
 - The problem is a variation of the classic

@@ -23,7 +23,7 @@ When you're climbing a mountain in the fog with no map, metaheuristics are your 
 
 ## When NOT to Use
 
-- **Need provable optimality** - Use MILP, CP-SAT, or exact algorithms
+- **Need provable optimality** - Use MILP, constraint programming, or exact algorithms
 - **Have gradient information** - Use gradient descent or Adam
 - **Convex problems** - Use simplex or gradient methods
 

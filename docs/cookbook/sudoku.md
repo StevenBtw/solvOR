@@ -8,7 +8,7 @@ Fill a 9x9 grid so that each row, each column, and each 3x3 box contains the dig
 
 ## Why It's Interesting
 
-Sudoku is exact cover in disguise. Each constraint ("row 1 contains a 5") must be satisfied exactly once. Perfect for CP-SAT.
+Sudoku is [exact cover](https://en.wikipedia.org/wiki/Exact_cover) in disguise. Each constraint ("row 1 contains a 5") must be satisfied exactly once. Perfect for constraint programming.
 
 ## Example
 
@@ -101,5 +101,6 @@ m.add(m.sum_eq(cage, 12))  # Sum to 12
 
 ## See Also
 
-- [CP-SAT Model](../algorithms/constraint-programming/cp-sat.md)
+- [Model (CP)](../algorithms/constraint-programming/cp.md)
 - [N-Queens](n-queens.md)
+- [Wikipedia: Sudoku solving algorithms](https://en.wikipedia.org/wiki/Sudoku_solving_algorithms)
