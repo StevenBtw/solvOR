@@ -8,7 +8,21 @@ What broke, what got fixed, and what's new. The optimization journey, documented
 
 - **CI docs test:** Added `test_docs.py` that runs `mkdocs build --strict` to catch missing type annotations, broken links, and invalid markdown before merge.
 
+### Fixed
+
+- **CP IntVar multiplication**: `IntVar` now supports multiplication with integers
+  (`x * 3`, `3 * x`), enabling combined constraint expressions like
+  `timeslot * n_rooms + room`.
+
 ### Changed
+
+- **CP solver selection**: `Model.solve()` now defaults to `solver="auto"` which
+  automatically picks DFS for simple constraints and SAT for global constraints
+  (circuit, no_overlap, cumulative, sum_*). Use `solver="dfs"` or `solver="sat"`
+  to force a specific solver.
+
+- **CP refactor**: Extracted SAT encoding logic to `cp_encoder.py` for better
+  maintainability (cp.py went from 861 to 428 lines). No API changes.
 
 - **Documentation improvement pass:** Went through the docs and added references, tips and tried to improve general readability.
 - **Improved tests:** Removed some tests that have weak or wrong assertions, and improved some to test for edge cases or different parameters. No bugs found so far!
