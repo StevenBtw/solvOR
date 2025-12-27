@@ -53,6 +53,9 @@ select = ["E", "F", "I", "UP"]
 [tool.pytest.ini_options]
 addopts = "--cov=solvor --cov-report=term-missing --cov-fail-under=88"
 testpaths = ["tests"]
+markers = [
+    "docs: documentation build tests (requires docs dependencies)",
+]
 
 [tool.coverage.run]
 source = ["solvor"]
