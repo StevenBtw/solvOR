@@ -45,7 +45,7 @@ See `examples/linear_programming/diet_problem.py` for a complete version with mo
 
 ## Why LP?
 
-Properties blend linearly by quantity. No integer constraints needed - you can eat 2.5 eggs. For realistic discrete portions, use MILP.
+Properties blend linearly by quantity. No integer constraints needed, you can eat 2.5 eggs. For realistic discrete portions, use MILP.
 
 ## See Also
 
