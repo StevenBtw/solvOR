@@ -2,14 +2,48 @@
 
 ![solvOR logo](assets/logo.svg){ .logo-hero }
 
-**Solvor all your optimization needs.**
+**Learn optimization by reading the code.**
 
-solvOR is a pure Python optimization library. No numpy, no scipy, no compiled extensions. Each solver fits in one file you can actually read.
+solvOR is a pure Python optimization library designed for learning and experimentation. No numpy, no scipy, no compiled extensions. Each algorithm fits in one readable file you can study, modify, and extend.
 
 [![Build Status](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/StevenBtw/solvOR/branch/main/graph/badge.svg)](https://codecov.io/gh/StevenBtw/solvOR)
 [![PyPI](https://img.shields.io/pypi/v/solvor.svg)](https://pypi.org/project/solvor/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+---
+
+## Why solvOR?
+
+<div class="grid cards" markdown>
+
+-   :material-book-open-variant:{ .lg .middle } **Readable Code**
+
+    ---
+
+    Every algorithm is implemented in clear, documented Python. No magic, no hidden complexity. Perfect for understanding how solvers actually work.
+
+-   :material-school:{ .lg .middle } **Educational First**
+
+    ---
+
+    Designed for students and learners. Each solver includes Wikipedia links, complexity analysis, and practical tips. Learn the theory by reading working code.
+
+-   :material-wrench:{ .lg .middle } **Easy to Customize**
+
+    ---
+
+    Want to add a custom heuristic? Modify the neighborhood function? Everything is accessible Python you can copy, tweak, and experiment with.
+
+-   :material-lightning-bolt:{ .lg .middle } **Practical Performance**
+
+    ---
+
+    While not as fast as [OR-Tools](https://developers.google.com/optimization) on large instances, solvOR handles real problems effectively. Solves Sudoku instantly, TSP-100 in seconds, and scales to thousands of variables for many problem types.
+
+</div>
+
+---
 
 ## Quick Start
 
@@ -17,70 +51,145 @@ solvOR is a pure Python optimization library. No numpy, no scipy, no compiled ex
 uv add solvor
 ```
 
-```python
-from solvor import solve_lp, dijkstra, solve_hungarian
+=== "Linear Programming"
 
-# Linear programming
-result = solve_lp(c=[1, 2], A=[[1, 1]], b=[4])
-print(result.solution)
+    ```python
+    from solvor import solve_lp
 
-# Shortest path
-graph = {'A': [('B', 1), ('C', 4)], 'B': [('C', 2)], 'C': []}
-result = dijkstra('A', 'C', lambda n: graph.get(n, []))
-print(result.solution)  # ['A', 'B', 'C']
+    # Minimize 2x + 3y subject to x + y >= 4
+    result = solve_lp(c=[2, 3], A=[[-1, -1]], b=[-4])
+    print(result.solution)  # Optimal x, y
+    print(result.objective) # Minimum cost
+    ```
 
-# Assignment
-costs = [[10, 5], [3, 9]]
-result = solve_hungarian(costs)
-print(result.solution)  # [1, 0]
-```
+=== "Pathfinding"
 
-## What's in the box?
+    ```python
+    from solvor import dijkstra
 
-| Category | Solvers | Use Case |
-|----------|---------|----------|
-| **Linear/Integer** | `solve_lp`, `solve_milp` | Resource allocation, scheduling |
-| **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, config problems |
-| **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
-| **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
-| **Population** | `evolve`, `differential_evolution`, `particle_swarm` | Global search |
-| **Gradient** | `gradient_descent`, `momentum`, `rmsprop`, `adam` | ML, curve fitting |
-| **Quasi-Newton** | `bfgs`, `lbfgs` | Fast convergence, smooth functions |
-| **Derivative-Free** | `nelder_mead`, `powell`, `bayesian_opt` | Black-box, expensive functions |
-| **Pathfinding** | `bfs`, `dfs`, `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | Shortest paths |
-| **Graph** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | Flow, MST |
-| **Assignment** | `solve_hungarian`, `solve_assignment` | Matching |
+    graph = {'A': [('B', 1), ('C', 4)], 'B': [('C', 2)], 'C': []}
+    result = dijkstra('A', 'C', lambda n: graph.get(n, []))
+    print(result.solution)  # ['A', 'B', 'C']
+    print(result.objective) # 3 (total distance)
+    ```
 
-## When to use what?
+=== "Constraint Programming"
 
-**I need the optimal solution and...**
+    ```python
+    from solvor import Model
 
-- My constraints are linear → `solve_lp`
-- Some variables must be integers → `solve_milp`
-- It's all boolean logic → `solve_sat`
-- I have complex constraints → `Model` (CP-SAT)
+    m = Model()
+    x, y, z = [m.int_var(1, 9, name) for name in 'xyz']
+    m.add(m.all_different([x, y, z]))
+    m.add(x + y + z == 15)
+    result = m.solve()
+    print(result.solution)  # {'x': 3, 'y': 5, 'z': 7}
+    ```
 
-**Good enough is fine...**
+=== "Metaheuristics"
 
-- I have a decent starting point → `tabu_search` or `anneal`
-- Continuous, no gradients → `particle_swarm` or `nelder_mead`
-- My function is smooth → `adam`, `bfgs`
-- Each evaluation is expensive → `bayesian_opt`
+    ```python
+    from solvor import solve_tsp
 
-**I need a path through a graph...**
+    distances = [
+        [0, 29, 20, 21],
+        [29, 0, 15, 17],
+        [20, 15, 0, 28],
+        [21, 17, 28, 0]
+    ]
+    result = solve_tsp(distances)
+    print(result.solution)  # Best tour found
+    print(result.objective) # Tour length
+    ```
 
-- Unweighted → `bfs` or `dfs`
-- Weighted, non-negative → `dijkstra` or `astar`
-- Negative edge weights → `bellman_ford`
+---
+
+## What's in the Box?
+
+| Category | Algorithms | Learn About |
+|----------|------------|-------------|
+| **Linear Programming** | `solve_lp`, `solve_milp` | [Simplex method](https://en.wikipedia.org/wiki/Simplex_algorithm), branch and bound |
+| **Constraint Programming** | `solve_sat`, `Model`, `solve_exact_cover` | [SAT solving](https://en.wikipedia.org/wiki/Boolean_satisfiability_problem), [Dancing Links](https://en.wikipedia.org/wiki/Dancing_Links) |
+| **Metaheuristics** | `anneal`, `tabu_search`, `lns`, `evolve` | [Local search](https://en.wikipedia.org/wiki/Local_search_(optimization)), [genetic algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm) |
+| **Continuous Optimization** | `adam`, `bfgs`, `nelder_mead`, `bayesian_opt` | [Gradient descent](https://en.wikipedia.org/wiki/Gradient_descent), [quasi-Newton methods](https://en.wikipedia.org/wiki/Quasi-Newton_method) |
+| **Graph Algorithms** | `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | [Shortest paths](https://en.wikipedia.org/wiki/Shortest_path_problem), [A* search](https://en.wikipedia.org/wiki/A*_search_algorithm) |
+| **Network Flow** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | [Ford-Fulkerson](https://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm), [MST algorithms](https://en.wikipedia.org/wiki/Minimum_spanning_tree) |
+| **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop` | [Dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming), scheduling |
+| **Assignment** | `solve_hungarian`, `network_simplex` | [Hungarian algorithm](https://en.wikipedia.org/wiki/Hungarian_algorithm) |
+
+---
+
+## Choosing an Algorithm
+
+**I need a provably optimal solution:**
+
+- Linear constraints, continuous variables → [`solve_lp`](algorithms/linear-programming/solve-lp.md)
+- Integer or binary variables → [`solve_milp`](algorithms/linear-programming/solve-milp.md)
+- Boolean satisfiability → [`solve_sat`](algorithms/constraint-programming/solve-sat.md)
+- Complex constraints (all-different, etc.) → [`Model`](algorithms/constraint-programming/cp.md)
+
+**A good solution quickly is fine:**
+
+- Have a starting point → [`tabu_search`](algorithms/metaheuristics/tabu.md) or [`anneal`](algorithms/metaheuristics/anneal.md)
+- Continuous, no gradients → [`nelder_mead`](algorithms/continuous/nelder-mead.md)
+- Expensive evaluations → [`bayesian_opt`](algorithms/continuous/bayesian.md)
+
+**Graph or network problem:**
+
+- Shortest path → [`dijkstra`](algorithms/graph/shortest-paths.md), [`astar`](algorithms/graph/shortest-paths.md), [`bellman_ford`](algorithms/graph/shortest-paths.md)
+- Maximum flow → [`max_flow`](algorithms/graph/network-flow.md)
+- Spanning tree → [`kruskal`](algorithms/graph/mst.md), [`prim`](algorithms/graph/mst.md)
+
+[:material-arrow-right: Full decision guide](getting-started/choosing-solver.md)
+
+---
+
+## Popular Examples
+
+<div class="grid cards" markdown>
+
+-   **[Sudoku Solver](cookbook/sudoku.md)**
+
+    ---
+
+    Constraint programming with `all_different`. Classic puzzle, elegant solution.
+
+-   **[Traveling Salesman](cookbook/tsp.md)**
+
+    ---
+
+    Tabu search for TSP. See how local search escapes local optima.
+
+-   **[Shortest Path Grid](cookbook/shortest-path-grid.md)**
+
+    ---
+
+    A* pathfinding on a 2D grid. Understand heuristics in action.
+
+-   **[N-Queens](cookbook/n-queens.md)**
+
+    ---
+
+    Place N queens with no conflicts. A constraint satisfaction classic.
+
+</div>
+
+[:material-arrow-right: All cookbook examples](cookbook/index.md) · [:material-arrow-right: More examples](examples/index.md)
+
+---
 
 ## Philosophy
 
-1. **Pure Python** - no numpy, no scipy, runs anywhere Python runs
-2. **Readable** - each solver fits in one file you can actually read
-3. **Consistent** - same Result format, same conventions across all solvers
-4. **Practical** - solves real problems and AoC puzzles, obviously
+!!! quote "Design principles"
 
-Working > perfect. Readable > clever. Simple > general.
+    1. **Working > perfect** — Ship code that solves problems
+    2. **Readable > clever** — Tomorrow-you needs to understand today-you's code
+    3. **Simple > general** — Solve the problem at hand, not all possible problems
+
+solvOR is not trying to compete with production solvers like OR-Tools, Gurobi, or CPLEX. It's designed to help you **understand** how these algorithms work, so you can make informed decisions about which tools to use and how to apply them.
+
+---
 
 [Get Started](getting-started/installation.md){ .md-button .md-button--primary }
-[Examples](examples/index.md){ .md-button }
+[Browse Examples](examples/index.md){ .md-button }
+[API Reference](api/index.md){ .md-button }

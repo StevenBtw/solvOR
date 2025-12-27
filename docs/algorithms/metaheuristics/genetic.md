@@ -1,6 +1,6 @@
 # evolve
 
-Genetic algorithm. Maintains a population, combines solutions via crossover, occasionally mutates. Slower than single-solution methods but explores more diversity. Good for multi-objective problems.
+[Genetic algorithm](https://en.wikipedia.org/wiki/Genetic_algorithm). Maintains a population, combines solutions via crossover, occasionally mutates. Slower than single-solution methods but explores more diversity. Good for multi-objective problems.
 
 ## Signature
 

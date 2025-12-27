@@ -1,6 +1,6 @@
 # tabu_search
 
-Greedy local search with memory. Always picks the best neighbor, but maintains a "tabu list" of recent moves to prevent cycling. More deterministic than annealing, easier to debug.
+[Tabu search](https://en.wikipedia.org/wiki/Tabu_search). Greedy local search with memory. Always picks the best neighbor, but maintains a "tabu list" of recent moves to prevent cycling. More deterministic than annealing, easier to debug.
 
 ## Signature
 

@@ -2,11 +2,13 @@
 
 Find the shortest tour visiting all cities exactly once and returning to start.
 
+The [Traveling Salesman Problem (TSP)](https://en.wikipedia.org/wiki/Travelling_salesman_problem) is one of the most studied problems in combinatorial optimization.
+
 ## The Problem
 
 Given N cities and distances between them, find the shortest possible route that visits each city exactly once and returns to the starting city.
 
-This is the classic TSP, NP-hard, but small instances (< 100 cities) are very solvable with tabu search.
+This is the classic TSP, NP-hard, but small instances (< 100 cities) are very solvable with [tabu search](https://en.wikipedia.org/wiki/Tabu_search).
 
 ## Why It's Hard
 

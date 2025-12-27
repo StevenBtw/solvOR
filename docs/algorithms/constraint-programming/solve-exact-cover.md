@@ -77,6 +77,7 @@ Given a matrix of 0s and 1s, find rows such that each column has exactly one 1.
 
 ## See Also
 
-- [CP-SAT Model](cp-sat.md) - More general constraint programming
+- [Model (CP)](cp.md) - More general constraint programming
 - [Cookbook: Pentomino](../../cookbook/pentomino.md) - Tiling example
 - [Cookbook: Sudoku](../../cookbook/sudoku.md) - Can also use exact cover
+- [Wikipedia: Dancing Links](https://en.wikipedia.org/wiki/Dancing_Links) - Knuth's Algorithm X

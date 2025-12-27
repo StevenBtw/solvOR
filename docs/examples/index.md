@@ -34,12 +34,12 @@ python examples/real_world/nurse_scheduling.py
 
 Examples print their results and explain the problem being solved.
 
-## Reference Data
+## Problem Libraries
 
 Examples use well-known problem instances from the OR community:
 
-- **TSPLIB**: TSP instances (att48 - 48 US capitals)
-- **Solomon**: Vehicle routing with time windows (R101)
-- **Fisher-Thompson**: Job shop scheduling (ft06)
-- **Falkenauer**: Bin packing instances
-- **ITC 2007**: University timetabling
+- [TSPLIB](http://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/) - TSP instances (att48 - 48 US capitals)
+- [Solomon](https://www.sintef.no/projectweb/top/vrptw/solomon-benchmark/) - Vehicle routing with time windows (R101)
+- Fisher-Thompson - Job shop scheduling (ft06)
+- Falkenauer - Bin packing instances
+- [ITC 2007](https://www.itc2007.it/) - University timetabling

@@ -2,9 +2,11 @@
 
 Color graph nodes so no adjacent nodes share a color.
 
+The [graph coloring problem](https://en.wikipedia.org/wiki/Graph_coloring) is a classic constraint satisfaction problem with applications in scheduling, register allocation, and frequency assignment.
+
 ## The Problem
 
-Given a graph, assign colors to nodes such that no two adjacent nodes have the same color. Classic constraint satisfaction.
+Given a graph, assign colors to nodes such that no two adjacent nodes have the same color.
 
 ## Example
 
@@ -47,5 +49,5 @@ def chromatic_number(edges, n_nodes):
 
 ## See Also
 
-- [CP-SAT Model](../algorithms/constraint-programming/cp-sat.md)
+- [Model (CP)](../algorithms/constraint-programming/cp.md)
 - [N-Queens](n-queens.md) - Similar constraint pattern
