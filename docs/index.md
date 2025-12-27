@@ -1,8 +1,11 @@
-# solvOR { .visually-hidden }
+---
+title: solvOR - Pure Python Optimization Library
+description: Learn optimization by reading the code. 40+ algorithms, zero dependencies. Each solver fits in one readable file.
+---
 
 ![solvOR logo](assets/logo.svg){ .logo-hero }
 
-**Solvor all your optimization needs.**
+**Learn optimization by reading the code.**
 
 solvOR is a pure Python optimization library designed for learning and experimentation. No numpy, no scipy, no compiled extensions. Each algorithm fits in one readable file you can study, modify, and extend.
 
