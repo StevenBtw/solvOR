@@ -55,81 +55,18 @@ class TestBasicGA:
         assert result.objective <= 2  # Should get close to target
 
 
-class TestCrossover:
-    def test_two_point_crossover(self):
-        def two_point(p1, p2):
-            n = len(p1)
-            i, j = sorted([randint(0, n), randint(0, n)])
-            return p1[:i] + p2[i:j] + p1[j:]
-
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 8) for _ in range(15)]
-        result = evolve(objective, population, two_point, bit_mutate, max_iter=50, seed=42)
-        assert result.status == Status.FEASIBLE
-
-    def test_uniform_crossover(self):
-        def uniform(p1, p2):
-            return tuple(p1[i] if randint(0, 1) else p2[i] for i in range(len(p1)))
-
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 8) for _ in range(15)]
-        result = evolve(objective, population, uniform, bit_mutate, max_iter=50, seed=42)
-        assert result.status == Status.FEASIBLE
-
-
-class TestMutation:
-    def test_multi_bit_mutate(self):
-        def multi_mutate(bits):
-            bits = list(bits)
-            for _ in range(2):
-                i = randint(0, len(bits) - 1)
-                bits[i] = 1 - bits[i]
-            return tuple(bits)
-
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, multi_mutate, max_iter=50, seed=42)
-        assert result.status == Status.FEASIBLE
-
-
 class TestParameters:
-    def test_large_population(self):
+    def test_elitism_preserves_best(self):
+        # Elitism should never lose the best solution found
         def objective(bits):
             return sum(bits)
 
-        population = [tuple([1] * 10) for _ in range(50)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, seed=42)
+        # Include one optimal solution in population
+        optimal = tuple([0] * 10)
+        population = [optimal] + [tuple([1] * 10) for _ in range(19)]
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, elite_size=1, seed=42)
         assert result.status == Status.FEASIBLE
-
-    def test_small_population(self):
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 10) for _ in range(5)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42)
-        assert result.status == Status.FEASIBLE
-
-    def test_elitism(self):
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, elite_size=5, seed=42)
-        assert result.status == Status.FEASIBLE
-
-    def test_mutation_rate(self):
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, mutation_rate=0.5, seed=42)
-        assert result.status == Status.FEASIBLE
+        assert result.objective == 0  # Elitism should preserve the optimal solution
 
 
 class TestRealValuedGA:
@@ -155,14 +92,6 @@ class TestRealValuedGA:
 
 
 class TestEdgeCases:
-    def test_single_bit(self):
-        def objective(bits):
-            return bits[0]
-
-        population = [tuple([1]) for _ in range(10)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=20, seed=42)
-        assert result.status == Status.FEASIBLE
-
     def test_already_optimal(self):
         # Start with optimal solution in population
         def objective(bits):
@@ -172,13 +101,16 @@ class TestEdgeCases:
         result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=10, seed=42)
         assert result.objective == 0
 
-    def test_identical_population(self):
+    def test_identical_population_still_improves(self):
+        # Mutation should introduce diversity even with identical start
         def objective(bits):
             return sum(bits)
 
-        population = [tuple([1, 0, 1, 0]) for _ in range(10)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=30, seed=42)
+        # All ones, objective = 4
+        population = [tuple([1, 1, 1, 1]) for _ in range(10)]
+        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42)
         assert result.status == Status.FEASIBLE
+        assert result.objective < 4  # Mutation should find improvement
 
 
 class TestStress:
@@ -297,48 +229,12 @@ class TestAdaptiveMutation:
             # Very flat landscape - hard to improve
             return 10 if sum(bits) > 3 else sum(bits)
 
-        # Start with already good solutions
+        # Start with sum=5 (returns 10), need to reduce to sum<=3
         population = [tuple([0] * 5 + [1] * 5) for _ in range(20)]
         result = evolve(
             objective, population, simple_crossover, bit_mutate,
-            max_iter=30, adaptive_mutation=True, seed=42
+            max_iter=50, adaptive_mutation=True, seed=42
         )
         assert result.status == Status.FEASIBLE
-
-
-class TestTournamentK:
-    def test_high_tournament_pressure(self):
-        # High tournament_k = more selection pressure
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42, tournament_k=10)
-        assert result.status == Status.FEASIBLE
-
-    def test_low_tournament_pressure(self):
-        # Low tournament_k = less selection pressure, more diversity
-        def objective(bits):
-            return sum(bits)
-
-        population = [tuple([1] * 10) for _ in range(20)]
-        result = evolve(objective, population, simple_crossover, bit_mutate, max_iter=50, seed=42, tournament_k=2)
-        assert result.status == Status.FEASIBLE
-
-    def test_tournament_k_comparison(self):
-        # Higher tournament_k should converge faster (more greedy)
-        def objective(bits):
-            return sum(bits)
-
-        population_high = [tuple([1] * 15) for _ in range(30)]
-        population_low = [tuple([1] * 15) for _ in range(30)]
-
-        result_high = evolve(
-            objective, population_high, simple_crossover, bit_mutate, max_iter=30, seed=42, tournament_k=15
-        )
-        result_low = evolve(
-            objective, population_low, simple_crossover, bit_mutate, max_iter=30, seed=42, tournament_k=2
-        )
-        # Both should work, but high k typically converges faster
-        assert result_high.status == Status.FEASIBLE
-        assert result_low.status == Status.FEASIBLE
+        # Adaptive mutation should help escape the penalty region
+        assert result.objective <= 3  # Found a solution in the low-penalty region

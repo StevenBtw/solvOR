@@ -394,10 +394,12 @@ class TestSolveVRPTW:
         assert result.ok
         state = result.solution
 
-        # Customer 2 should be in multiple routes
+        # All customers should be assigned
+        assert len(state.unassigned) == 0
+
+        # Customer 2 (requiring 2 vehicles) should be visited by at least 2 vehicles
         vehicles_with_2 = [v for v, r in enumerate(state.routes) if 2 in r]
-        # May or may not succeed depending on optimization, but should try
-        assert len(state.unassigned) == 0 or 2 not in state.unassigned or len(vehicles_with_2) >= 1
+        assert len(vehicles_with_2) >= 2  # Multi-resource constraint satisfied
 
     def test_vrptw_respects_capacity(self):
         customers = [

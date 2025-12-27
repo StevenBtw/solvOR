@@ -82,8 +82,8 @@ class TestAlgorithms:
         result_ff = solve_bin_pack(sizes, capacity, algorithm="first-fit")
         result_ffd = solve_bin_pack(sizes, capacity, algorithm="first-fit-decreasing")
 
-        # FFD should do at least as well as FF
-        assert result_ffd.objective <= result_ff.objective + 1
+        # FFD should do at least as well as FF (never worse)
+        assert result_ffd.objective <= result_ff.objective
 
 
 class TestEdgeCases:

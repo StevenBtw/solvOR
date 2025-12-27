@@ -104,8 +104,7 @@ python cp_example.py
 - [nurse_scheduling.py](real_world/nurse_scheduling.py) - Hospital staff scheduling
 - **School Timetabling** (ITC 2007 competition):
   - [timetabling_sat.py](real_world/school_timetabling/timetabling_sat.py) - SAT approach
-  - [timetabling_cp.py](real_world/school_timetabling/timetabling_cp.py) - CP-SAT approach
-  - [timetabling_milp.py](real_world/school_timetabling/timetabling_milp.py) - MILP approach
+  - [timetabling_cp.py](real_world/school_timetabling/timetabling_cp.py) - Constraint programming approach
   - [timetabling_anneal.py](real_world/school_timetabling/timetabling_anneal.py) - Simulated annealing
   - [timetabling_genetic.py](real_world/school_timetabling/timetabling_genetic.py) - Genetic algorithm
   - [timetabling_tabu.py](real_world/school_timetabling/timetabling_tabu.py) - Tabu search
