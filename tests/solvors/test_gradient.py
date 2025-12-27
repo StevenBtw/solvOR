@@ -426,13 +426,15 @@ class TestLearningRateSchedules:
 
         result = adam(grad, [5.0], lr=0.1, lr_schedule="step", max_iter=200)
         assert result.status in (Status.OPTIMAL, Status.MAX_ITER)
+        assert abs(result.solution[0]) < 1.0  # Should converge near 0
 
     def test_adam_cosine_schedule(self):
         def grad(x):
             return [2 * x[0]]
 
-        result = adam(grad, [5.0], lr=0.1, lr_schedule="cosine", max_iter=100)
+        result = adam(grad, [5.0], lr=0.1, lr_schedule="cosine", max_iter=150)
         assert result.status in (Status.OPTIMAL, Status.MAX_ITER)
+        assert abs(result.solution[0]) < 1.0  # Should converge near 0
 
     def test_adam_warmup_schedule(self):
         def grad(x):
@@ -440,6 +442,7 @@ class TestLearningRateSchedules:
 
         result = adam(grad, [5.0], lr=0.1, lr_schedule="warmup", warmup_steps=10, max_iter=100)
         assert result.status in (Status.OPTIMAL, Status.MAX_ITER)
+        assert abs(result.solution[0]) < 1.0  # Should converge near 0
 
     def test_adam_step_schedule_convergence(self):
         """Test that step schedule actually applies decay at 50% and 75%."""

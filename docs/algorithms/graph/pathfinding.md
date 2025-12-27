@@ -1,10 +1,10 @@
 # Pathfinding (BFS / DFS)
 
-Basic graph traversal. BFS finds shortest paths in unweighted graphs. DFS finds a path (not necessarily shortest).
+Basic graph traversal. [BFS](https://en.wikipedia.org/wiki/Breadth-first_search) finds shortest paths in unweighted graphs. [DFS](https://en.wikipedia.org/wiki/Depth-first_search) finds a path (not necessarily shortest).
 
 ## bfs
 
-Breadth-first search. Explores level by level.
+Breadth-first search. Explores level by level, guaranteeing the shortest path in unweighted graphs.
 
 ```python
 def bfs[S](
@@ -71,9 +71,11 @@ print(result.solution)  # Some path (not necessarily shortest)
 ## Tips
 
 - **BFS for shortest paths.** DFS doesn't guarantee shortest.
-- **DFS for memory efficiency.** O(depth) vs O(breadth).
-- **Goal as function.** Pass `goal=lambda n: n.is_target()` for complex goals.
+- **DFS for memory efficiency.** O(depth) vs O(breadth) space.
+- **Goal as function.** Pass `goal=lambda n: n.is_target()` for complex goal conditions.
+- **Iterative deepening.** For memory-efficient shortest paths, use iterative deepening DFS (not implemented, but easy to build on top of `dfs`).
 
 ## See Also
 
-- [Shortest Paths](shortest-paths.md) - For weighted graphs
+- [Shortest Paths](shortest-paths.md) - For weighted graphs (Dijkstra, A*, Bellman-Ford)
+- [Wikipedia: Graph traversal](https://en.wikipedia.org/wiki/Graph_traversal) - Overview of traversal algorithms

@@ -22,7 +22,7 @@ flowchart TD
     D -->|Scheduling/Assignment| L{Size?}
     D -->|Graph/Network| M{What operation?}
 
-    L -->|Small/Medium| N[Model CP-SAT]
+    L -->|Small/Medium| N[Model]
     L -->|Large| O[anneal / tabu_search]
 
     M -->|Shortest path| P[dijkstra / astar]
@@ -44,7 +44,7 @@ flowchart TD
 | Solver | Use When |
 |--------|----------|
 | `solve_sat` | Pure boolean satisfiability |
-| `Model` (CP-SAT) | Complex constraints, scheduling, puzzles |
+| `Model` | Complex constraints, scheduling, puzzles |
 | `solve_exact_cover` | Exact cover problems (Sudoku, pentominos) |
 
 ### Continuous Optimization
@@ -101,10 +101,10 @@ flowchart TD
 **Problem**: Schedule 50 nurses across 30 days with complex constraints.
 
 1. It has discrete decisions (who works when) → Not LP
-2. Has complex constraints (no consecutive nights, skill requirements) → CP-SAT is good
+2. Has complex constraints (no consecutive nights, skill requirements) → Constraint programming is good
 3. Size is medium (50 × 30 = 1500 decisions) → Exact method should work
 
-**Answer**: Use `Model` (CP-SAT) with appropriate constraints.
+**Answer**: Use `Model` with appropriate constraints.
 
 ```python
 from solvor import Model

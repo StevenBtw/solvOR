@@ -1,15 +1,17 @@
 # Contributing to solvOR
 
-Thanks for your interest in contributing to solvor!
+Thanks for your interest in contributing to solvOR!
 
 **Python 3.12+** is required. The project is tested on Python 3.12, 3.13, and 3.14, and developed with 3.14 in mind primarily.
+
+**Tooling:** We use [uv](https://docs.astral.sh/uv/) for package management, [Ruff](https://docs.astral.sh/ruff/) for linting/formatting, [ty](https://docs.astral.sh/ty/) for type checking, and [Codecov](https://codecov.io/) for coverage tracking.
 
 ## Development Setup
 
 ```bash
 # Clone the repo
-git clone https://github.com/StevenBtw/solvor.git
-cd solvor
+git clone https://github.com/StevenBtw/solvOR.git
+cd solvOR
 
 # Install with dev dependencies
 uv sync --extra dev
@@ -115,7 +117,12 @@ Group: stdlib, then local. No blank lines between.
 5. **Group algorithm families in one file**
    - `gradient.py` contains gradient_descent, momentum, rmsprop, adam
    - Split only if file exceeds ~300 lines
-6. **Primary function matches filename**
+6. **Keep each solvor self-contained**
+   - Each solver should be readable without jumping between files
+   - Avoid abstractions that hide implementation details elsewhere
+   - Exception: shared utilities in `utils/` (data structures, validation, helpers)
+   - Goal: open `dijkstra.py` and understand Dijkstra without hunting for code
+7. **Primary function matches filename**
    - `anneal.py` → `anneal()`
    - Problem-based: add `solve_` prefix (`milp.py` → `solve_milp()`)
 
@@ -586,14 +593,15 @@ tests/
 │   ├── test_simplex.py
 │   ├── test_milp.py
 │   └── ...
-└── examples/    # Example integration tests (opt-in)
-    ├── test_quick_examples.py
-    ├── test_puzzles.py
-    ├── test_classic.py
-    ├── test_graph_algorithms.py
-    ├── test_linear_programming.py
-    ├── test_machine_learning.py
-    └── test_real_world.py
+├── examples/    # Example integration tests (opt-in)
+│   ├── test_quick_examples.py
+│   ├── test_puzzles.py
+│   ├── test_classic.py
+│   ├── test_graph_algorithms.py
+│   ├── test_linear_programming.py
+│   ├── test_machine_learning.py
+│   └── test_real_world.py
+└── test_docs.py # Documentation build test
 ```
 
 ### Solver Tests
@@ -631,6 +639,20 @@ uv run pytest -m machine_learning --no-cov
 uv run pytest -m real_world --no-cov
 ```
 
+### Documentation Tests
+
+The `test_docs.py` file runs `mkdocs build --strict` to catch documentation issues before they reach production:
+
+- Missing type annotations on public APIs
+- Broken internal links
+- Invalid markdown
+- Missing referenced files
+
+```bash
+# Run docs test
+uv run pytest -m docs --no-cov
+```
+
 ## Code Coverage
 
 We maintain **88% minimum coverage** enforced by CI. Coverage runs automatically with pytest.
@@ -664,6 +686,7 @@ The project uses GitHub Actions (`.github/workflows/`):
 - `typecheck` - ty type checker (Python 3.12, 3.13, 3.14)
 - `test-solvers` - All solver tests with coverage (88% minimum)
 - `test-examples` - Example file tests
+- `test-docs` - MkDocs strict build (catches missing type hints, broken links)
 
 **publish.yml** - Runs on GitHub releases:
 
@@ -671,7 +694,7 @@ The project uses GitHub Actions (`.github/workflows/`):
 
 ## Type Checking
 
-We use [ty](https://github.com/astral-sh/ty) for static type checking, enforced by CI.
+We use [ty](https://docs.astral.sh/ty/) for static type checking, enforced by CI.
 
 ```bash
 # Run type checker
@@ -688,9 +711,11 @@ Docs live in `docs/` and are built with MkDocs + Material theme. Deployed to [so
 # Serve locally
 uv run mkdocs serve
 
-# Build
-uv run mkdocs build
+# Build (use --strict to catch issues before CI does)
+uv run mkdocs build --strict
 ```
+
+**Strict mode catches:** Missing type annotations on public APIs, broken links, invalid markdown. CI runs this automatically via `test_docs.py`.
 
 **When to update docs:**
 

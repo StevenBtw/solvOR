@@ -41,7 +41,7 @@ def solve_lp(
 from solvor import solve_lp
 
 # Maximize 3x + 2y subject to x + y <= 4, x,y >= 0
-result = solve_lp(c=[-3, -2], A=[[1, 1]], b=[4], minimize=False)
+result = solve_lp(c=[3, 2], A=[[1, 1]], b=[4], minimize=False)
 print(result.solution)  # [4.0, 0.0]
 print(result.objective)  # 12.0
 ```

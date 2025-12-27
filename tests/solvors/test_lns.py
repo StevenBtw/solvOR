@@ -287,9 +287,9 @@ class TestALNS:
             seed=42,
         )
 
-        # Good repair should be called more often over time
-        # (Hard to test precisely due to randomness, but good should be substantial)
-        assert repair_calls[1] > 0
+        # Good repair should be called more often than bad repair
+        # (adaptive weights should favor the operator that improves solutions)
+        assert repair_calls[1] > repair_calls[0], "Adaptive weights should favor good repair"
 
     def test_alns_empty_operators_error(self):
         def objective(x):

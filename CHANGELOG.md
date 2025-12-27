@@ -1,9 +1,17 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+What broke, what got fixed, and what's new. The optimization journey, documented.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [Unreleased]
+
+### Added
+
+- **CI docs test:** Added `test_docs.py` that runs `mkdocs build --strict` to catch missing type annotations, broken links, and invalid markdown before merge.
+
+### Changed
+
+- **Documentation improvement pass:** Went through the docs and added references, tips and tried to improve general readability.
+- **Improved tests:** Removed some tests that have weak or wrong assertions, and improved some to test for edge cases or different parameters. No bugs found so far!
 
 ## [0.5.1] - 2025-12-27
 
@@ -13,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2025-12-26
 
-**solvOR** is now in beta! 
+**solvOR** is now in beta!
 
 Documentation finally has a proper home. Moved everything from the wiki to MkDocs, deployed at [solver.ai](https://solver.ai). The wiki now just points there.
 
@@ -268,20 +276,24 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
-[0.5.1]: https://github.com/StevenBtw/solvor/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/StevenBtw/solvor/compare/v0.4.8...v0.5.0
-[0.4.8]: https://github.com/StevenBtw/solvor/compare/v0.4.7...v0.4.8
-[0.4.7]: https://github.com/StevenBtw/solvor/compare/v0.4.6...v0.4.7
-[0.4.6]: https://github.com/StevenBtw/solvor/compare/v0.4.5...v0.4.6
-[0.4.5]: https://github.com/StevenBtw/solvor/compare/v0.4.4...v0.4.5
-[0.4.4]: https://github.com/StevenBtw/solvor/compare/v0.4.3...v0.4.4
-[0.4.3]: https://github.com/StevenBtw/solvor/compare/v0.4.2...v0.4.3
-[0.4.2]: https://github.com/StevenBtw/solvor/compare/v0.4.1...v0.4.2
-[0.4.1]: https://github.com/StevenBtw/solvor/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/StevenBtw/solvor/compare/v0.3.5...v0.4.0
-[0.3.5]: https://github.com/StevenBtw/solvor/compare/v0.3.4...v0.3.5
-[0.3.4]: https://github.com/StevenBtw/solvor/compare/v0.3.3...v0.3.4
-[0.3.3]: https://github.com/StevenBtw/solvor/compare/v0.3.2...v0.3.3
-[0.3.2]: https://github.com/StevenBtw/solvor/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/StevenBtw/solvor/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/StevenBtw/solvor/releases/tag/v0.3.0
+[0.5.1]: https://github.com/StevenBtw/solvOR/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/StevenBtw/solvOR/compare/v0.4.8...v0.5.0
+[0.4.8]: https://github.com/StevenBtw/solvOR/compare/v0.4.7...v0.4.8
+[0.4.7]: https://github.com/StevenBtw/solvOR/compare/v0.4.6...v0.4.7
+[0.4.6]: https://github.com/StevenBtw/solvOR/compare/v0.4.5...v0.4.6
+[0.4.5]: https://github.com/StevenBtw/solvOR/compare/v0.4.4...v0.4.5
+[0.4.4]: https://github.com/StevenBtw/solvOR/compare/v0.4.3...v0.4.4
+[0.4.3]: https://github.com/StevenBtw/solvOR/compare/v0.4.2...v0.4.3
+[0.4.2]: https://github.com/StevenBtw/solvOR/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/StevenBtw/solvOR/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/StevenBtw/solvOR/compare/v0.3.5...v0.4.0
+[0.3.5]: https://github.com/StevenBtw/solvOR/compare/v0.3.4...v0.3.5
+[0.3.4]: https://github.com/StevenBtw/solvOR/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/StevenBtw/solvOR/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/StevenBtw/solvOR/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/StevenBtw/solvOR/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/StevenBtw/solvOR/releases/tag/v0.3.0
+
+---
+
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) | Versioning: [SemVer](https://semver.org/spec/v2.0.0.html)

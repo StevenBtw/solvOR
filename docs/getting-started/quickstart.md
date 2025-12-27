@@ -14,13 +14,14 @@ Let's solve a simple production planning problem:
 from solvor import solve_lp
 
 result = solve_lp(
-    c=[-3, -2],  # Negative because we minimize (so -max = min)
+    c=[3, 2],  # Profit per chair, per table
     A=[[1, 1], [1, 0], [0, 1]],  # Constraints: x+y <= 4, x <= 2, y <= 3
-    b=[4, 2, 3]
+    b=[4, 2, 3],
+    minimize=False  # We want to maximize profit
 )
 
 print(f"Make {result.solution[0]:.0f} chairs and {result.solution[1]:.0f} tables")
-print(f"Total profit: ${-result.objective:.0f}")
+print(f"Total profit: ${result.objective:.0f}")
 ```
 
 Output:
@@ -28,6 +29,9 @@ Output:
 Make 2 chairs and 2 tables
 Total profit: $10
 ```
+
+!!! tip "Minimize vs Maximize"
+    solvOR minimizes by default. Use `minimize=False` to maximize instead.
 
 ## Solving a SAT Problem
 

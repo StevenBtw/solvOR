@@ -109,8 +109,8 @@ class TestLocalSearch:
         ]
         result_no_ls = solve_job_shop(jobs, local_search=False, seed=42)
         result_ls = solve_job_shop(jobs, local_search=True, seed=42)
-        # Local search should do at least as well
-        assert result_ls.objective <= result_no_ls.objective + 1
+        # Local search should do at least as well (never worse)
+        assert result_ls.objective <= result_no_ls.objective
 
     def test_max_iter(self):
         """Respects max_iter limit."""
@@ -123,20 +123,6 @@ class TestLocalSearch:
 
 
 class TestProgressCallback:
-    def test_callback_called(self):
-        """Progress callback is invoked."""
-        calls = []
-
-        def callback(progress):
-            calls.append(progress)
-
-        jobs = [
-            [(0, 3), (1, 2)],
-            [(1, 2), (0, 3)],
-        ]
-        solve_job_shop(jobs, on_progress=callback, progress_interval=10, seed=42)
-        # May or may not have calls depending on iteration count
-
     def test_early_stop(self):
         """Callback can stop optimization early."""
 

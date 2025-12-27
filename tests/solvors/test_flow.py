@@ -68,7 +68,8 @@ class TestMinCostFlow:
         graph = {"s": [("a", 10, 1), ("b", 10, 2)], "a": [("t", 10, 1)], "b": [("t", 10, 1)], "t": []}
         result = min_cost_flow(graph, "s", "t", 5)
         assert result.status == Status.OPTIMAL
-        # Should prefer path through 'a' (cost 1+1=2 vs 2+1=3)
+        # Should prefer path through 'a' (cost 1+1=2 per unit vs 2+1=3)
+        assert result.objective == 10  # 5 units * cost 2 (via path s->a->t)
 
     def test_equal_cost_paths(self):
         graph = {"s": [("a", 10, 2), ("b", 10, 2)], "a": [("t", 10, 2)], "b": [("t", 10, 2)], "t": []}

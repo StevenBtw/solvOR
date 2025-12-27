@@ -1,10 +1,10 @@
 # Shortest Paths
 
-Algorithms for finding shortest paths in weighted graphs.
+Algorithms for finding shortest paths in weighted graphs. For unweighted graphs, see [Pathfinding (BFS/DFS)](pathfinding.md).
 
 ## dijkstra
 
-Shortest path for non-negative edge weights. Greedily expands the closest unvisited node.
+[Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) for non-negative edge weights. Greedily expands the closest unvisited node.
 
 ```python
 from solvor import dijkstra
@@ -26,7 +26,7 @@ print(result.objective)  # 4
 
 ## astar
 
-A* search with heuristic. Faster than Dijkstra when you have a good distance estimate.
+[A* search](https://en.wikipedia.org/wiki/A*_search_algorithm) with heuristic. Faster than Dijkstra when you have a good distance estimate.
 
 ```python
 from solvor import astar
@@ -62,7 +62,7 @@ print(result.solution)  # Path coordinates
 
 ## bellman_ford
 
-Handles negative edge weights. Detects negative cycles.
+[Bellman-Ford algorithm](https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm). Handles negative edge weights and detects negative cycles.
 
 ```python
 from solvor import bellman_ford
@@ -77,7 +77,7 @@ print(result.solution)  # Distances from node 0
 
 ## floyd_warshall
 
-All-pairs shortest paths. O(V³) but gives everything at once.
+[Floyd-Warshall algorithm](https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm). All-pairs shortest paths in O(V³), giving you every shortest path at once.
 
 ```python
 from solvor import floyd_warshall

@@ -40,7 +40,7 @@ result = solve_sat([[1, 2], [-1, 3], [-2, -3]])
 print(result.solution)  # {1: True, 2: False, 3: True}
 ```
 
-### CP-SAT Model
+### Constraint Programming Model
 
 ```python
 from solvor import Model

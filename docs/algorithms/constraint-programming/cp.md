@@ -1,6 +1,8 @@
-# Model (CP-SAT)
+# Model (Constraint Programming)
 
-Constraint programming with integer variables. Write natural constraints like `all_different([x, y, z])` or `x + y == 10`, and the model encodes them to SAT clauses. You get the expressiveness of CP with the power of modern SAT solvers.
+Constraint programming with integer variables. Write natural constraints like `all_different([x, y, z])` or `x + y == 10`, and the model encodes them to SAT clauses internally. You get the expressiveness of constraint programming with the power of SAT-based solving.
+
+For more background, see [Constraint Programming](https://en.wikipedia.org/wiki/Constraint_programming) on Wikipedia.
 
 ## When to Use
 
@@ -90,17 +92,18 @@ def solve_sudoku(puzzle):
 
 ## Complexity
 
-- **Time:** NP-hard
+- **Time:** NP-hard (constraint satisfaction is NP-complete in general)
 - **Guarantees:** Finds a solution or proves none exists
 
 ## Tips
 
 1. **Model naturally first.** Don't prematurely optimize constraints. Get it working, then refine.
-2. **All-different is powerful.** Use it rather than pairwise inequalities.
+2. **All-different is powerful.** Use it rather than pairwise inequalities. See [All-different constraint](https://en.wikipedia.org/wiki/All_different_constraint).
 3. **Symmetry breaking.** Add constraints to eliminate symmetric solutions.
 
 ## See Also
 
 - [solve_sat](solve-sat.md) - Raw SAT solving
+- [solve_exact_cover](solve-exact-cover.md) - Dancing Links for exact cover problems
 - [Cookbook: Sudoku](../../cookbook/sudoku.md) - Full Sudoku solver
-- [Cookbook: N-Queens](../../cookbook/n-queens.md) - Classic CP problem
+- [Cookbook: N-Queens](../../cookbook/n-queens.md) - Classic constraint programming problem
