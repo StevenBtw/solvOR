@@ -101,26 +101,6 @@ class TestAstarGrid:
 
 
 class TestHeuristics:
-    def test_manhattan(self):
-        grid = [[0] * 5 for _ in range(5)]
-        result = astar_grid(grid, (0, 0), (4, 4), heuristic="manhattan")
-        assert result.status == Status.OPTIMAL
-
-    def test_euclidean(self):
-        grid = [[0] * 5 for _ in range(5)]
-        result = astar_grid(grid, (0, 0), (4, 4), heuristic="euclidean", directions=8)
-        assert result.status == Status.OPTIMAL
-
-    def test_octile(self):
-        grid = [[0] * 5 for _ in range(5)]
-        result = astar_grid(grid, (0, 0), (4, 4), heuristic="octile", directions=8)
-        assert result.status == Status.OPTIMAL
-
-    def test_chebyshev(self):
-        grid = [[0] * 5 for _ in range(5)]
-        result = astar_grid(grid, (0, 0), (4, 4), heuristic="chebyshev", directions=8)
-        assert result.status == Status.OPTIMAL
-
     def test_heuristic_reduces_expansions(self):
         # Good heuristic should expand fewer nodes than h=0 (Dijkstra)
         graph = {i: [(i + 1, 1), (i + 10, 1)] for i in range(100)}
@@ -247,6 +227,8 @@ class TestStress:
         grid = [[0] * n for _ in range(n)]
         result = astar_grid(grid, (0, 0), (n - 1, n - 1), directions=8)
         assert result.status == Status.OPTIMAL
+        # With 8 directions, diagonal path length should be 49 (Chebyshev distance)
+        assert len(result.solution) == n  # Path from (0,0) to (49,49) inclusive
 
     def test_maze(self):
         grid = [[0, 0, 0, 0, 0], [1, 1, 1, 1, 0], [0, 0, 0, 0, 0], [0, 1, 1, 1, 1], [0, 0, 0, 0, 0]]

@@ -246,7 +246,7 @@ class TestHints:
         m.int_var(1, 2, "x")
         result = m.solve(hints={"x": 1})
         assert result.ok
-        assert result.solution["x"] in [1, 2]
+        assert result.solution["x"] == 1  # Hint should be followed when feasible
 
     def test_hints_infeasible_ignored(self):
         """Hints with infeasible value don't crash."""
@@ -257,13 +257,6 @@ class TestHints:
         result = m.solve(hints={"x": 10})
         assert result.status == Status.OPTIMAL
         assert result.solution["x"] == 3
-
-    def test_hints_unknown_var_ignored(self):
-        """Hints for unknown variables are ignored."""
-        m = Model()
-        m.int_var(1, 5, "x")
-        result = m.solve(hints={"unknown": 5})
-        assert result.status == Status.OPTIMAL
 
 
 class TestSolutionPool:

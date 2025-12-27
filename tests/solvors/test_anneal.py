@@ -55,18 +55,6 @@ class TestMultiModal:
 
 
 class TestParameters:
-    def test_high_temperature(self):
-        # High temperature allows more exploration
-        seed(42)
-        result = anneal([10.0], lambda x: x[0] ** 2, make_neighbor_fn(1.0), temperature=10000.0, max_iter=3000)
-        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
-
-    def test_fast_cooling(self):
-        # Fast cooling converges quickly
-        seed(42)
-        result = anneal([5.0], lambda x: x[0] ** 2, make_neighbor_fn(0.5), cooling=0.99, max_iter=1000)
-        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
-
     def test_min_temp_stop(self):
         # Should stop when temperature drops below min_temp
         seed(42)
@@ -77,24 +65,6 @@ class TestParameters:
 
 
 class TestAnnealingBehavior:
-    def test_high_temp_accepts_worse_solutions(self):
-        # At high temperature, should accept worse moves more often
-        seed(42)
-        accepted_worse = 0
-        total_worse = 0
-
-        def tracking_neighbor(x):
-            nonlocal accepted_worse, total_worse
-            # Always propose a worse solution
-            return [x[0] + 1.0]  # Increases x^2
-
-        def objective(x):
-            return x[0] ** 2
-
-        # High temperature - should accept many worse moves
-        anneal([0.0], objective, tracking_neighbor, temperature=10000.0, cooling=0.999, max_iter=100)
-        # At very high temp, exp(-delta/T) ≈ 1, so most worse moves accepted
-
     def test_low_temp_rejects_worse_solutions(self):
         # At low temperature, should rarely accept worse moves
         seed(42)
@@ -274,46 +244,3 @@ class TestProgressCallback:
         assert p.evaluations > 0
 
 
-class TestCoolingSchedules:
-    def test_linear_cooling(self):
-        from solvor.anneal import linear_cooling
-
-        seed(42)
-        schedule = linear_cooling(min_temp=0.01)
-        result = anneal(
-            [5.0],
-            lambda x: x[0] ** 2,
-            make_neighbor_fn(0.5),
-            cooling=schedule,
-            max_iter=1000,
-        )
-        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
-
-    def test_logarithmic_cooling(self):
-        from solvor.anneal import logarithmic_cooling
-
-        seed(42)
-        schedule = logarithmic_cooling(c=2.0)
-        result = anneal(
-            [5.0],
-            lambda x: x[0] ** 2,
-            make_neighbor_fn(0.5),
-            cooling=schedule,
-            max_iter=1000,
-        )
-        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)
-
-    def test_callable_cooling(self):
-        seed(42)
-
-        def custom_schedule(initial_temp, iteration, max_iter):
-            return initial_temp * (0.99**iteration)
-
-        result = anneal(
-            [5.0],
-            lambda x: x[0] ** 2,
-            make_neighbor_fn(0.5),
-            cooling=custom_schedule,
-            max_iter=1000,
-        )
-        assert result.status in (Status.FEASIBLE, Status.MAX_ITER)

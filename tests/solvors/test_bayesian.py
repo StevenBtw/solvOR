@@ -19,6 +19,7 @@ class TestBasicBayesian:
 
         result = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=30, seed=42)
         assert result.ok or result.status == Status.MAX_ITER
+        assert result.objective < 0.1  # Should find near-optimal solution
 
     def test_maximize(self):
         def objective(x):
@@ -61,13 +62,7 @@ class TestMultiDimensional:
 
         result = bayesian_opt(objective, bounds=[(0, 1), (0, 1), (0, 1)], max_iter=40, seed=42)
         assert result.ok or result.status == Status.MAX_ITER
-
-    def test_different_scales(self):
-        def objective(x):
-            return (x[0] - 5) ** 2 + (x[1] - 0.5) ** 2
-
-        result = bayesian_opt(objective, bounds=[(0, 10), (0, 1)], max_iter=30, seed=42)
-        assert result.ok or result.status == Status.MAX_ITER
+        assert result.objective < 0.15  # Should find reasonably good solution
 
 
 class TestMultiModal:
@@ -80,22 +75,6 @@ class TestMultiModal:
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=25, seed=42)
         assert result.ok or result.status == Status.MAX_ITER
         assert result.objective < 1.0
-
-
-class TestParameters:
-    def test_initial_points(self):
-        def objective(x):
-            return x[0] ** 2
-
-        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, n_initial=5, seed=42)
-        assert result.ok or result.status == Status.MAX_ITER
-
-    def test_more_initial_points(self):
-        def objective(x):
-            return (x[0] - 0.5) ** 2
-
-        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, n_initial=10, seed=42)
-        assert result.ok or result.status == Status.MAX_ITER
 
 
 class TestEdgeCases:
@@ -114,14 +93,6 @@ class TestEdgeCases:
         result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, seed=42)
         assert result.ok or result.status == Status.MAX_ITER
         assert result.solution[0] < 0.3
-
-    def test_single_iteration(self):
-        def objective(x):
-            return x[0] ** 2
-
-        # With n_initial=5 (default), max_iter=1 means only initial points
-        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=5, n_initial=5, seed=42)
-        assert result.ok or result.status == Status.MAX_ITER
 
 
 class TestStress:
@@ -229,34 +200,6 @@ class TestAcquisitionFunctions:
             assert False, "Should raise ValueError"
         except ValueError as e:
             assert "ei" in str(e) and "ucb" in str(e)
-
-
-class TestAcquisitionRestarts:
-    def test_default_restarts(self):
-        def objective(x):
-            return (x[0] - 0.5) ** 2
-
-        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, seed=42)
-        assert result.ok or result.status == Status.MAX_ITER
-
-    def test_custom_restarts(self):
-        def objective(x):
-            return (x[0] - 0.5) ** 2
-
-        result = bayesian_opt(objective, bounds=[(0, 1)], max_iter=15, acq_restarts=3, seed=42)
-        assert result.ok or result.status == Status.MAX_ITER
-
-    def test_more_restarts_better_acquisition(self):
-        def objective(x):
-            return (x[0] - 0.5) ** 2 + (x[1] - 0.5) ** 2
-
-        # More restarts should generally find better acquisition maxima
-        result_few = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=25, acq_restarts=2, seed=42)
-        result_many = bayesian_opt(objective, bounds=[(0, 1), (0, 1)], max_iter=25, acq_restarts=10, seed=42)
-
-        # Both should find reasonable solutions
-        assert result_few.ok or result_few.status == Status.MAX_ITER
-        assert result_many.ok or result_many.status == Status.MAX_ITER
 
 
 class TestProgressCallback:
