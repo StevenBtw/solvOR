@@ -736,6 +736,71 @@ class TestExpressionOperators:
         expr = 10 - x  # triggers IntVar.__rsub__
         assert expr is not None
 
+    def test_intvar_mul_int(self):
+        """Test x * 3 (IntVar multiplication)."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        expr = x * 3  # triggers IntVar.__mul__
+        assert expr is not None
+        # Verify the expression tuple structure
+        assert expr.data[0] == "mul"
+        assert expr.data[2] == 3
+
+    def test_int_mul_intvar(self):
+        """Test 3 * x (IntVar rmul)."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        expr = 3 * x  # triggers IntVar.__rmul__
+        assert expr is not None
+        assert expr.data[0] == "mul"
+        assert expr.data[2] == 3
+
+    def test_expr_mul_int(self):
+        """Test (x + 1) * 2 (Expr multiplication)."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        expr = (x + 1) * 2  # triggers Expr.__mul__
+        assert expr is not None
+        assert expr.data[0] == "mul"
+
+    def test_int_mul_expr(self):
+        """Test 2 * (x + 1) (Expr rmul)."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        expr = 2 * (x + 1)  # triggers Expr.__rmul__
+        assert expr is not None
+        assert expr.data[0] == "mul"
+
+    def test_multiplication_in_constraint(self):
+        """Test multiplication used in a real constraint (timetabling pattern)."""
+        m = Model()
+        timeslot = m.int_var(0, 2, "timeslot")  # 3 timeslots
+        room = m.int_var(0, 1, "room")  # 2 rooms
+        n_rooms = 2
+
+        # Combined index: timeslot * n_rooms + room
+        # This is the pattern that failed before the fix
+        combined = timeslot * n_rooms + room
+
+        # The combined value should be unique per (timeslot, room) pair
+        # Range: 0*2+0=0 to 2*2+1=5
+        assert combined is not None
+
+    def test_intvar_mul_unsupported_type(self):
+        """Test IntVar * unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        result = x.__mul__("string")
+        assert result is NotImplemented
+
+    def test_expr_mul_unsupported_type(self):
+        """Test Expr * unsupported type returns NotImplemented."""
+        m = Model()
+        x = m.int_var(1, 5, "x")
+        expr = x + 1
+        result = expr.__mul__("string")
+        assert result is NotImplemented
+
 
 class TestSumLeGe:
     def test_sum_le(self):

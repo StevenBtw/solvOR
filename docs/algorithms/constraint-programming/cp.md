@@ -50,12 +50,67 @@ m.add(m.sum_le([x, y], 10))    # Sum upper bound
 m.add(m.sum_ge([x, y], 5))     # Sum lower bound
 ```
 
+### Global Constraints
+
+For scheduling and routing problems:
+
+```python
+# Hamiltonian circuit (TSP successor formulation)
+m.add(m.circuit([next_0, next_1, next_2]))
+
+# Non-overlapping intervals
+starts = [m.int_var(0, 10, f's{i}') for i in range(3)]
+durations = [2, 3, 1]
+m.add(m.no_overlap(starts, durations))
+
+# Cumulative resource constraint
+demands = [1, 2, 1]
+capacity = 2
+m.add(m.cumulative(starts, durations, demands, capacity))
+```
+
+### Arithmetic Expressions
+
+```python
+m.add(x + y == 10)            # Addition
+m.add(x - y != 0)             # Subtraction
+m.add(x * 3 + y == 15)        # Multiplication by constant
+m.add(slot * n_rooms + room == combined)  # Combined index pattern
+```
+
 ### Solving
 
 ```python
-result = m.solve()
+result = m.solve()            # Auto-selects best solver
 if result.solution:
     print(result.solution['x'])
+```
+
+### Solver Selection
+
+The model automatically picks the best solver for your constraints:
+
+- **DFS (default for simple constraints):** Fast backtracking with constraint propagation. Used for `all_different`, `==`, `!=`, and arithmetic expressions.
+- **SAT (for global constraints):** SAT encoding with DPLL solving. Used for `circuit`, `no_overlap`, `cumulative`, and `sum_*` constraints.
+
+You can force a specific solver:
+
+```python
+result = m.solve(solver="auto")  # Default: picks best solver
+result = m.solve(solver="dfs")   # Force DFS backtracking
+result = m.solve(solver="sat")   # Force SAT encoding
+```
+
+### Hints and Multiple Solutions
+
+```python
+# Guide the solver toward specific values
+result = m.solve(hints={'x': 5})
+
+# Find up to 10 solutions
+result = m.solve(solution_limit=10)
+for sol in result.solutions:
+    print(sol)
 ```
 
 ## Sudoku Example
