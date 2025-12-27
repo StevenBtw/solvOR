@@ -2,7 +2,7 @@
 
 What broke, what got fixed, and what's new. The optimization journey, documented.
 
-## [Unreleased] - 2025-12-28
+## [Unreleased]
 
 ### Added
 
