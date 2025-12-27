@@ -1,6 +1,6 @@
 # Contributing to solvOR
 
-Thanks for your interest in contributing to solvor!
+Thanks for your interest in contributing to solvOR!
 
 **Python 3.12+** is required. The project is tested on Python 3.12, 3.13, and 3.14, and developed with 3.14 in mind primarily.
 
@@ -10,8 +10,8 @@ Thanks for your interest in contributing to solvor!
 
 ```bash
 # Clone the repo
-git clone https://github.com/StevenBtw/solvor.git
-cd solvor
+git clone https://github.com/StevenBtw/solvOR.git
+cd solvOR
 
 # Install with dev dependencies
 uv sync --extra dev
@@ -117,7 +117,12 @@ Group: stdlib, then local. No blank lines between.
 5. **Group algorithm families in one file**
    - `gradient.py` contains gradient_descent, momentum, rmsprop, adam
    - Split only if file exceeds ~300 lines
-6. **Primary function matches filename**
+6. **Keep each solvor self-contained**
+   - Each solver should be readable without jumping between files
+   - Avoid abstractions that hide implementation details elsewhere
+   - Exception: shared utilities in `utils/` (data structures, validation, helpers)
+   - Goal: open `dijkstra.py` and understand Dijkstra without hunting for code
+7. **Primary function matches filename**
    - `anneal.py` → `anneal()`
    - Problem-based: add `solve_` prefix (`milp.py` → `solve_milp()`)
 

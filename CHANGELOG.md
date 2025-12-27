@@ -276,23 +276,23 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
-[0.5.1]: https://github.com/StevenBtw/solvor/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/StevenBtw/solvor/compare/v0.4.8...v0.5.0
-[0.4.8]: https://github.com/StevenBtw/solvor/compare/v0.4.7...v0.4.8
-[0.4.7]: https://github.com/StevenBtw/solvor/compare/v0.4.6...v0.4.7
-[0.4.6]: https://github.com/StevenBtw/solvor/compare/v0.4.5...v0.4.6
-[0.4.5]: https://github.com/StevenBtw/solvor/compare/v0.4.4...v0.4.5
-[0.4.4]: https://github.com/StevenBtw/solvor/compare/v0.4.3...v0.4.4
-[0.4.3]: https://github.com/StevenBtw/solvor/compare/v0.4.2...v0.4.3
-[0.4.2]: https://github.com/StevenBtw/solvor/compare/v0.4.1...v0.4.2
-[0.4.1]: https://github.com/StevenBtw/solvor/compare/v0.4.0...v0.4.1
-[0.4.0]: https://github.com/StevenBtw/solvor/compare/v0.3.5...v0.4.0
-[0.3.5]: https://github.com/StevenBtw/solvor/compare/v0.3.4...v0.3.5
-[0.3.4]: https://github.com/StevenBtw/solvor/compare/v0.3.3...v0.3.4
-[0.3.3]: https://github.com/StevenBtw/solvor/compare/v0.3.2...v0.3.3
-[0.3.2]: https://github.com/StevenBtw/solvor/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/StevenBtw/solvor/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/StevenBtw/solvor/releases/tag/v0.3.0
+[0.5.1]: https://github.com/StevenBtw/solvOR/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/StevenBtw/solvOR/compare/v0.4.8...v0.5.0
+[0.4.8]: https://github.com/StevenBtw/solvOR/compare/v0.4.7...v0.4.8
+[0.4.7]: https://github.com/StevenBtw/solvOR/compare/v0.4.6...v0.4.7
+[0.4.6]: https://github.com/StevenBtw/solvOR/compare/v0.4.5...v0.4.6
+[0.4.5]: https://github.com/StevenBtw/solvOR/compare/v0.4.4...v0.4.5
+[0.4.4]: https://github.com/StevenBtw/solvOR/compare/v0.4.3...v0.4.4
+[0.4.3]: https://github.com/StevenBtw/solvOR/compare/v0.4.2...v0.4.3
+[0.4.2]: https://github.com/StevenBtw/solvOR/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/StevenBtw/solvOR/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/StevenBtw/solvOR/compare/v0.3.5...v0.4.0
+[0.3.5]: https://github.com/StevenBtw/solvOR/compare/v0.3.4...v0.3.5
+[0.3.4]: https://github.com/StevenBtw/solvOR/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/StevenBtw/solvOR/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/StevenBtw/solvOR/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/StevenBtw/solvOR/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/StevenBtw/solvOR/releases/tag/v0.3.0
 
 ---
 
