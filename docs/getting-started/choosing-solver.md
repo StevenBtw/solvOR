@@ -11,8 +11,8 @@ flowchart TD
     B -->|Discrete| D{Problem type?}
 
     C -->|Linear constraints| E[solve_lp]
-    C -->|No constraints| F{Gradient available?}
-    C -->|Complex/nonlinear| G[nelder_mead / powell]
+    C -->|None, smooth| F{Gradient available?}
+    C -->|None, noisy/complex| G[nelder_mead / powell]
 
     F -->|Yes| H[adam / bfgs]
     F -->|No / Black-box| I[bayesian_opt]
@@ -111,5 +111,5 @@ from solvor import Model
 
 model = Model()
 # ... define variables and constraints
-result = model.solve(time_limit=60)
+result = model.solve(solution_limit=1)
 ```
