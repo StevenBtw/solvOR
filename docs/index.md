@@ -2,7 +2,7 @@
 
 ![solvOR logo](assets/logo.svg){ .logo-hero }
 
-**Learn optimization by reading the code.**
+**Solvor all your optimization needs.**
 
 solvOR is a pure Python optimization library designed for learning and experimentation. No numpy, no scipy, no compiled extensions. Each algorithm fits in one readable file you can study, modify, and extend.
 
