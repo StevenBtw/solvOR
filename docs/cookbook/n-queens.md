@@ -1,6 +1,6 @@
 # N-Queens
 
-Place N queens on an NxN chessboard with no conflicts. The classic constraint satisfaction demo.
+Place N queens on an NxN chessboard with no conflicts. The classic [constraint satisfaction](https://en.wikipedia.org/wiki/Eight_queens_puzzle) demo.
 
 ## The Problem
 
@@ -47,7 +47,7 @@ To count all solutions:
 ```python
 def count_n_queens(n):
     count = 0
-    # Use backtracking or CP-SAT enumeration
+    # Use backtracking or constraint programming enumeration
     # ...
     return count
 
@@ -56,5 +56,5 @@ def count_n_queens(n):
 
 ## See Also
 
-- [CP-SAT Model](../algorithms/constraint-programming/cp-sat.md)
+- [Model (CP)](../algorithms/constraint-programming/cp.md)
 - [Sudoku](sudoku.md)

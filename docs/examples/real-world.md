@@ -18,7 +18,7 @@ Assign nurses to shifts while respecting regulations and preferences.
 
 ### Approach
 
-Uses CP-SAT model with `all_different` and sum constraints.
+Uses constraint programming model with `all_different` and sum constraints.
 
 ```python
 from solvor import Model
@@ -56,8 +56,7 @@ Uses ITC 2007 competition format.
 Multiple solver approaches compared:
 
 - [timetabling_sat.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_sat.py) - SAT
-- [timetabling_cp.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_cp.py) - CP-SAT
-- [timetabling_milp.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_milp.py) - MILP
+- [timetabling_cp.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_cp.py) - Constraint programming
 - [timetabling_anneal.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_anneal.py) - Simulated annealing
 - [timetabling_genetic.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_genetic.py) - Genetic algorithm
 - [timetabling_tabu.py](https://github.com/StevenBtw/solvOR/blob/main/examples/real_world/school_timetabling/timetabling_tabu.py) - Tabu search

@@ -1,6 +1,6 @@
 # Knapsack Problem
 
-Select items to maximize value within weight constraint. The problem that made dynamic programming famous.
+Select items to maximize value within weight constraint. The [knapsack problem](https://en.wikipedia.org/wiki/Knapsack_problem) made dynamic programming famous.
 
 ## The Problem
 
@@ -57,4 +57,4 @@ print(f"Total value: {-result.objective}")
 ## See Also
 
 - [Bin Packing](bin-packing.md)
-- [Linear & Integer Programming](../algorithms/linear-programming/solve-milp.md)
+- [solve_milp](../algorithms/linear-programming/solve-milp.md) - MILP solver reference

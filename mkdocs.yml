@@ -121,7 +121,7 @@ nav:
           - solve_milp: algorithms/linear-programming/solve-milp.md
       - Constraint Programming:
           - solve_sat: algorithms/constraint-programming/solve-sat.md
-          - CP-SAT Model: algorithms/constraint-programming/cp-sat.md
+          - Model (CP): algorithms/constraint-programming/cp.md
           - solve_exact_cover: algorithms/constraint-programming/solve-exact-cover.md
       - Metaheuristics:
           - Overview: algorithms/metaheuristics/index.md
