@@ -15,7 +15,6 @@ dist/
 .pytest_cache/
 .coverage
 .cov
-uv.lock
 
 # MkDocs
 site/

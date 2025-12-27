@@ -12,7 +12,7 @@ What broke, what got fixed, and what's new. The optimization journey, documented
 
 - **Documentation improvement pass:** Went through the docs and added references, tips and tried to improve general readability.
 - **Improved tests:** Removed some tests that have weak or wrong assertions, and improved some to test for edge cases or different parameters. No bugs found so far!
-- **Improved ci and re-commit:** Added cache for uv steps, removed redundant type check for all python versions and adde no-commit-to-branch for main. 
+- **Improved ci and re-commit:** Added cache for uv steps, removed redundant type check for all python versions and adde no-commit-to-branch for main.
 
 ## [0.5.1] - 2025-12-27
 
