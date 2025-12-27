@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2025-12-27
+
+### Fixed
+
+- **Documentation consistency pass:** Reviewed all 29 solvors and 7 extended examples against MkDocs pages. Fixed parameter name mismatches, incorrect signatures, and outdated solution formats across 15+ documentation files.
+
 ## [0.5.0] - 2025-12-26
 
 **solvOR** is now in beta! 
@@ -262,6 +268,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.5.1]: https://github.com/StevenBtw/solvor/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/StevenBtw/solvor/compare/v0.4.8...v0.5.0
 [0.4.8]: https://github.com/StevenBtw/solvor/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/StevenBtw/solvor/compare/v0.4.6...v0.4.7
