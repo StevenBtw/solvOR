@@ -5,9 +5,11 @@ description: Learn optimization by reading the code. 40+ algorithms, zero depend
 
 ![solvOR logo](assets/logo.svg){ .logo-hero }
 
-**Learn optimization by reading the code.**
+**Solvor all your optimization needs.**
 
 solvOR is a pure Python optimization library designed for learning and experimentation. No numpy, no scipy, no compiled extensions. Each algorithm fits in one readable file you can study, modify, and extend.
+
+**Learn optimization by reading the code.**
 
 [![Build Status](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/StevenBtw/solvOR/graph/badge.svg?token=A3H2COO119)](https://codecov.io/gh/StevenBtw/solvOR)
