@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 [project.urls]
-Website = "https://solver.ai"
+Website = "https://solvOR.ai"
 Repository = "https://github.com/StevenBtw/solvOR"
 PyPI = "https://pypi.org/project/solvor"
 
