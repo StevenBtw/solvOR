@@ -586,14 +586,15 @@ tests/
 │   ├── test_simplex.py
 │   ├── test_milp.py
 │   └── ...
-└── examples/    # Example integration tests (opt-in)
-    ├── test_quick_examples.py
-    ├── test_puzzles.py
-    ├── test_classic.py
-    ├── test_graph_algorithms.py
-    ├── test_linear_programming.py
-    ├── test_machine_learning.py
-    └── test_real_world.py
+├── examples/    # Example integration tests (opt-in)
+│   ├── test_quick_examples.py
+│   ├── test_puzzles.py
+│   ├── test_classic.py
+│   ├── test_graph_algorithms.py
+│   ├── test_linear_programming.py
+│   ├── test_machine_learning.py
+│   └── test_real_world.py
+└── test_docs.py # Documentation build test
 ```
 
 ### Solver Tests
@@ -631,6 +632,20 @@ uv run pytest -m machine_learning --no-cov
 uv run pytest -m real_world --no-cov
 ```
 
+### Documentation Tests
+
+The `test_docs.py` file runs `mkdocs build --strict` to catch documentation issues before they reach production:
+
+- Missing type annotations on public APIs
+- Broken internal links
+- Invalid markdown
+- Missing referenced files
+
+```bash
+# Run docs test
+uv run pytest -m docs --no-cov
+```
+
 ## Code Coverage
 
 We maintain **88% minimum coverage** enforced by CI. Coverage runs automatically with pytest.
@@ -664,6 +679,7 @@ The project uses GitHub Actions (`.github/workflows/`):
 - `typecheck` - ty type checker (Python 3.12, 3.13, 3.14)
 - `test-solvers` - All solver tests with coverage (88% minimum)
 - `test-examples` - Example file tests
+- `test-docs` - MkDocs strict build (catches missing type hints, broken links)
 
 **publish.yml** - Runs on GitHub releases:
 
