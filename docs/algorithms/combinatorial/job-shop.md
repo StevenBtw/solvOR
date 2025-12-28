@@ -1,6 +1,35 @@
 # solve_job_shop
 
-Job shop scheduling. Minimize makespan for jobs on machines.
+Job shop scheduling. Minimize makespan for jobs on machines. Uses dispatching rules with local search.
+
+## Signature
+
+```python
+def solve_job_shop(
+    jobs: Sequence[Job],
+    *,
+    rule: str = "spt",
+    local_search: bool = True,
+    max_iter: int = 1000,
+    seed: int | None = None,
+    on_progress: ProgressCallback | None = None,
+    progress_interval: int = 0,
+) -> Result[dict[tuple[int, int], tuple[int, int]]]
+```
+
+Where `Job = Sequence[tuple[int, int]]` (list of (machine, duration) tuples).
+
+## Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `jobs` | List of jobs, each job is a sequence of (machine, duration) operations |
+| `rule` | Dispatching rule: `"spt"` (shortest processing time), `"lpt"` (longest), `"fifo"`, `"mwkr"` (most work remaining), `"random"` |
+| `local_search` | If True, improve initial schedule with swap moves |
+| `max_iter` | Maximum local search iterations |
+| `seed` | Random seed for reproducibility |
+| `on_progress` | Progress callback (return True to stop early) |
+| `progress_interval` | Call progress every N iterations (0 = disabled) |
 
 ## Example
 
