@@ -1,6 +1,6 @@
 # solve_lp_interior
 
-Linear programming using interior point method. While simplex walks along edges of the feasible polytope, interior point cuts straight through the middle. Think of simplex as taking the stairs, interior point as taking the elevator—different path, same destination.
+Linear programming using interior point method. While simplex walks along edges of the feasible polytope, interior point cuts straight through the middle. Think of simplex as taking the stairs, interior point as taking the elevator, different path, same destination.
 
 ## When to Use
 

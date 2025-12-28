@@ -84,7 +84,7 @@ result = anneal(initial, obj, neighbors, cooling=logarithmic_cooling(c=1.0))
 P(accept) = exp(-Δcost / temperature)
 ```
 
-At high temperature, this is near 1—accept almost anything. At low temperature, this approaches 0—only accept improvements. The exponential form comes from statistical mechanics (Boltzmann distribution).
+At high temperature, this is near 1, so accept almost anything. At low temperature, this approaches 0, so only accept improvements. The exponential form comes from statistical mechanics (Boltzmann distribution).
 
 **Why it works:** Early on, high temperature lets you escape local optima by accepting worse moves. As you cool, you become more selective, converging toward a good solution. The probability of accepting a bad move depends on *how bad*—small backward steps are more likely than large ones.
 
