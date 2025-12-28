@@ -94,12 +94,13 @@ jobs:
   test-docs:
     runs-on: ubuntu-latest
     needs: lint
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
           python-version: "3.14"
-      - run: uv sync --extra dev
+      - run: uv sync --extra dev --extra docs
       - name: Test docs build
         run: uv run pytest tests/test_docs.py -v -m docs --no-cov
