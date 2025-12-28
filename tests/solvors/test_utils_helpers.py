@@ -2,11 +2,13 @@
 
 from solvor.types import Progress
 from solvor.utils import (
+    Evaluator,
     assignment_cost,
     default_progress,
     is_feasible,
     pairwise_swap_neighbors,
     random_permutation,
+    report_progress,
     timed_progress,
 )
 
@@ -195,3 +197,118 @@ class TestDefaultProgress:
         cb(Progress(iteration=1, objective=3.5))
         captured = capsys.readouterr()
         assert "best=3.5" in captured.out
+
+
+class TestEvaluator:
+    def test_minimize_mode(self):
+        """Evaluator in minimize mode returns objective as-is."""
+        evaluate = Evaluator(lambda x: x * 2, minimize=True)
+        assert evaluate(5) == 10
+        assert evaluate.evals == 1
+
+    def test_maximize_mode(self):
+        """Evaluator in maximize mode negates objective."""
+        evaluate = Evaluator(lambda x: x * 2, minimize=False)
+        assert evaluate(5) == -10
+        assert evaluate.evals == 1
+
+    def test_to_user_minimize(self):
+        """to_user returns original value in minimize mode."""
+        evaluate = Evaluator(lambda x: x, minimize=True)
+        internal = evaluate(7)
+        assert evaluate.to_user(internal) == 7
+
+    def test_to_user_maximize(self):
+        """to_user converts back to positive in maximize mode."""
+        evaluate = Evaluator(lambda x: x, minimize=False)
+        internal = evaluate(7)  # -7 internally
+        assert evaluate.to_user(internal) == 7
+
+    def test_tracks_evaluations(self):
+        """Evaluator counts function evaluations."""
+        evaluate = Evaluator(lambda x: x)
+        evaluate(1)
+        evaluate(2)
+        evaluate(3)
+        assert evaluate.evals == 3
+
+
+class TestReportProgress:
+    def test_no_callback(self):
+        """Returns False when no callback provided."""
+        result = report_progress(None, 10, 100, 5.0, 3.0, 50)
+        assert result is False
+
+    def test_interval_zero(self):
+        """Returns False when interval is 0 (disabled)."""
+        called = []
+        result = report_progress(lambda p: called.append(p), 0, 100, 5.0, 3.0, 50)
+        assert result is False
+        assert len(called) == 0
+
+    def test_not_at_interval(self):
+        """Returns False when not at interval."""
+        called = []
+        result = report_progress(lambda p: called.append(p), 10, 15, 5.0, 3.0, 50)
+        assert result is False
+        assert len(called) == 0
+
+    def test_at_interval_calls_callback(self):
+        """Calls callback when at interval."""
+        called = []
+        result = report_progress(lambda p: called.append(p), 10, 20, 5.0, 3.0, 50)
+        assert result is False
+        assert len(called) == 1
+        assert called[0].iteration == 20
+        assert called[0].objective == 5.0
+        assert called[0].best == 3.0
+        assert called[0].evaluations == 50
+
+    def test_callback_returns_true_stops(self):
+        """Returns True when callback returns True."""
+        result = report_progress(lambda p: True, 10, 10, 5.0, 3.0, 50)
+        assert result is True
+
+    def test_callback_returns_none_continues(self):
+        """Returns False when callback returns None."""
+        result = report_progress(lambda p: None, 10, 10, 5.0, 3.0, 50)
+        assert result is False
+
+    def test_best_same_as_current(self):
+        """best is None when current equals best."""
+        called = []
+        report_progress(lambda p: called.append(p), 1, 1, 5.0, 5.0, 10)
+        assert called[0].best is None
+
+    def test_best_different_from_current(self):
+        """best is set when different from current."""
+        called = []
+        report_progress(lambda p: called.append(p), 1, 1, 5.0, 3.0, 10)
+        assert called[0].best == 3.0
+
+
+class TestDebug:
+    def test_debug_without_env(self, capsys):
+        """debug() prints nothing when DEBUG not set."""
+        from solvor.utils import debug
+
+        debug("test message")
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_debug_with_env(self, capsys, monkeypatch):
+        """debug() prints when DEBUG=1."""
+        monkeypatch.setenv("DEBUG", "1")
+        import importlib
+
+        import solvor.utils.helpers
+
+        importlib.reload(solvor.utils.helpers)
+
+        solvor.utils.helpers.debug("test message")
+        captured = capsys.readouterr()
+        assert "test message" in captured.out
+
+        # Cleanup
+        monkeypatch.delenv("DEBUG", raising=False)
+        importlib.reload(solvor.utils.helpers)
