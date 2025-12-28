@@ -6,7 +6,7 @@ the best neighbor. The trick is the tabu list, a memory of recent moves that
 are temporarily forbidden. This prevents cycling back to solutions you just
 left, forcing the search to explore new territory.
 
-Use this for routing (traveling salesmen probelem), scheduling, or when you want more control than
+Use this for routing (traveling salesmen problem), scheduling, or when you want more control than
 anneal. Tabu is deterministic where anneal is probabilistic, so results are
 more reproducible and easier to debug.
 
