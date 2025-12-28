@@ -2,31 +2,20 @@
 
 What broke, what got fixed, and what's new. The optimization journey, documented.
 
-## [0.5.2] 2025-12-28
+## [0.5.2] - 2025-12-28
+
+Cleanup and polish. CP got a diet, docs got a checkup, CI got faster.
 
 ### Added
 
-- **CI docs test:** Added `test_docs.py` that runs `mkdocs build --strict` to catch missing type annotations, broken links, and invalid markdown before merge.
-
-### Fixed
-
-- **CP IntVar multiplication**: `IntVar` now supports multiplication with integers
-  (`x * 3`, `3 * x`), enabling combined constraint expressions like
-  `timeslot * n_rooms + room`.
+- **CI docs test:** `test_docs.py` runs `mkdocs build --strict` to catch missing type hints and broken links before they reach main.
 
 ### Changed
 
-- **CP solver selection**: `Model.solve()` now defaults to `solver="auto"` which
-  automatically picks DFS for simple constraints and SAT for global constraints
-  (circuit, no_overlap, cumulative, sum_*). Use `solver="dfs"` or `solver="sat"`
-  to force a specific solver.
-
-- **CP refactor**: Extracted SAT encoding logic to `cp_encoder.py` for better
-  maintainability (cp.py went from 861 to 428 lines). No API changes.
-
-- **Documentation improvement pass:** Went through the docs and added references, tips and tried to improve general readability.
-- **Improved tests:** Removed some tests that have weak or wrong assertions, and improved some to test for edge cases or different parameters. No bugs found so far!
-- **Improved ci and re-commit:** Added cache for uv steps, removed redundant type check for all python versions and adde no-commit-to-branch for main.
+- **CP refactor:** Extracted SAT encoding to `cp_encoder.py` (cp.py went from 861 to 428 lines, much easier to read now). `Model.solve()` defaults to `solver="auto"` which picks DFS for simple constraints and SAT for globals (circuit, no_overlap, cumulative, sum_*). Force a specific solver with `solver="dfs"` or `solver="sat"`. Also, `IntVar` now supports multiplication (`x * 3`, `3 * x`) for expressions like `timeslot * n_rooms + room`.
+- **Docs:** Added references, tips, general readability improvements.
+- **Tests:** Removed tests with weak assertions, improved edge case coverage. No bugs found (yet).
+- **CI/pre-commit:** Turned on uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
 
 ## [0.5.1] - 2025-12-27
 

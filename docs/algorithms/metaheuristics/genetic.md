@@ -11,11 +11,14 @@ def evolve[T](
     crossover: Callable[[T, T], T],
     mutate: Callable[[T], T],
     *,
-    max_iter: int = 100,
+    minimize: bool = True,
     elite_size: int = 2,
     mutation_rate: float = 0.1,
     adaptive_mutation: bool = False,
-    on_progress: Callable[[Progress], bool | None] | None = None,
+    max_iter: int = 100,
+    tournament_k: int = 3,
+    seed: int | None = None,
+    on_progress: ProgressCallback | None = None,
     progress_interval: int = 0,
 ) -> Result[T]
 ```
@@ -24,14 +27,19 @@ def evolve[T](
 
 | Parameter | Description |
 |-----------|-------------|
-| `objective_fn` | Function to minimize |
+| `objective_fn` | Function to minimize (or maximize if `minimize=False`) |
 | `population` | Initial population of solutions |
 | `crossover` | Combine two parents into child |
 | `mutate` | Randomly modify a solution |
-| `max_iter` | Number of generations |
+| `minimize` | If False, maximize instead |
 | `elite_size` | Keep best N across generations |
-| `mutation_rate` | Probability of mutation |
-| `adaptive_mutation` | Increase rate when stuck |
+| `mutation_rate` | Probability of mutation (0.0–1.0) |
+| `adaptive_mutation` | Increase rate when stuck, decrease when improving |
+| `max_iter` | Number of generations |
+| `tournament_k` | Tournament size for selection (higher = greedier) |
+| `seed` | Random seed for reproducibility |
+| `on_progress` | Progress callback (return True to stop early) |
+| `progress_interval` | Call progress every N iterations (0 = disabled) |
 
 ## Example
 

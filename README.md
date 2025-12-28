@@ -1,4 +1,5 @@
 [![Build Status](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml)
+[![Docs](https://github.com/StevenBtw/solvOR/actions/workflows/docs.yml/badge.svg)](https://solvOR.ai)
 [![codecov](https://codecov.io/gh/StevenBtw/solvOR/graph/badge.svg?token=A3H2COO119)](https://codecov.io/gh/StevenBtw/solvOR)
 [![PyPI](https://img.shields.io/pypi/v/solvor)](https://pypi.org/project/solvor/)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
@@ -384,9 +385,12 @@ Vehicle Routing with Time Windows. Serve customers with capacity and time constr
 ```python
 from solvor import Customer, solve_vrptw
 
-customers = [Customer(x=0, y=0, demand=0, ready=0, due=100, service=0)]  # depot
-customers += [Customer(x=i, y=i, demand=10, ready=0, due=50, service=5) for i in range(1, 5)]
-result = solve_vrptw(customers, vehicle_capacity=30, n_vehicles=2)
+customers = [
+    Customer(1, 10, 10, demand=10, tw_start=0, tw_end=50, service_time=5),
+    Customer(2, 20, 20, demand=10, tw_start=0, tw_end=50, service_time=5),
+    Customer(3, 30, 30, demand=10, tw_start=0, tw_end=50, service_time=5),
+]
+result = solve_vrptw(customers, vehicles=2, vehicle_capacity=30)
 ```
 
 </details>
