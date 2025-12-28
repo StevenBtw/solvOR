@@ -16,7 +16,7 @@ be non-negative, use bellman_ford for negative weights.
 
 For negative edges use bellman_ford, Dijkstra's negativity was legendary,
 just not in his algorithm. For unweighted graphs use bfs (simpler).
-With a good distance estimate, use astar.
+With a good distance estimate, use a_star.
 """
 
 from collections.abc import Callable, Iterable
