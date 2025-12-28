@@ -46,6 +46,8 @@ def network_simplex(
     m = len(arcs)
     n = n_nodes
 
+    # --- Arc representation ---
+    # Arrays indexed by arc ID: original arcs [0..m), artificial arcs [m..m+n)
     source = [0] * (m + n)
     target = [0] * (m + n)
     cap = [0] * (m + n)
