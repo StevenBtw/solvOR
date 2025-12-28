@@ -60,10 +60,39 @@ result = solve_lp(c, [[-1, -1]], [-4])
 result = solve_lp(c, [[1, 1], [-1, -1]], [4, -4])
 ```
 
+## How It Works
+
+The simplex algorithm exploits a key insight: the optimal solution to a linear program always occurs at a vertex (corner) of the feasible region. Instead of searching the entire space, we hop from vertex to vertex, always improving the objective.
+
+**The geometry:** Your constraints define a convex polytope in n-dimensional space. Each vertex is where n constraints meet. The objective function defines a direction—we're looking for the vertex furthest in that direction.
+
+**The algebra:** We convert to standard form with slack variables:
+
+```text
+minimize c·x
+subject to Ax + s = b, x ≥ 0, s ≥ 0
+```
+
+Each vertex corresponds to a *basic feasible solution*—setting n variables to zero and solving for the rest. The algorithm:
+
+1. Start at a vertex (basic feasible solution)
+2. Look at adjacent vertices (one pivot away)
+3. Move to a neighbor with better objective value
+4. Repeat until no improvement possible → optimal
+
+**The pivot:** Each iteration picks an entering variable (improves objective) and leaving variable (maintains feasibility), then updates the tableau. This is the "walking along edges" part.
+
+**Two-phase method:** If the origin isn't feasible (some constraints violated), Phase I finds a feasible starting vertex using artificial variables. Phase II then optimizes.
+
+**Bland's rule:** Prevents cycling (revisiting the same vertex) by always picking the smallest index when ties occur.
+
+For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikipedia.org/wiki/Simplex_algorithm) or the classic textbook by Chvátal.
+
 ## Complexity
 
-- **Time:** O(exponential worst case, polynomial average case)
-- **Guarantees:** Finds the exact optimum for LP problems
+- **Time:** O(2^n) worst case, but O(n²m) average on random instances
+- **Space:** O(nm) for the tableau
+- **Guarantees:** Finds the exact global optimum (not approximate)
 
 ## Tips
 
