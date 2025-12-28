@@ -5,10 +5,9 @@ Common validation functions to ensure inputs are well-formed before solving.
 Provides clear error messages for dimension mismatches, invalid values, and
 other common mistakes.
 
-    from solvor.validate import check_matrix, check_bounds, check_positive
+    from solvor.utils import check_matrix_dims, check_bounds, check_positive
 
-These are used internally by solvers but can also be imported for custom
-validation in user code.
+Used internally by solvers but also available for custom validation.
 """
 
 from collections.abc import Sequence

@@ -1,8 +1,11 @@
 """
 Helper functions for optimization tasks, debugging, and evaluation.
 
-Small, stable helpers that don't change often. Use these for common operations
-across solvers or for debugging and evaluation.
+Small, stable helpers used across solvers for common operations like objective
+function wrapping, progress reporting, and solution manipulation.
+
+    from solvor.utils import debug, Evaluator, report_progress
+    from solvor.utils import random_permutation, pairwise_swap_neighbors
 """
 
 from collections.abc import Callable, Iterator

@@ -1,8 +1,12 @@
 """
 Utility functions and data structures for optimization.
 
-    from solvor.utils import FenwickTree, UnionFind, debug
-    from solvor.utils import check_matrix_dims, check_bounds
+Data structures, validation helpers, and debugging utilities used internally
+by solvers. Also available for custom implementations.
+
+    from solvor.utils import UnionFind, FenwickTree
+    from solvor.utils import check_matrix_dims, check_positive
+    from solvor.utils import Evaluator, report_progress
 """
 
 from solvor.utils.data_structures import FenwickTree, UnionFind

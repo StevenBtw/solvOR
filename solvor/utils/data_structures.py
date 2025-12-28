@@ -1,8 +1,13 @@
 """
 Data structures for optimization algorithms.
 
-Efficient data structures used internally by solvers and available for
-custom implementations.
+Efficient data structures used internally by solvers. Also available for
+custom implementations requiring these classic structures.
+
+    from solvor.utils import UnionFind, FenwickTree
+
+    uf = UnionFind(10)        # Disjoint sets for cycle detection
+    ft = FenwickTree([1,2,3]) # Prefix sums with point updates
 """
 
 __all__ = ["FenwickTree", "UnionFind"]
