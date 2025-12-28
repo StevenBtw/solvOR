@@ -76,12 +76,25 @@ result = anneal(initial, obj, neighbors, cooling=logarithmic_cooling(c=1.0))
 
 ## How It Works
 
-1. Start with initial solution at high temperature
-2. Generate random neighbor
-3. If neighbor is better, accept it
-4. If neighbor is worse, accept with probability exp(-delta/T)
-5. Reduce temperature according to cooling schedule
-6. Stop when temperature drops below `min_temp` or `max_iter` reached
+**The metallurgy analogy:** In real annealing, you heat metal until atoms move freely, then cool slowly so atoms settle into a low-energy crystal structure. Cool too fast and you get brittle metal with defects (stuck in local minimum). The algorithm mimics this.
+
+**The math:** Accept worse solutions with probability:
+
+```text
+P(accept) = exp(-Δcost / temperature)
+```
+
+At high temperature, this is near 1—accept almost anything. At low temperature, this approaches 0—only accept improvements. The exponential form comes from statistical mechanics (Boltzmann distribution).
+
+**Why it works:** Early on, high temperature lets you escape local optima by accepting worse moves. As you cool, you become more selective, converging toward a good solution. The probability of accepting a bad move depends on *how bad*—small backward steps are more likely than large ones.
+
+**The algorithm:**
+
+1. Start at high temperature with initial solution
+2. Pick a random neighbor
+3. If better, accept. If worse, accept with probability exp(-Δ/T)
+4. Cool down: T ← T × cooling_rate
+5. Repeat until cold or max iterations
 
 ## Reproducibility
 
