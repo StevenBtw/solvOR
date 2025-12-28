@@ -1,21 +1,38 @@
-"""
+r"""
 A* search for goal-directed shortest paths with heuristics.
 
 Dijkstra explores in all directions like ripples in a pond. A* knows where it's
 going and prioritizes paths that look promising. Give it a heuristic (estimate
-to goal) and it expands far fewer nodes. The heuristic must be admissible (never
-overestimate) for optimal results.
+to goal) and it expands far fewer nodes.
 
     from solvor.a_star import astar, astar_grid
 
     result = astar(start, goal, neighbors, heuristic)
     result = astar_grid(maze, (0, 0), (9, 9), directions=8)
 
-astar_grid provides built-in heuristics and neighbor generation for 2D grids.
-For weighted A* (faster but suboptimal), set weight > 1.
+How it works: like Dijkstra but prioritizes by f(n) = g(n) + h(n), where g is
+cost so far and h is estimated cost to goal. Heuristic must be admissible
+(never overestimate) for optimal results. Weighted A* (weight > 1) trades
+optimality for speed.
 
-Don't use this for: unknown goal location (use dijkstra), negative edges
-(use bellman_ford), or unweighted graphs (use bfs).
+Use this for:
+
+- Pathfinding with known goal location
+- When you have a good distance heuristic
+- Grid navigation and game AI
+- When Dijkstra is too slow
+
+Parameters:
+
+    start: starting node
+    goal: target node or predicate function
+    neighbors: returns (neighbor, cost) pairs
+    heuristic: estimates distance to goal (must not overestimate)
+    weight: heuristic weight, >1 for faster suboptimal search
+
+astar_grid provides built-in heuristics for 2D grids.
+
+Don't use this for: unknown goal (use dijkstra), negative edges (use bellman_ford).
 """
 
 from collections.abc import Callable, Iterable, Sequence

@@ -1,13 +1,8 @@
-"""
+r"""
 CP Solver, constraint programming with backtracking search.
 
 Write constraints like a human ("all different", "x + y == 10"), and the solver
-finds valid assignments. Perfect for puzzles and scheduling: Sudoku, N-Queens,
-nurse rostering, timetabling.
-
-Don't use this for: optimization problems (use milp), pure linear problems
-(simplex is simpler and faster), or trivially small problems where the encoding
-overhead isn't worth it.
+finds valid assignments. Perfect for puzzles and scheduling.
 
     from solvor.cp import Model
 
@@ -18,23 +13,33 @@ overhead isn't worth it.
     m.add(x + y == 10)
     result = m.solve()  # {'x': 3, 'y': 7} or similar
 
-    # warm start with hints (guides search toward known values)
-    result = m.solve(hints={'x': 3})
-
-    # find multiple solutions (result.solutions contains all found)
-    result = m.solve(solution_limit=10)
-
     # global constraints for scheduling and routing
     m.add(m.circuit([x, y, z]))  # Hamiltonian cycle
     m.add(m.no_overlap(starts, durations))  # intervals don't overlap
     m.add(m.cumulative(starts, durations, demands, capacity))  # resource limit
 
-Uses DFS with constraint propagation by default (fast for most problems). Falls
-back to SAT encoding automatically for complex global constraints. You can also
-choose explicitly: `m.solve(solver='dfs')` or `m.solve(solver='sat')`.
+How it works: DFS with constraint propagation and arc consistency. Falls back
+to SAT encoding automatically for complex global constraints. MRV (minimum
+remaining values) heuristic picks the most constrained variable first.
 
-For optimization problems use MILP. For heavier constraint logic, Z3 sits nicely
-between this approach and full MILP: https://github.com/Z3Prover/z3
+Use this for:
+
+- Sudoku, N-Queens, logic puzzles
+- Nurse rostering and timetabling
+- Scheduling with complex constraints
+- When "all different" or other global constraints fit naturally
+
+Parameters:
+
+    Model.int_var(lb, ub, name): create integer variable
+    Model.add(constraint): add constraint
+    Model.solve(hints, solution_limit, solver): find solutions
+
+    hints: initial value hints to guide search
+    solution_limit: find multiple solutions
+    solver: 'auto' (default), 'dfs', or 'sat'
+
+For optimization use MILP. For heavier constraint logic, see Z3.
 """
 
 from typing import Any

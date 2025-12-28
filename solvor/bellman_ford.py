@@ -1,27 +1,33 @@
-"""
+r"""
 Bellman-Ford for shortest paths with negative edge weights.
 
-Use this when edges can have negative weights. Slower than Dijkstra, checks
-every edge V-1 times. The true edgelord. Only use when you actually have
-negative edges.
+Slower than Dijkstra but handles negative edges. The true edgelord. Only use
+when you actually have negative weights.
 
     from solvor.bellman_ford import bellman_ford
 
     result = bellman_ford(start, edges, n_nodes)
     result = bellman_ford(start, edges, n_nodes, target=3)
 
+How it works: relaxes every edge V-1 times. If any edge can still be relaxed
+after that, a negative cycle exists. Simple but O(VE) complexity.
+
+Use this for:
+
+- Graphs with negative edge weights
+- Detecting negative cycles
+- Currency arbitrage detection
+- When Dijkstra's non-negative assumption doesn't hold
+
+Parameters:
+
+    start: source node index
+    edges: list of (from, to, weight) tuples
+    n_nodes: number of nodes in graph
+    target: optional destination node
+
 Negative weights model situations where traversing an edge gives you something
-back. Example: trading routes where some legs earn profit instead of costing.
-
-    A --(-2)--> B --(3)--> C      Path A→B→C costs -2 + 3 = 1
-    A --(5)--> C                  Path A→C costs 5
-                                  Bellman-Ford finds A→B→C is cheaper
-
-A negative cycle means you can reduce cost infinitely by looping. If one exists,
-shortest paths are undefined and status is UNBOUNDED.
-
-Returns shortest paths from start to all reachable nodes, or to a specific
-target if provided.
+back (e.g., trading routes where some legs earn profit).
 
 Don't use this for: non-negative edges (use dijkstra), or all-pairs (floyd_warshall).
 """

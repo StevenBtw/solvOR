@@ -1,4 +1,4 @@
-"""
+r"""
 Hungarian Algorithm for optimal assignment.
 
 Got workers and tasks? This finds who does what at minimum total cost. O(n³),
@@ -13,6 +13,22 @@ the go-to for pure assignment problems.
     Worker 0   10      5      13        solve_hungarian finds: 0→B, 1→A, 2→C
     Worker 1    3      9      18        total cost: 5 + 3 + 12 = 20
     Worker 2   10      6      12
+
+How it works: repeatedly modify the cost matrix by subtracting row/column
+minimums and adjusting potentials until an optimal assignment can be read
+directly from the zeros. Uses dual variables (potentials) to maintain
+optimality conditions throughout.
+
+Use this for:
+
+- Worker-to-task assignment
+- Resource allocation problems
+- One-to-one matching with costs
+
+Parameters:
+
+    cost_matrix: rows are workers, columns are tasks
+    minimize: if True minimize total cost, else maximize
 
 Returns assignment[i] = column assigned to row i. Rectangular matrices work
 fine, assigns min(rows, cols) pairs.

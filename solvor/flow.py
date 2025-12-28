@@ -1,13 +1,8 @@
-"""
+r"""
 Network Flow, for assignment, matching, and bottleneck analysis.
 
-Use max_flow when you need "how much can I push through this network?" -
-assigning workers to tasks, servers to requests, finding bottlenecks.
+Use max_flow when you need "how much can I push through this network?"
 Use min_cost_flow when cost matters: "what's the cheapest way to route X units?"
-Think of: transportation, logistics and resource allocation with prices.
-
-The max-flow min-cut theorem makes this useful for systems thinking: the maximum
-flow equals the minimum cut, so you find bottlenecks for free.
 
     from solvor.flow import max_flow, min_cost_flow
 
@@ -15,18 +10,27 @@ flow equals the minimum cut, so you find bottlenecks for free.
     result = max_flow(graph, source='s', sink='t')
     result = min_cost_flow(graph, source='s', sink='t', demand=10)
 
-Works well with NetworkX for graph construction and visualization:
+How it works: max_flow uses Ford-Fulkerson with BFS (Edmonds-Karp), repeatedly
+finding augmenting paths until none exist. min_cost_flow uses successive
+shortest paths via Bellman-Ford, finding the cheapest augmenting path each time.
+The max-flow min-cut theorem means you find bottlenecks for free.
 
-    import networkx as nx
-    G = nx.DiGraph()
-    G.add_edge('s', 'a', capacity=10, cost=1)
-    G.add_edge('a', 't', capacity=5, cost=2)
-    graph = {u: [(v, d['capacity'], d.get('cost', 0))
-                 for v, d in G[u].items()] for u in G}
-    result = max_flow(graph, 's', 't')
+Use this for:
 
-For heavier graph work (shortest paths, centrality, community detection),
-NetworkX is very extensive. This solver focuses on the flow problems.
+- Assignment and matching problems
+- Server-to-request allocation
+- Transportation and logistics
+- Finding network bottlenecks (max-flow = min-cut)
+
+Parameters:
+
+    graph: adjacency dict {node: [(neighbor, capacity, cost), ...]}
+    source: source node
+    sink: sink node
+    demand: (min_cost_flow only) units to route
+
+Works well with NetworkX for graph construction. For heavier graph work
+(shortest paths, centrality, community detection), NetworkX is more extensive.
 """
 
 from collections import defaultdict, deque

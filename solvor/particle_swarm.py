@@ -1,10 +1,8 @@
-"""
+r"""
 Particle Swarm Optimization (PSO) for global optimization.
 
 Swarm intelligence metaheuristic where particles fly through the search space,
-influenced by their own best position and the swarm's best position. Each
-particle adjusts velocity based on cognitive (personal best) and social
-(global best) components.
+influenced by their own best position and the swarm's best position.
 
     from solvor.particle_swarm import particle_swarm
 
@@ -14,11 +12,26 @@ particle adjusts velocity based on cognitive (personal best) and social
     # warm start from previous solutions
     result = particle_swarm(objective_fn, bounds, initial_positions=[prev.solution])
 
-Use PSO when you need:
+How it works: each particle has a position and velocity. Every iteration, update
+velocity based on three forces: inertia (keep moving), cognitive (pull toward
+personal best), and social (pull toward global best). Then update position.
+The swarm converges as particles cluster around good solutions.
+
+Use this for:
+
 - Global optimization without gradients
 - Multi-modal functions with many local optima
 - Parameter tuning, hyperparameter optimization
 - Continuous optimization problems
+
+Parameters:
+
+    objective_fn: function to minimize (or maximize)
+    bounds: list of (lower, upper) bounds for each dimension
+    n_particles: swarm size (default: 30)
+    inertia: momentum coefficient (default: 0.7)
+    cognitive: personal best attraction (default: 1.5)
+    social: global best attraction (default: 1.5)
 
 PSO is simpler than differential evolution and often faster to converge on
 well-behaved functions. For highly constrained or discrete problems, consider

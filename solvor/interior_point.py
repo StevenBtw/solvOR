@@ -1,4 +1,4 @@
-"""
+r"""
 Interior Point Method for Linear Programming.
 
 While simplex walks along edges of the feasible polytope, interior point
@@ -10,15 +10,24 @@ interior point as taking the elevator - different path, same destination.
     # minimize c @ x, subject to A @ x <= b, x >= 0
     result = solve_lp_interior(c, A, b)
 
-This implements a primal-dual interior point method. Each iteration solves
-a Newton system to find a direction toward optimality while staying strictly
-inside the feasible region. The barrier parameter μ drives complementarity
-to zero as we approach the optimal solution.
+How it works: implements primal-dual interior point with Mehrotra's
+predictor-corrector. Each iteration solves a Newton system to find a
+direction toward optimality while staying strictly inside the feasible
+region. The barrier parameter mu drives complementarity to zero.
 
 Use this when:
-- You want to understand how modern LP solvers work (HiGHS, CPLEX, Gurobi)
-- Simplex is cycling or slow on degenerate problems
-- You're curious about the "other" way to solve LP
+
+- Understanding how modern LP solvers work (HiGHS, CPLEX, Gurobi)
+- When simplex is cycling or slow on degenerate problems
+- Learning the "other" way to solve LP
+
+Parameters:
+
+    c: objective coefficients
+    A: constraint matrix
+    b: constraint bounds
+    minimize: if True minimize, else maximize
+    eps: convergence tolerance
 
 Simplex is often faster for small/medium LPs. Interior point shines on
 large, sparse problems, but that advantage disappears without numpy/scipy.
@@ -60,9 +69,6 @@ def solve_lp_interior(
     # Flip objective for maximization
     obj = list(c) if minimize else [-ci for ci in c]
 
-    # Standard form: min c'x subject to Ax + s = b, x >= 0, s >= 0
-    # Variables: x (n original) + s (m slacks)
-    # Extended cost: [c; 0] (slacks have zero cost)
     c_ext = obj + [0.0] * m
     n_total = n + m
 

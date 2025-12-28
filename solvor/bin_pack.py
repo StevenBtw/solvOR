@@ -1,4 +1,4 @@
-"""
+r"""
 Bin Packing solver using heuristic algorithms.
 
 Pack items into the minimum number of bins without exceeding capacity. NP-hard,
@@ -6,21 +6,31 @@ but heuristics get surprisingly close to optimal. Best-fit-decreasing (put big
 items first, fill gaps with small ones) is within 11/9 OPT + 6/9 of optimal,
 proven in 1973. Good enough for most real-world packing.
 
-Applications: cutting stock, container loading, memory allocation, VM placement.
-
     from solvor import solve_bin_pack
 
     result = solve_bin_pack(item_sizes, bin_capacity)
     result = solve_bin_pack(sizes, capacity, algorithm='best-fit-decreasing')
 
-Available algorithms:
-- 'first-fit': Place item in first bin that fits
-- 'best-fit': Place item in bin with least remaining space
-- 'first-fit-decreasing': Sort items descending, then first-fit
-- 'best-fit-decreasing': Sort items descending, then best-fit (default)
+How it works: process items one by one (optionally sorted by size descending),
+placing each in an existing bin if it fits or opening a new bin. Best-fit
+minimizes wasted space per bin, first-fit is faster.
 
-Decreasing variants typically produce better results. For optimal solutions
-on small instances, use MILP formulation instead.
+Use this for:
+
+- Cutting stock problems
+- Container loading
+- Memory allocation
+- VM placement
+
+Parameters:
+
+    item_sizes: size of each item to pack
+    bin_capacity: maximum capacity of each bin
+    algorithm: 'first-fit', 'best-fit', or their '-decreasing' variants
+
+Available algorithms: 'first-fit', 'best-fit', 'first-fit-decreasing',
+'best-fit-decreasing' (default). Decreasing variants typically produce
+better results. For optimal solutions on small instances, use MILP instead.
 """
 
 from collections.abc import Sequence

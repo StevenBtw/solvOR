@@ -1,14 +1,9 @@
-"""
-Simulated Annealing, a black box optimization that handles local optima well.
+r"""
+Simulated Annealing, black box optimization that handles local optima well.
 
-Use this when you have an objective function and can generate neighbors, but don't
-know much else about the problem structure. Fast to prototype, low constraints on
-problem formulation. Works well on landscapes with many local optima where gradient
-descent would get stuck.
-
-Don't use this for: problems where you need guarantees, or when you have constraints
-that are easier to encode in MILP/CP. If you need more control over the search,
-consider tabu (memory of visited states) or genetic (population-based exploration).
+Inspired by metallurgical annealing: heat metal, let it cool slowly, atoms find
+low-energy configurations. Here, "temperature" controls how likely we are to
+accept worse solutions, allowing escape from local optima.
 
     from solvor.anneal import anneal, linear_cooling
 
@@ -16,19 +11,36 @@ consider tabu (memory of visited states) or genetic (population-based exploratio
     result = anneal(start, objective_fn, neighbor_fn, minimize=False)  # maximize
     result = anneal(start, objective_fn, neighbor_fn, cooling=linear_cooling())
 
-The neighbor function is the key part, good neighbors make small moves, not random
-jumps. Think "swap two cities" for TSP, not "shuffle everything". Small perturbations
-let the algorithm actually explore the neighborhood instead of teleporting randomly.
+How it works: at each step, generate a neighbor. If better, accept it. If worse,
+accept with probability exp(-delta/temperature). High temperature = explore freely,
+low temperature = exploit best found. Temperature decreases over time.
 
-If it's getting stuck: try higher starting temperature or slower cooling. If it's
-taking forever: cool faster.
+Use this for:
+
+- Black-box optimization without gradients
+- Landscapes with many local optima
+- Fast prototyping when problem structure is unknown
+- When you can define a good neighbor function
+
+Parameters:
+
+    initial: starting solution
+    objective_fn: function mapping solution to score
+    neighbors: function returning a random neighbor
+    temperature: starting temperature (default: 1000)
+    cooling: cooling schedule or rate (default: 0.9995)
+
+The neighbor function is key: good neighbors make small moves, not random jumps.
+Think "swap two cities" for TSP, not "shuffle everything".
 
 Cooling schedules:
+
     exponential_cooling(rate)  : temp = initial * rate^iter (default, classic)
     linear_cooling(min_temp)   : temp decreases linearly to min_temp
-    logarithmic_cooling(c)     : temp = initial / (1 + c * log(1 + iter)), slow cooling
+    logarithmic_cooling(c)     : temp = initial / (1 + c * log(1 + iter))
 
-Or pass any callable: (initial_temp, iteration, max_iter) -> temperature
+Don't use this for: problems needing guarantees, or constraints easier to encode
+in MILP/CP. Consider tabu (memory) or genetic (population) for more control.
 """
 
 from collections.abc import Callable

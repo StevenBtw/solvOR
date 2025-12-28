@@ -1,4 +1,4 @@
-"""
+r"""
 Vehicle Routing Problem with Time Windows (VRPTW) support.
 
 Provides state representation, constraint handling, and LNS operators for
@@ -18,9 +18,28 @@ Multi-resource visits: Some customers need multiple vehicles to arrive at the
 same time (e.g., heavy deliveries requiring two trucks). Set required_vehicles > 1
 on such customers. The solver will try to synchronize arrival times across vehicles.
 
-The ALNS implementation uses adaptive operator selection with:
-- Destroy operators: random, worst, related, route, sync-group removal
-- Repair operators: greedy, regret-2, and sync-aware insertion
+How it works: uses Adaptive Large Neighborhood Search (ALNS) with multiple
+destroy operators (random, worst, related, route removal) and repair operators
+(greedy, regret-2 insertion). Operators that produce good results get selected
+more often. Supports time windows and capacity constraints.
+
+Use this for:
+
+- Delivery routing with time windows
+- Multi-vehicle logistics planning
+- Pickup and delivery problems
+- Fleet management optimization
+
+Parameters:
+
+    customers: list of Customer objects with location, demand, time windows
+    vehicles: number of vehicles or list of Vehicle objects
+    depot: (x, y) coordinates of depot
+    vehicle_capacity: capacity per vehicle (if using int for vehicles)
+
+Multi-resource visits: set required_vehicles > 1 on customers that need
+multiple vehicles simultaneously (e.g., heavy deliveries). The solver
+will try to synchronize arrival times across vehicles.
 """
 
 from dataclasses import dataclass, field

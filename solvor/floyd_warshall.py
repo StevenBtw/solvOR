@@ -1,22 +1,35 @@
-"""
+r"""
 Floyd-Warshall for all-pairs shortest paths.
 
-Use this when you need distances between ALL pairs of nodes at once.
-Network analysis, finding graph diameter, checking reachability matrices,
-precomputing route tables where any node might query any other.
+Computes shortest paths between ALL pairs of nodes at once. Simple three
+nested loops, handles negative edges but not negative cycles.
 
     from solvor.floyd_warshall import floyd_warshall
 
     result = floyd_warshall(n_nodes, edges)
     dist = result.solution  # dist[i][j] = shortest path from i to j
 
-Handles negative edges, but negative cycles will mess up your results.
-O(n³) time, so works well for smaller graphs. Past a few hundred
-nodes it slows down significantly.
+How it works: dynamic programming over intermediate nodes. For each pair (i,j),
+check if going through node k gives a shorter path: dist[i][j] = min(dist[i][j],
+dist[i][k] + dist[k][j]). O(n³) time complexity.
 
-For single-source: dijkstra. For negative edges single-source: bellman_ford.
-For large graphs: just run dijkstra from each source, it's very parallelizable
+Use this for:
+
+- All-pairs shortest paths
+- Network analysis and graph diameter
+- Reachability matrices
+- Precomputing route tables
+
+Parameters:
+
+    n_nodes: number of nodes in graph
+    edges: list of (from, to, weight) tuples
+    directed: if False, edges are bidirectional (default: True)
+
+O(n³) works well for smaller graphs (<500 nodes). For larger graphs, run
+dijkstra from each source , it's very parallelizable
 and usually faster in practice.
+For single-source: also dijkstra. For negative edges single-source: bellman_ford.
 """
 
 from solvor.types import Result, Status

@@ -1,14 +1,8 @@
-"""
+r"""
 Gradient Descent, for smooth continuous optimization.
 
 The idea is simple: compute the slope at your current position, take a step
-downhill, repeat. The gradient tells you which direction is steepest, the
-learning rate controls how big a step you take. Momentum and Adam add memory
-of previous steps to avoid oscillation and adapt step sizes per dimension.
-
-Great for refining solutions from other methods. Found a rough solution with
-genetic or anneal? Use gradient descent to polish it if your objective is
-differentiable. Also useful for smoothing out noisy landscapes.
+downhill, repeat. Great for refining solutions from other methods.
 
     from solvor.gradient import gradient_descent, adam, rmsprop
 
@@ -16,15 +10,35 @@ differentiable. Also useful for smoothing out noisy landscapes.
     result = gradient_descent(grad_fn, x0, objective_fn=f, line_search=True)
     result = adam(grad_fn, x0)  # adaptive learning rates, often works better
 
-Variants:
-    gradient_descent : vanilla, just follows the gradient (supports line search)
-    momentum         : remembers previous direction, smoother convergence
-    rmsprop          : adapts learning rate per parameter using RMS of gradients
-    adam             : combines momentum + rmsprop, usually the default choice
+How it works: the gradient tells you which direction is steepest, the learning
+rate controls how big a step you take. Momentum adds memory of previous steps
+to avoid oscillation. Adam adapts step sizes per dimension using running
+averages of gradients and squared gradients.
 
-Warning: gradient descent finds local minima, not global ones. For non-convex
-problems, your starting point matters a lot. If you suspect multiple optima,
-use anneal or genetic to explore first, then refine with gradient descent.
+Use this for:
+
+- Polishing solutions from other methods (genetic, anneal)
+- Smooth differentiable objectives
+- Machine learning model training
+- Local refinement when starting point is close to optimum
+
+Variants:
+
+    gradient_descent: vanilla gradient following (supports line search)
+    momentum: remembers previous direction, smoother convergence
+    rmsprop: adapts learning rate per parameter using RMS of gradients
+    adam: combines momentum + rmsprop, usually the default choice
+
+Parameters:
+
+    grad_fn: function returning gradient at a point
+    x0: starting point
+    lr: learning rate / step size
+    objective_fn: optional, enables line search
+    tol: convergence tolerance on gradient norm
+
+Warning: gradient descent finds local minima, not global ones. If you suspect
+multiple optima, use anneal or genetic to explore first.
 
 Don't use this for: non-differentiable functions, discrete problems, or when
 you don't have access to gradients.

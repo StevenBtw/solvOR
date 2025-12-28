@@ -1,32 +1,37 @@
-"""
+r"""
 Large Neighborhood Search (LNS) and Adaptive LNS (ALNS).
 
 LNS iteratively destroys and repairs solutions, exploring large neighborhoods
-that local search methods like 2-opt can't reach. ALNS extends this with
-multiple operators and adaptive selection based on past performance.
-
-Use this for complex routing, scheduling, or assignment problems where:
-- Local moves (swaps, 2-opt) get stuck in local optima
-- The solution structure allows partial destruction/reconstruction
-- You have domain knowledge to design good destroy/repair operators
+that local search methods like 2-opt can't reach.
 
     from solvor.lns import lns, alns
 
     result = lns(initial, objective_fn, destroy, repair)
     result = alns(initial, objective_fn, destroy_ops, repair_ops)
 
-The destroy function takes a solution and RNG, returns a partially destroyed
-solution (e.g., with some elements removed). The repair function takes a
-partial solution and RNG, returns a complete feasible solution.
+How it works: each iteration, destroy removes part of the solution (e.g., some
+routes or assignments), then repair rebuilds a complete solution. This allows
+large jumps that local search can't make. ALNS uses multiple operators and
+adapts their selection probabilities based on which ones produce improvements.
 
-Unlike tabu search which explores small neighborhoods exhaustively, LNS makes
-large jumps by removing and reinserting significant portions of the solution.
-This makes it effective for highly constrained problems like VRPTW where good
-solutions are sparse.
+Use this for:
 
-ALNS adds adaptivity: multiple destroy/repair operators compete, and operators
-that produce good results get selected more often. This automates the tuning
-of which neighborhoods to explore.
+- Complex routing problems (VRP, VRPTW)
+- Scheduling with many constraints
+- Assignment problems where local moves get stuck
+- Problems where you can design good destroy/repair operators
+
+Parameters:
+
+    initial: starting solution
+    objective_fn: function to minimize (or maximize)
+    destroy: function(solution, rng) -> partial solution
+    repair: function(partial, rng) -> complete solution
+    accept: 'improving', 'accept_all', or 'simulated_annealing'
+
+For ALNS, pass lists of destroy/repair operators. Operators that produce
+good results get selected more often. This automates the tuning of which
+neighborhoods to explore.
 """
 
 from collections.abc import Callable, Sequence

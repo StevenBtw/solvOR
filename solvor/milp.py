@@ -1,16 +1,8 @@
-"""
+r"""
 MILP Solver, linear optimization with integer constraints.
 
-Use this when you need to minimize or maximize a linear objective with linear
-constraints, and some variables must be integers. Classic problems: diet/blending
-(minimize cost meeting nutritional requirements), scheduling with discrete slots,
-set covering, power grid design, energy management (optimizing consumption across
-timeslots based on production forecasts).
-
-Under the hood, this is branch and bound using simplex as a subroutine. It solves
-LP relaxations (ignoring integer constraints), then branches on fractional values,
-pruning subtrees that can't beat the current best. Best-first search prioritizes
-the most promising branches.
+Linear programming with integer constraints. The workhorse of discrete
+optimization: diet problems, scheduling, set covering, facility location.
 
     from solvor.milp import solve_milp
 
@@ -24,11 +16,28 @@ the most promising branches.
     # find multiple solutions (result.solutions contains all found)
     result = solve_milp(c, A, b, integers=[0, 2], solution_limit=5)
 
-CP is more expressive for logical constraints like "all different" but
-doesn't optimize. SAT handles boolean satisfiability only. MILP is for
-when you have a clear linear objective and need the optimal value.
+How it works: branch and bound using simplex as subroutine. Solves LP relaxations
+(ignoring integer constraints), branches on fractional values, prunes subtrees
+that can't beat current best. Best-first search prioritizes promising branches.
 
-If your problem is purely continuous (no integers), just use simplex (directly).
+Use this for:
+
+- Linear objectives with integer constraints
+- Diet/blending, scheduling, set covering
+- Facility location, power grid design
+- When you need proven optimal values
+
+Parameters:
+
+    c: objective coefficients
+    A: constraint matrix
+    b: constraint bounds
+    integers: indices of integer-constrained variables
+    warm_start: initial solution to prune search tree
+    solution_limit: find multiple solutions
+
+CP is more expressive for logical constraints. SAT handles pure boolean.
+For continuous-only problems, use simplex directly.
 """
 
 from collections.abc import Sequence

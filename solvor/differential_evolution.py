@@ -1,9 +1,8 @@
-"""
+r"""
 Differential Evolution (DE) for global optimization.
 
 Population-based stochastic search that's more systematic than genetic
-algorithms for continuous problems. DE uses mutation by adding weighted
-differences between population members, then crosses over with the target.
+algorithms for continuous problems.
 
     from solvor.differential_evolution import differential_evolution
 
@@ -13,11 +12,25 @@ differences between population members, then crosses over with the target.
     # warm start from previous solutions
     result = differential_evolution(objective_fn, bounds, initial_population=[prev.solution])
 
-Use DE when you need global optimization without gradients:
+How it works: maintains a population of candidate solutions. Each generation,
+create mutant vectors by adding weighted differences between population members,
+then crossover with the target vector. If the trial beats the target, it replaces
+it. The 'rand/1' strategy uses random base vectors, 'best/1' uses the current best.
+
+Use this for:
+
 - Parameter fitting for models
 - Black-box optimization
 - Multi-modal functions with many local minima
 - Hyperparameter tuning
+
+Parameters:
+
+    objective_fn: function to minimize (or maximize)
+    bounds: list of (lower, upper) bounds for each dimension
+    strategy: 'rand/1' (default) or 'best/1' for mutation strategy
+    mutation: scale factor for difference vectors (default: 0.8)
+    crossover: probability of taking mutant's value (default: 0.7)
 
 For smooth local optimization, gradient methods are faster. For
 high-dimensional problems (>100 vars), consider CMA-ES (Covariance

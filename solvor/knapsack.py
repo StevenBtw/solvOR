@@ -1,21 +1,32 @@
-"""
+r"""
 0/1 Knapsack solver using dynamic programming.
 
 The problem that launched a thousand algorithms. Select items to maximize value
 without exceeding capacity. Each item is all-or-nothing (0/1), no cutting that
-gold bar in half. DP builds up the answer by asking "what's the best I can do
-with capacity w?" for every w from 0 to your limit.
+gold bar in half.
 
     from solvor.knapsack import solve_knapsack
 
     result = solve_knapsack(values, weights, capacity)
     print(result.solution)  # indices of selected items
 
+How it works: DP builds a table asking "what's the best I can do with capacity w?"
+for every w from 0 to your limit. Each item either fits (add its value) or doesn't.
+Backtrack through the table to find which items were selected.
+
 Use this for:
+
 - Resource allocation with discrete choices
 - Budget optimization
 - Subset selection problems
 - Capital budgeting
+
+Parameters:
+
+    values: value/profit of each item
+    weights: weight/cost of each item
+    capacity: maximum total weight allowed
+    minimize: if True, minimize total value (unusual but supported)
 
 For fractional items, use LP (greedy by value/weight ratio is optimal).
 For multiple constraints, use MILP or CP-SAT.

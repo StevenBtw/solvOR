@@ -31,6 +31,7 @@ Follow the project's style:
 - **snake_case** everywhere
 - **Type hints** on public APIs, skip for internal helpers
 - **Keyword-only** for optional parameters (use `*`)
+- **Raw docstrings** use `r"""` for solver module docstrings (allows backslashes in ASCII diagrams)
 - **Minimal comments** explain *why*, not *what*
 - **Sets for membership** O(1) lookup, not lists
 - **Immutable state** solutions passed between iterations should be immutable; working structures can mutate
@@ -228,14 +229,38 @@ def solve_parallel(problems):
 
 ### Comments
 
-Minimal. Explain *why*, not *what*. No docstrings for internal functions:
+Minimal. Explain *why*, not *what*. No docstrings for internal functions.
+
+**When to comment:**
+
+- Non-obvious algorithm choices or trade-offs
+- Data structure purpose when not clear from names
+- Mathematical formulas that need context
+
+**When not to comment:**
+
+- Self-explanatory code
+- Simple operations
+- Anything already in the module docstring
+
+**Style:**
+
+- Keep it simple, no fancy formatting or divider lines
+- Section markers are fine: `# Backtrack to find selected items`
+- Inline "why" comments: `# Traverse backwards to avoid using same item twice`
 
 ```python
+# Good: explains why
 # Bland's rule prevents cycling
 if ratio < min_ratio - eps:
 
-# tableau stores -z, so z > 0 means -z < 0
-if tab[-1][-1] < -eps:
+# Good: explains data structure purpose
+# state[arc]: 1 = at lower bound, -1 = at upper bound, 0 = basic
+state = [0] * total_arcs
+
+# Bad: explains what (don't do this)
+# compute the sum
+total = sum(values)
 ```
 
 ### Data Structures
@@ -550,7 +575,12 @@ solve_lp(c, A, b, minimize=False)    # maximize c @ x
 ### Module Structure Template
 
 ```python
-"""One-line description."""
+r"""One-line description.
+
+Extended description with code example, "How it works", "Use this for" bullets,
+and "Parameters" section. Use raw string (r-prefix) for module docstrings to
+allow backslashes in ASCII diagrams without escaping.
+"""
 
 from solvor.types import Result, Status
 

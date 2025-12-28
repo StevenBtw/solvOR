@@ -1,13 +1,9 @@
-"""
+r"""
 Simplex Solver, linear programming that aged like wine.
 
 You're walking along edges of a giant crystal always uphill, until you hit a corner
 that's optimal. You can visualize it. Most algorithms are abstract symbol
 manipulation. Simplex is a journey through space.
-
-Use this for linear objectives with linear constraints and continuous variables.
-Resource allocation, blending, production planning, transportation. Unlike
-gradient descent which approximates, simplex finds the exact optimum for LP.
 
     from solvor.simplex import solve_lp
 
@@ -15,8 +11,25 @@ gradient descent which approximates, simplex finds the exact optimum for LP.
     result = solve_lp(c, A, b)
     result = solve_lp(c, A, b, minimize=False)  # maximize
 
-This is also doing the grunt work inside MILP, which is branch and bound that calls simplex
-repeatedly to solve LP relaxations.
+How it works: starts at a vertex of the feasible polytope (phase 1 finds one if
+needed). Each iteration pivots to an adjacent vertex with better objective value.
+Bland's rule prevents cycling. Terminates when no improving neighbor exists.
+
+Use this for:
+
+- Linear objectives with linear constraints
+- Resource allocation, blending, production planning
+- Transportation and assignment problems
+- When you need exact optimum (not approximate)
+
+Parameters:
+
+    c: objective coefficients (minimize c @ x)
+    A: constraint matrix (A @ x <= b)
+    b: constraint bounds
+    minimize: True for min, False for max (default: True)
+
+This also does the grunt work inside MILP, solving LP relaxations at each node.
 
 Don't use this for: integer constraints (use MILP), non-linear objectives
 (use gradient or anneal), or problems with poor numerical scaling (simplex
@@ -176,7 +189,8 @@ def _pivot(matrix, m, row, col, eps):
     n_cols = len(matrix[0])
     pivot_val = matrix[row][col]
     if abs(pivot_val) < eps:
-        return matrix  # numerical instability, skip pivot
+        # Numerical instability, skip pivot
+        return matrix
     inv = 1.0 / pivot_val
 
     for j in range(n_cols):

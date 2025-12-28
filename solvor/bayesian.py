@@ -1,14 +1,8 @@
-"""
+r"""
 Bayesian Optimization, for when each evaluation is expensive.
 
-Use this for hyperparameter tuning, A/B testing, simulation optimization, or any
-black-box problem where you can only afford 20-100 evaluations. Works well in
-low dimensions (5-15 parameters), builds a surrogate model to guess where to
-sample next instead of brute-forcing the space.
-
-Don't use this for: functions that are cheap to evaluate (just use anneal or genetic with
-more iterations), high-dimensional problems (>20 dims, the surrogate struggles),
-or discrete/categorical parameters without encoding tricks.
+Works well in low dimensions (5-15 parameters), builds a surrogate model to
+guess where to sample next instead of brute-forcing the space.
 
     from solvor.bayesian import bayesian_opt
 
@@ -16,8 +10,29 @@ or discrete/categorical parameters without encoding tricks.
     result = bayesian_opt(objective_fn, bounds, minimize=False)  # maximize
     result = bayesian_opt(objective_fn, bounds, acquisition="ucb", kappa=2.5)  # UCB
 
-If you're doing serious ML hyperparameter tuning, consider scikit-optimize or
-Optuna, they handle the edge cases and integrations this implementation doesn't.
+How it works: fit a Gaussian Process surrogate to observed points, then use
+an acquisition function (Expected Improvement or UCB) to decide where to
+sample next. EI balances exploitation (where the model predicts good values)
+with exploration (where uncertainty is high).
+
+Use this for:
+
+- Hyperparameter tuning
+- A/B testing
+- Simulation optimization
+- Black-box problems with expensive evaluations (20-100 budget)
+
+Parameters:
+
+    objective_fn: function to minimize (or maximize)
+    bounds: list of (lower, upper) bounds for each dimension
+    acquisition: 'ei' (Expected Improvement) or 'ucb' (Upper Confidence Bound)
+    kappa: UCB exploration parameter (higher = more exploration)
+    n_initial: number of random initial samples
+
+Don't use this for: cheap-to-evaluate functions (use anneal or genetic),
+high-dimensional problems (>20 dims), or discrete/categorical parameters.
+For serious ML hyperparameter tuning, consider scikit-optimize or Optuna.
 """
 
 from collections.abc import Callable, Sequence

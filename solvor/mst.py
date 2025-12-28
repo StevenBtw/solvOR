@@ -1,10 +1,7 @@
-"""
+r"""
 Minimum Spanning Tree - connect everything at minimum cost.
 
-One of those rare greedy algorithms that's actually optimal. Kruskal's is
-beautifully simple: sort edges by weight, pick the smallest that doesn't
-create a cycle. Uses Union-Find under the hood for near O(1) cycle detection.
-Prim's grows a tree from a start node, Dijkstra-style, but with a priority queu.
+One of those rare greedy algorithms that's actually optimal.
 
     from solvor.mst import kruskal, prim
 
@@ -17,10 +14,26 @@ Prim's grows a tree from a start node, Dijkstra-style, but with a priority queu.
     | /     |        skips 1-3 (5) - would create cycle
     2 --6-- 3
 
-Classic uses: network cabling, clustering (stop early = k clusters), circuit
-layout. Both algorithms return the same MST.
+Kruskal's is beautifully simple: Kruskal's sorts edges by weight, picks the smallest that doesn't
+create a cycle. Uses Union-Find for near O(1) cycle detection. Prim's grows a
+tree from a start node using a priority queue, Dijkstra-style.
 
-Don't use this for: directed graphs, or shortest paths (that's dijkstra).
+Use this for:
+
+- Network cabling and infrastructure design
+- Clustering (stop early = k clusters)
+- Circuit layout
+- Any "connect all nodes at minimum cost" problem
+
+Parameters:
+
+    n_nodes: number of nodes (Kruskal's)
+    edges: list of (u, v, weight) tuples
+    graph: adjacency dict (Prim's)
+    allow_forest: return partial result for disconnected graphs
+
+Both algorithms return the same MST. Don't use this for directed graphs
+or shortest paths (that's dijkstra).
 """
 
 from collections.abc import Iterable

@@ -1,4 +1,4 @@
-"""
+r"""
 BFGS Quasi-Newton Method for smooth optimization.
 
 BFGS approximates the Hessian (second derivatives) using gradient history,
@@ -15,12 +15,22 @@ How it works: maintains an approximation H of the inverse Hessian. Each step
 computes direction d = -H @ grad, does line search, then updates H using the
 BFGS formula. The approximation improves as it learns the local curvature.
 
-Use this when:
-- You have access to gradients (or can compute them)
-- The objective is smooth (twice differentiable)
-- Problem dimension is moderate (< 1000 for BFGS, use L-BFGS for larger)
+Use this for:
 
-Don't use for: non-smooth functions, very large dimensions (use L-BFGS),
+- Smooth (twice differentiable) objectives
+- Medium-scale problems (< 1000 variables for BFGS)
+- Large-scale problems (use L-BFGS, stores only last m gradient pairs)
+- When you have access to gradients
+
+Parameters:
+
+    grad_fn: function returning gradient at a point
+    x0: starting point
+    objective_fn: optional, enables backtracking line search
+    m: (L-BFGS only) number of correction pairs to store (default: 10)
+    tol: convergence tolerance on gradient norm
+
+Don't use for: non-smooth functions, very large dimensions without L-BFGS,
 or when gradients are expensive (consider derivative-free methods).
 """
 

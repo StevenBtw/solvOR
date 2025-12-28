@@ -1,20 +1,32 @@
-"""
+r"""
 Nelder-Mead simplex method for derivative-free optimization.
 
 When you can't compute gradients (noisy simulations, black-box functions,
-non-differentiable objectives), Nelder-Mead is your go-to. It maintains a
-simplex of n+1 points in n dimensions, iteratively reflecting, expanding,
-contracting, and shrinking to find the minimum.
+non-differentiable objectives), Nelder-Mead is your go-to.
 
     from solvor.nelder_mead import nelder_mead
 
     result = nelder_mead(objective_fn, [1.0, 2.0])
     result = nelder_mead(objective_fn, x0, adaptive=True)  # better for high dimensions
 
-The algorithm doesn't use gradients, so it works on:
+How it works: maintains a simplex of n+1 points in n dimensions. Each iteration,
+reflect the worst point through the centroid of the others. If that's good, try
+expanding further. If bad, contract toward the centroid. If all else fails,
+shrink the whole simplex toward the best point.
+
+Use this for:
+
 - Simulation outputs where derivatives aren't available
 - Functions with discontinuities or noise
 - Black-box optimization (hyperparameter tuning, etc.)
+
+Parameters:
+
+    objective_fn: function to minimize (or maximize)
+    x0: starting point
+    adaptive: use dimension-adaptive parameters (better for high dims)
+    initial_step: size of initial simplex (default: 0.05)
+    tol: convergence tolerance on spread of values
 
 Limitations: slower than gradient methods for smooth functions, can stall
 on high-dimensional problems (>20 variables). For global optimization,

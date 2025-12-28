@@ -1,18 +1,30 @@
-"""
+r"""
 Dijkstra's algorithm for weighted shortest paths.
 
-Use this when edges have non-negative weights and you need the optimal path.
-Road networks, routing with distances, any graph where "shortest" means
-"minimum total weight". This is the foundation for A*, which adds a heuristic
-for faster goal-directed search.
+The classic algorithm for finding shortest paths in graphs with non-negative
+edge weights. Named after Edsger Dijkstra, who designed it in 1956.
 
     from solvor.dijkstra import dijkstra
 
     result = dijkstra(start, goal, neighbors)
     result = dijkstra(start, lambda s: s.is_target, neighbors)
 
-The neighbors function returns (neighbor, edge_cost) pairs. Edge costs must
-be non-negative, use bellman_ford for negative weights.
+How it works: maintains a priority queue of (distance, node) pairs. Each
+iteration pops the closest unvisited node, marks it visited, and relaxes
+its edges. Guarantees shortest path when all edges are non-negative.
+
+Use this for:
+
+- Road networks and routing
+- Any graph where "shortest" means minimum total weight
+- When edge weights are non-negative
+- As foundation for A* (add heuristic for goal-directed search)
+
+Parameters:
+
+    start: starting node
+    goal: target node, or predicate function returning True at goal
+    neighbors: function returning (neighbor, edge_cost) pairs
 
 For negative edges use bellman_ford, Dijkstra's negativity was legendary,
 just not in his algorithm. For unweighted graphs use bfs (simpler).

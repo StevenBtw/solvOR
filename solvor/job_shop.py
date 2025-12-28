@@ -1,10 +1,9 @@
-"""
+r"""
 Job Shop Scheduling solver using dispatching rules and local search.
 
 The factory floor puzzle: n jobs, each needing a specific sequence of machines.
 Job A needs drill then lathe then mill. Job B needs lathe then drill then paint.
 Machines can only handle one job at a time. Minimize total time to finish everything.
-NP-hard, but dispatching rules get you 80% of the way there surprisingly fast.
 
     from solvor import solve_job_shop
 
@@ -15,14 +14,26 @@ NP-hard, but dispatching rules get you 80% of the way there surprisingly fast.
     result = solve_job_shop(jobs)
     print(result.solution)  # Schedule with start times
 
+How it works: first, generate an initial schedule using a dispatching rule
+(SPT picks shortest operation, MWKR picks job with most work remaining, etc.).
+Then, local search tries swapping adjacent operations on the same machine
+to reduce makespan. Repeat until no improvement found.
+
 Use this for:
+
 - Manufacturing scheduling
 - Production planning
 - Resource allocation with precedence constraints
 
-For optimal solutions on small instances (<10 jobs), consider using CP-SAT
-with the encoding in this module. For larger instances, dispatching rules
-with local search provide good approximate solutions.
+Parameters:
+
+    jobs: list of jobs, each job is a list of (machine, duration) tuples
+    rule: dispatching rule - 'spt', 'lpt', 'mwkr', 'fifo', or 'random'
+    local_search: if True, improve initial schedule with swap moves
+
+For optimal solutions on small instances (<10 jobs), consider CP-SAT.
+For larger instances, dispatching rules with local search provide good
+approximate solutions surprisingly fast.
 """
 
 from collections.abc import Sequence

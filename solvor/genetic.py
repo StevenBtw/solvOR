@@ -1,4 +1,4 @@
-"""
+r"""
 Genetic Algorithm, population-based search that excels at multi-objective problems.
 
 Slower than modern solvers for single-objective problems, and gradients will beat
@@ -8,22 +8,34 @@ you're searching in the dark without structure to exploit. And they parallelize
 beautifully while most solvers don't.
 
 Unlike anneal/tabu (single solution), this evolves a whole population. More
-overhead, but better diversity and less likely to get trapped.
+overhead, but better diversity and less likely to get trapped. Great at
+multi-objective optimization (Pareto fronts) and parallelizes beautifully.
 
     from solvor.genetic import evolve
 
     result = evolve(objective_fn, population, crossover_fn, mutate_fn)
     result = evolve(objective_fn, pop, cross, mut, minimize=False)  # maximize
 
+How it works: each generation, select parents via tournament, combine with
+crossover to produce children, apply random mutations. Elite individuals
+survive unchanged. Adaptive mutation rate increases when stagnating.
+
+Use this for:
+
+- Multi-objective optimization (Pareto fronts)
+- Exploration when problem structure is unknown
+- Problems that parallelize well
+- When you can define good crossover/mutation operators
+
 Parameters:
-    objective_fn (Callable[[T], float]): fitness function mapping a solution to a score
-    population (Sequence[T]): starting solutions, bigger = more diversity but slower
-    crossover (Callable[[T, T], T]): combine two parents into one child; this matters a lot
-    mutate (Callable[[T], T]): small random changes to a solution; keep it subtle
-    elite_size (int): survivors per generation, too high = stagnation (default: 2)
-    mutation_rate (float): how often to mutate (default: 0.1)
-    max_iter (int): iterations/generations to run (default: 100)
-    tournament_k (int): selection pressure, higher = greedier (default: 3)
+
+    objective_fn: fitness function mapping solution to score
+    population: starting solutions (bigger = more diversity but slower)
+    crossover: combine two parents into one child
+    mutate: small random changes to a solution
+    elite_size: survivors per generation (default: 2)
+    mutation_rate: how often to mutate (default: 0.1)
+    tournament_k: selection pressure (default: 3)
 
 Don't use this for: problems with gradient info (use gradient descent), convex
 problems (use simplex), or discrete structured problems (use CP/SAT).

@@ -18,7 +18,8 @@ Cleanup and polish. CP got a diet, docs got a checkup, CI got faster.
 ### Changed
 
 - **CP refactor:** Extracted SAT encoding to `cp_encoder.py` (cp.py went from 861 to 428 lines, much easier to read now). `Model.solve()` defaults to `solver="auto"` which picks DFS for simple constraints and SAT for globals (circuit, no_overlap, cumulative, sum_*). Force a specific solver with `solver="dfs"` or `solver="sat"`. Also, `IntVar` now supports multiplication (`x * 3`, `3 * x`) for expressions like `timeslot * n_rooms + room`.
-- **Docs:** Added "How It Works" sections explaining the math behind 16 algorithms (simplex, interior point, dijkstra, bellman-ford, floyd-warshall, A*, anneal, tabu, genetic, PSO, DE, BFGS, knapsack, bin-packing, SAT, DLX). Also added references, tips, and full signature sections.
+- **Module docstrings:** Standardized all 18 solvor docstrings with consistent format: "How it works" section, "Use this for" bullets, "Parameters" section. Same style, so easier when scanning the different solvors.
+- **Docs site:** Added "How It Works" sections explaining the math behind 16 algorithms (simplex, interior point, dijkstra, bellman-ford, floyd-warshall, A*, anneal, tabu, genetic, PSO, DE, BFGS, knapsack, bin-packing, SAT, DLX). Also added references, tips, and full signature sections.
 - **Tests:** Removed tests with weak assertions, improved edge case coverage. No bugs found (yet).
 - **CI/pre-commit:** Turned on uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
 - **README:** Added docs badge.
@@ -286,6 +287,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.5.2]: https://github.com/StevenBtw/solvOR/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/StevenBtw/solvOR/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/StevenBtw/solvOR/compare/v0.4.8...v0.5.0
 [0.4.8]: https://github.com/StevenBtw/solvOR/compare/v0.4.7...v0.4.8

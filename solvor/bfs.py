@@ -1,13 +1,9 @@
-"""
+r"""
 Breadth-first and depth-first search for unweighted graphs.
 
 BFS is the polite algorithm: it waits its turn, exploring level by level,
 guaranteeing shortest paths. DFS is the curious one: it dives deep before
 backtracking, useful when you just need any path or want to explore everything.
-Both are O(V + E), the difference is queue vs stack.
-
-Use this for: mazes, grid navigation, finding any path, flood fill, checking
-if two nodes are connected. When goal is None, explores all reachable nodes.
 
     from solvor.bfs import bfs, dfs
 
@@ -15,8 +11,24 @@ if two nodes are connected. When goal is None, explores all reachable nodes.
     result = dfs(start, goal, neighbors)           # any path
     result = bfs(start, None, neighbors)           # all reachable nodes
 
-For weighted graphs, use dijkstra. For heuristic search, use astar. For
-negative edges, use bellman_ford.
+How it works: BFS uses a queue (FIFO), DFS uses a stack (LIFO). Both mark
+nodes as visited to avoid cycles. O(V + E) time complexity.
+
+Use this for:
+
+- Mazes and grid navigation
+- Finding any path or shortest path (unweighted)
+- Flood fill and connectivity checks
+- When goal is None, explores all reachable nodes
+
+Parameters:
+
+    start: starting node
+    goal: target node, predicate function, or None (explore all)
+    neighbors: function returning iterable of adjacent nodes
+
+For weighted graphs use dijkstra. For heuristic search use astar.
+For negative edges use bellman_ford.
 """
 
 from collections import deque

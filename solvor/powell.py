@@ -1,4 +1,4 @@
-"""
+r"""
 Powell's Conjugate Direction Method for derivative-free optimization.
 
 Powell's method finds minima without computing gradients by doing sequential
@@ -15,10 +15,18 @@ then replace one direction with the overall displacement. Over iterations,
 the directions become conjugate (orthogonal in the Hessian metric), which
 gives quadratic convergence for quadratic functions.
 
-Use this when:
-- You can't compute gradients (black-box function)
-- The objective is smooth and continuous
-- Nelder-Mead is too slow
+Use this for:
+
+- Black-box functions where you can't compute gradients
+- Smooth, continuous objectives
+- When Nelder-Mead is too slow
+
+Parameters:
+
+    objective_fn: function to minimize (or maximize)
+    x0: starting point
+    bounds: optional list of (lower, upper) bounds per dimension
+    tol: convergence tolerance on function value change
 
 Don't use for: noisy functions (try Nelder-Mead), non-smooth objectives,
 or very high dimensions (the method needs O(n) line searches per iteration).

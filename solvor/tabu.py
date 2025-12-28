@@ -1,4 +1,4 @@
-"""
+r"""
 Tabu Search, local search with memory to escape cycles.
 
 Like anneal, this explores neighbors. Unlike anneal, it's greedy: always pick
@@ -15,9 +15,27 @@ more reproducible and easier to debug.
     result = tabu_search(start, objective_fn, neighbors_fn)
     result = solve_tsp(distance_matrix)  # built-in TSP helper
 
-The neighbor function is different from anneal: it must return a list of
-(move, new_solution) pairs, where move is hashable (so it can go in the tabu
-list). Think (i, j) for "swap cities i and j" rather than just the new tour.
+How it works: each iteration picks the best neighbor not on the tabu list.
+The chosen move goes on the list for `cooldown` iterations. Aspiration allows
+tabu moves if they beat the global best.
+
+Use this for:
+
+- Routing (TSP, VRP)
+- Scheduling and timetabling
+- When you want deterministic, reproducible results
+- When you need more control than anneal
+
+The neighbor function must return (move, new_solution) pairs where move is
+hashable (so it can go in the tabu list). Think (i, j) for "swap cities i and j".
+
+Parameters:
+
+    initial: starting solution
+    objective_fn: function mapping solution to score
+    neighbors: returns list of (move, new_solution) pairs
+    cooldown: how long moves stay tabu (default: 10)
+    max_no_improve: stop after this many iterations without improvement
 
 Genetic is population-based (more overhead, better diversity), anneal is
 probabilistic (simpler setup), tabu is greedy with memory (more predictable).

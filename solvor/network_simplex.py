@@ -13,11 +13,22 @@ This structure makes it fly on large networks where regular simplex would strugg
     Source [+10] --(cap:10, cost:2)--> [0] Transship --(cap:15, cost:1)--> [-10] Sink
                   \__(cap:5, cost:3)_____________________/
 
-    supplies: positive = produces flow, negative = consumes, zero = passes through
-    arcs: (from, to, capacity, cost)
+How it works: maintain a spanning tree basis. Each iteration, find an arc with
+negative reduced cost (entering), trace the cycle it creates, find the
+bottleneck (leaving), and update flows and potentials. Much faster than dense
+simplex for sparse networks.
 
-Use this over min_cost_flow when you have large networks. min_cost_flow uses
-successive shortest paths which is simpler but slower. Network simplex scales.
+Use this for:
+
+- Large-scale min-cost flow problems
+- Transportation and transshipment networks
+- When min_cost_flow is too slow
+
+Parameters:
+
+    n_nodes: number of nodes
+    arcs: list of (from, to, capacity, cost) tuples
+    supplies: positive = produces flow, negative = consumes, zero = transship
 
 Don't use this for: problems that aren't min-cost flow shaped (use solve_lp),
 or tiny problems where config overhead isn't worth it (use min_cost_flow).
@@ -46,8 +57,7 @@ def network_simplex(
     m = len(arcs)
     n = n_nodes
 
-    # --- Arc representation ---
-    # Arrays indexed by arc ID: original arcs [0..m), artificial arcs [m..m+n)
+    # Arc arrays indexed by arc ID: original arcs [0..m), artificial arcs [m..m+n)
     source = [0] * (m + n)
     target = [0] * (m + n)
     cap = [0] * (m + n)
@@ -63,8 +73,7 @@ def network_simplex(
     # Big-M penalty ensures artificial arcs are only used when necessary
     big_m = sum(abs(cost[i]) for i in range(m)) * n + 1
 
-    # --- Artificial arcs for feasibility ---
-    # Connect each node to artificial root; flow on these = supply/demand imbalance
+    # Artificial arcs connect each node to root; flow here = supply/demand imbalance
     for i in range(n):
         arc_id = m + i
         if supplies[i] >= 0:
@@ -83,6 +92,8 @@ def network_simplex(
     total_nodes = n + 1
     root = n
 
+    # Spanning tree: parent[i] = parent node, pred[i] = arc to parent, depth[i] = tree depth
+    # thread/rev_thread = preorder traversal links for fast subtree iteration
     parent = [root] * total_nodes
     parent[root] = -1
     pred = list(range(m, m + n)) + [-1]
@@ -94,6 +105,7 @@ def network_simplex(
     rev_thread = [root] + list(range(total_nodes - 1))
     rev_thread[root] = n - 1
 
+    # pi[i] = node potential (dual variable); reduced cost = cost - pi[src] + pi[tgt]
     pi = [0.0] * total_nodes
     for i in range(n):
         arc = pred[i]
@@ -102,6 +114,7 @@ def network_simplex(
         else:
             pi[i] = pi[root] - cost[arc]
 
+    # state[arc]: 1 = at lower bound (can increase), -1 = at upper bound (can decrease), 0 = basic (in tree)
     state = [0] * total_arcs
     for arc in range(total_arcs):
         if flow[arc] == 0:
@@ -116,6 +129,7 @@ def network_simplex(
     while iterations < max_iter:
         iterations += 1
 
+        # Find entering arc with negative reduced cost
         entering = -1
         best_cost = -1e-9
 
@@ -133,11 +147,12 @@ def network_simplex(
                 entering = arc
 
         if entering == -1:
-            break
+            break  # Optimal: no improving arc found
 
         u, v = source[entering], target[entering]
         rc = cost[entering] - pi[u] + pi[v]
 
+        # Determine flow direction based on reduced cost sign
         if rc < 0:
             delta = cap[entering] - flow[entering]
             first, second = u, v
@@ -145,8 +160,10 @@ def network_simplex(
             delta = flow[entering]
             first, second = v, u
 
+        # Find where the cycle closes (lowest common ancestor in tree)
         join = _find_join(first, second, depth, parent)
 
+        # Ratio test: find leaving arc (bottleneck in cycle)
         leaving = entering
         leaving_first = True
 
@@ -170,10 +187,12 @@ def network_simplex(
                 leaving_first = False
             node = parent[node]
 
+        # Degenerate pivot: flip state without changing flow
         if delta == 0 and leaving == entering:
             state[entering] = -state[entering]
             continue
 
+        # Augment flow along cycle
         if rc < 0:
             flow[entering] += delta
         else:

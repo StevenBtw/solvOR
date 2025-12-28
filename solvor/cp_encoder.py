@@ -33,9 +33,7 @@ class SATEncoder:
         self._next_bool += 1
         return v
 
-    # -------------------------------------------------------------------------
     # Basic encoding helpers
-    # -------------------------------------------------------------------------
 
     def _encode_exactly_one(self, lits: list[int]) -> None:
         """Encode exactly-one constraint: exactly one literal must be true."""
@@ -50,9 +48,7 @@ class SATEncoder:
         for a, b in combinations(lits, 2):
             self._clauses.append([-a, -b])
 
-    # -------------------------------------------------------------------------
     # Variable encoding
-    # -------------------------------------------------------------------------
 
     def _encode_vars(self) -> None:
         """Encode all integer variables as exactly-one boolean constraints."""
@@ -60,9 +56,7 @@ class SATEncoder:
             lits = [var.bool_vars[v] for v in range(var.lb, var.ub + 1)]
             self._encode_exactly_one(lits)
 
-    # -------------------------------------------------------------------------
     # Simple constraint encoding
-    # -------------------------------------------------------------------------
 
     def _encode_all_different(self, variables: tuple["IntVar", ...]) -> None:
         """Encode all-different constraint: no two variables share a value."""
@@ -108,9 +102,7 @@ class SATEncoder:
         for val in common:
             self._clauses.append([-var1.bool_vars[val], -var2.bool_vars[val]])
 
-    # -------------------------------------------------------------------------
     # Expression handling
-    # -------------------------------------------------------------------------
 
     def _flatten_sum(self, expr: Any) -> tuple[list["IntVar"], int]:
         """Flatten a sum expression into (list of variables, constant offset)."""
@@ -227,9 +219,7 @@ class SATEncoder:
                     else:
                         self._clauses.append([-var1.bool_vars[v1]])
 
-    # -------------------------------------------------------------------------
     # Sum constraints
-    # -------------------------------------------------------------------------
 
     def _encode_sum_eq(self, variables: list["IntVar"], target: int) -> None:
         """Encode sum(variables) == target."""
@@ -357,9 +347,7 @@ class SATEncoder:
         self.model._vars[name] = var
         return var
 
-    # -------------------------------------------------------------------------
     # Global constraints
-    # -------------------------------------------------------------------------
 
     def _encode_circuit(self, variables: tuple["IntVar", ...]) -> None:
         """Encode circuit constraint: successor variables form a Hamiltonian cycle."""
@@ -468,9 +456,7 @@ class SATEncoder:
                     if is_minimal:
                         self._clauses.append([-lits[i] for i in subset])
 
-    # -------------------------------------------------------------------------
     # Constraint dispatcher
-    # -------------------------------------------------------------------------
 
     def _encode_constraint(self, constraint: Any) -> None:
         """Encode a single constraint to SAT clauses."""
@@ -508,9 +494,7 @@ class SATEncoder:
         elif kind == "sum_ge":
             self._encode_sum_ge(list(constraint[1]), constraint[2])
 
-    # -------------------------------------------------------------------------
     # Main solve method
-    # -------------------------------------------------------------------------
 
     def solve(
         self,

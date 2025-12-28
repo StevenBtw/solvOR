@@ -1,18 +1,8 @@
-"""
-Dancing Links (DLX), a Knuth's Algorithm X implementation.
+r"""
+Dancing Links (DLX), Knuth's Algorithm X implementation.
 
-Use this for exact cover problems: Sudoku, N-Queens, pentomino tiling, scheduling
-where every constraint must be satisfied exactly once. If your problem has "place
-these pieces without overlap" or "fill this grid with exactly one of each" vibes,
-DLX is probably a good fit.
-
-Don't use this for: optimization problems (use MIP/SAT), approximate solutions,
-or problems where constraints can be partially satisfied.
-
-This is a pure implementation without numpy or other C extensions, just linked lists.
-Fast enough for most puzzle-sized problems, but if you're solving industrial-scale
-exact cover, consider: sparse matrix representations, iterative deepening, or
-constraint propagation before feeding it to DLX.
+For exact cover problems: Sudoku, N-Queens, pentomino tiling, scheduling
+where every constraint must be satisfied exactly once.
 
 Example: tiling a 2x3 board with 3 dominoes:
 
@@ -47,6 +37,30 @@ Secondary columns (optional constraints):
 
     result = solve_exact_cover(matrix, columns=['A','B','C'], secondary=['C'])
     # Column 'C' is optional - solutions don't need to cover it
+
+How it works: represent the problem as a 0/1 matrix where rows are choices and
+columns are constraints. Use circular doubly-linked lists for efficient
+cover/uncover operations. Recursively pick a column (constraint), try each row
+that covers it, and backtrack if stuck. MRV heuristic picks the column with
+fewest 1s first to minimize branching.
+
+Use this for:
+
+- Sudoku and N-Queens puzzles
+- Pentomino and polyomino tiling
+- Scheduling with exact coverage requirements
+- Any "cover each element exactly once" problem
+
+Parameters:
+
+    matrix: binary matrix where 1s indicate which constraints each row covers
+    columns: optional names for columns
+    secondary: columns that are optional (can be covered at most once)
+    find_all: if True, find all solutions
+    max_solutions: stop after finding this many
+
+Don't use this for: optimization problems (use MIP/SAT), approximate solutions,
+or problems where constraints can be partially satisfied.
 """
 
 from collections.abc import Sequence
