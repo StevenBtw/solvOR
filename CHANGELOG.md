@@ -15,7 +15,7 @@ Cleanup and polish. CP got a diet, docs got a checkup, CI got faster.
 - **CP refactor:** Extracted SAT encoding to `cp_encoder.py` (cp.py went from 861 to 428 lines, much easier to read now). `Model.solve()` defaults to `solver="auto"` which picks DFS for simple constraints and SAT for globals (circuit, no_overlap, cumulative, sum_*). Force a specific solver with `solver="dfs"` or `solver="sat"`. Also, `IntVar` now supports multiplication (`x * 3`, `3 * x`) for expressions like `timeslot * n_rooms + room`.
 - **Docs:** Added references, tips, general readability improvements.
 - **Tests:** Removed tests with weak assertions, improved edge case coverage. No bugs found (yet).
-- **CI/pre-commit:** Added uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
+- **CI/pre-commit:** Turned on uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
 
 ## [0.5.1] - 2025-12-27
 
