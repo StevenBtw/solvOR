@@ -55,6 +55,14 @@ addopts = "--cov=solvor --cov-report=term-missing --cov-fail-under=88"
 testpaths = ["tests"]
 markers = [
     "docs: documentation build tests (requires docs dependencies)",
+    "examples: all example integration tests",
+    "quick_examples: quick example scripts",
+    "classic: classic optimization examples",
+    "puzzles: puzzle examples (sudoku, n-queens, etc.)",
+    "graph_algorithms: graph algorithm examples",
+    "linear_programming: LP/MILP examples",
+    "machine_learning: ML examples",
+    "real_world: real-world application examples",
 ]
 
 [tool.coverage.run]
