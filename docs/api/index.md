@@ -4,7 +4,7 @@ This section provides auto-generated documentation from the solvOR source code.
 
 ## Core Types
 
-::: solvor.types
+See the [Types](types.md) page for `Result`, `Status`, `Progress`, and `ProgressCallback`.
 
 ## Main Solvers
 
