@@ -46,6 +46,21 @@ result = astar('A', 'D', lambda n: graph[n], heuristic)
 
 **Guarantees:** Optimal with admissible heuristic (never overestimates).
 
+**How it works:** A* is Dijkstra with direction. Instead of expanding nodes by distance alone, it prioritizes by f(n) = g(n) + h(n):
+
+- g(n): actual cost from start to n (known)
+- h(n): estimated cost from n to goal (heuristic)
+
+**The admissibility requirement:** The heuristic must never overestimate. If h(n) ≤ true_distance(n, goal) for all n, A* finds the optimal path. Common admissible heuristics:
+
+- Manhattan distance: |dx| + |dy| (4-directional movement)
+- Euclidean distance: √(dx² + dy²) (any direction)
+- Octile distance: max(|dx|, |dy|) + (√2−1)·min(|dx|, |dy|) (8-directional)
+
+**Why it's faster:** Dijkstra explores uniformly in all directions. A* uses the heuristic to focus exploration toward the goal. With a perfect heuristic (h = true distance), A* goes straight to the goal. With h=0, A* degrades to Dijkstra.
+
+**Weighted A*:** Setting weight > 1 makes h more aggressive. Faster but may find suboptimal paths (bounded by weight factor).
+
 ## astar_grid
 
 A* for 2D grids with built-in heuristics.
@@ -96,6 +111,34 @@ edges = [(0, 1, 3), (1, 2, 1), (0, 2, 6)]
 result = floyd_warshall(n_nodes=3, edges=edges)
 print(result.solution[0][2])  # Shortest 0→2 = 4
 ```
+
+**How it works:** The key insight is beautifully simple: build up shortest paths by considering intermediate nodes one at a time.
+
+**The recurrence:** Let dist\[i\]\[j\]\[k\] = shortest path from i to j using only nodes {0, 1, ..., k-1} as intermediates. Then:
+
+```text
+dist[i][j][k] = min(
+    dist[i][j][k-1],           # don't use node k
+    dist[i][k][k-1] + dist[k][j][k-1]  # go through node k
+)
+```
+
+Either the shortest path avoids node k entirely, or it goes i→k→j.
+
+**The algorithm:** We don't need to store all k values—just update in place:
+
+```text
+for k in 0..n:
+    for i in 0..n:
+        for j in 0..n:
+            dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+```
+
+After considering all k, dist\[i\]\[j\] is the shortest path using any intermediate nodes.
+
+**Negative cycle detection:** If dist\[i\]\[i\] < 0 for any i after the algorithm, there's a negative cycle (you can reach i from i with negative cost).
+
+**When to use:** All-pairs queries, small dense graphs, or when you need the full distance matrix. For sparse graphs or single-source, Dijkstra/Bellman-Ford are faster.
 
 **Complexity:** O(V³)
 
