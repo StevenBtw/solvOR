@@ -9,6 +9,7 @@ Cleanup and polish. CP got a diet, docs got a checkup, CI got faster.
 ### Added
 
 - **CI docs test:** `test_docs.py` runs `mkdocs build --strict` to catch missing type hints and broken links before they reach main.
+- **Interior point:** Added `solve_lp_interior()` for linear programming. Primal-dual method with Mehrotra predictor-corrector. Alternative to simplex method.
 
 ### Fixed
 

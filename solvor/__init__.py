@@ -16,6 +16,7 @@ from solvor.floyd_warshall import floyd_warshall
 from solvor.genetic import evolve
 from solvor.gradient import adam, gradient_descent, momentum, rmsprop
 from solvor.hungarian import solve_hungarian
+from solvor.interior_point import solve_lp_interior
 from solvor.job_shop import solve_job_shop
 from solvor.knapsack import solve_knapsack
 from solvor.lns import alns, lns
@@ -34,6 +35,7 @@ from solvor.vrp import Customer, Vehicle, VRPState, solve_vrptw
 
 __all__ = [
     "solve_lp",
+    "solve_lp_interior",
     "solve_milp",
     "tabu_search",
     "solve_tsp",

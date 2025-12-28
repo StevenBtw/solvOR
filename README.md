@@ -20,7 +20,7 @@ Solvor all your optimization needs.
 
 | Category | Solvors | Use Case |
 |----------|---------|----------|
-| **Linear/Integer** | `solve_lp`, `solve_milp` | Resource allocation, scheduling |
+| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp` | Resource allocation, scheduling |
 | **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
 | **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
 | **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
@@ -419,7 +419,7 @@ Result(
 
 | Problem | Solvor |
 |---------|--------|
-| Linear constraints, continuous | `solve_lp` |
+| Linear constraints, continuous | `solve_lp`, `solve_lp_interior` |
 | Linear constraints, integers | `solve_milp` |
 | Boolean satisfiability | `solve_sat` |
 | Discrete vars, complex constraints | `Model` |

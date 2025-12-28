@@ -129,6 +129,7 @@ nav:
       - Overview: algorithms/index.md
       - Linear Programming:
           - solve_lp: algorithms/linear-programming/solve-lp.md
+          - solve_lp_interior: algorithms/linear-programming/solve-lp-interior.md
           - solve_milp: algorithms/linear-programming/solve-milp.md
       - Constraint Programming:
           - solve_sat: algorithms/constraint-programming/solve-sat.md
