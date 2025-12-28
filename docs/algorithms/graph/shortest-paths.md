@@ -21,7 +21,7 @@ print(result.solution)  # ['A', 'B', 'C', 'D']
 print(result.objective)  # 4
 ```
 
-**How it works:** Maintain a priority queue of nodes by tentative distance. Always expand the closest unvisited node—with non-negative weights, this node's distance is final. Update neighbors and repeat until you reach the goal.
+**How it works:** Maintain a priority queue of nodes by tentative distance. Always expand the closest unvisited node, with non-negative weights, this node's distance is final. Update neighbors and repeat until you reach the goal.
 
 The key insight: if all edges are non-negative, the shortest path to the closest unexplored node can't possibly go through unexplored territory (that would only add distance). So we can "lock in" each node's distance as we visit it.
 

@@ -64,7 +64,7 @@ result = solve_lp(c, [[1, 1], [-1, -1]], [4, -4])
 
 The simplex algorithm exploits a key insight: the optimal solution to a linear program always occurs at a vertex (corner) of the feasible region. Instead of searching the entire space, we hop from vertex to vertex, always improving the objective.
 
-**The geometry:** Your constraints define a convex polytope in n-dimensional space. Each vertex is where n constraints meet. The objective function defines a direction—we're looking for the vertex furthest in that direction.
+**The geometry:** Your constraints define a convex polytope in n-dimensional space. Each vertex is where n constraints meet. The objective function defines a direction, we're looking for the vertex furthest in that direction.
 
 **The algebra:** We convert to standard form with slack variables:
 
@@ -73,7 +73,7 @@ minimize c·x
 subject to Ax + s = b, x ≥ 0, s ≥ 0
 ```
 
-Each vertex corresponds to a *basic feasible solution*—setting n variables to zero and solving for the rest. The algorithm:
+Each vertex corresponds to a *basic feasible solution*, setting n variables to zero and solving for the rest. The algorithm:
 
 1. Start at a vertex (basic feasible solution)
 2. Look at adjacent vertices (one pivot away)
