@@ -78,7 +78,7 @@ print(result.solution)  # Distances from node 0
 
 **How it works:** Relax all edges V−1 times (where V is the number of nodes). "Relaxing" an edge means: if going through this edge gives a shorter path, update the distance.
 
-Each pass guarantees we've found shortest paths using at most k edges. After V−1 passes, we've found all shortest paths—because a simple path visits each node at most once, so it uses at most V−1 edges.
+Each pass guarantees we've found shortest paths using at most k edges. After V−1 passes, we've found all shortest paths, because a simple path visits each node at most once, so it uses at most V−1 edges.
 
 To detect negative cycles: do one more pass. If any distance still improves, there's a negative cycle—you can keep going around it forever, reducing the distance infinitely.
 
