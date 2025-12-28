@@ -60,8 +60,11 @@ def network_simplex(
         cap[i] = c
         cost[i] = w
 
+    # Big-M penalty ensures artificial arcs are only used when necessary
     big_m = sum(abs(cost[i]) for i in range(m)) * n + 1
 
+    # --- Artificial arcs for feasibility ---
+    # Connect each node to artificial root; flow on these = supply/demand imbalance
     for i in range(n):
         arc_id = m + i
         if supplies[i] >= 0:
