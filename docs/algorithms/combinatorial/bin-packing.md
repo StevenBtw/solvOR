@@ -41,6 +41,36 @@ Decreasing variants typically produce better results.
 
 **Guarantee:** Best-fit-decreasing uses at most 11/9 × OPT + 6/9 bins.
 
+## How It Works
+
+**The NP-hard reality:** Finding the optimal bin packing is NP-hard. But simple greedy heuristics work remarkably well in practice.
+
+**First-fit:** Scan bins in order, place item in first bin where it fits. If none fit, open a new bin. Fast and simple.
+
+**Best-fit:** Scan all bins, place item in the bin where it fits *most tightly* (least remaining space). Slightly slower but often better packing.
+
+**The decreasing trick:** Sort items largest-first before packing. Big items are hard to place, so pack them while you have flexibility. Small items fit in gaps later.
+
+```text
+Items: [4, 8, 1, 4, 2, 1], capacity = 10
+
+Best-fit-decreasing:
+  Sorted: [8, 4, 4, 2, 1, 1]
+
+  Bin 0: [8]        → 2 remaining
+  Bin 1: [4, 4]     → 2 remaining
+  Bin 1: [4, 4, 2]  → 0 remaining (full)
+  Bin 0: [8, 1, 1]  → 0 remaining (full)
+
+  Result: 2 bins
+```
+
+**Why decreasing helps:** Without sorting, you might fill bins with small items, then have nowhere to put the big ones. Sorting ensures big items get priority.
+
+**The approximation guarantee:** Best-fit-decreasing is provably within 11/9 of optimal—at most 22% more bins than necessary, plus a small constant. For practical inputs it's often optimal or within one bin.
+
+**When to go exact:** For critical applications, formulate as integer programming (MILP) or use branch-and-bound. But for most cases, BFD is fast and good enough.
+
 ## See Also
 
 - [Cookbook: Bin Packing](../../cookbook/bin-packing.md) - Full example

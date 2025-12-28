@@ -33,12 +33,36 @@ print(result.solution)  # Close to [0, 0, 0, 0, 0]
 
 ## How It Works
 
+**The swarm metaphor:** Imagine birds searching for food. Each bird remembers where it personally found the best food, and the flock shares where the best food was found overall. Birds fly toward both, with some randomness.
+
+**The velocity equation:** Each particle's velocity combines three forces:
+
+```text
+v = inertia·v + cognitive·r₁·(pbest - x) + social·r₂·(gbest - x)
+```
+
+- **Inertia:** Keep going the direction you were going (momentum)
+- **Cognitive:** Pull toward your personal best position
+- **Social:** Pull toward the swarm's global best
+
+r₁ and r₂ are random factors (0 to 1) that add stochasticity.
+
+**The algorithm:**
+
 1. Initialize particles with random positions and velocities
-2. Evaluate all particles
-3. Update personal and global bests
-4. Update velocities: v = inertia·v + cognitive·r1·(pbest - x) + social·r2·(gbest - x)
-5. Update positions: x = x + v
-6. Repeat
+2. Evaluate objective for all particles
+3. Update each particle's personal best if current is better
+4. Update global best if any particle found a new best
+5. Update velocities using the equation above
+6. Update positions: x = x + v
+7. Clamp positions to bounds
+8. Repeat until converged
+
+**Why it works:** The swarm balances exploitation (converging toward known good areas) and exploration (inertia carries particles through new territory). Random factors prevent premature convergence.
+
+**Inertia decay:** Start with high inertia (explore widely), decrease over time (exploit best regions). This is like cooling in simulated annealing.
+
+**Compared to GA:** No crossover or selection operators—just physics-like attraction. Simpler to implement, fewer hyperparameters, often works well out of the box.
 
 ## Tips
 
