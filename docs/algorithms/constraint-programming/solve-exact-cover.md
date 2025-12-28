@@ -64,6 +64,52 @@ Given a matrix of 0s and 1s, find rows such that each column has exactly one 1.
 2. **Identify possible choices** - These become rows
 3. **Mark which constraints each choice satisfies** - These become 1s
 
+## How It Works
+
+**Algorithm X:** Knuth's recursive backtracking for exact cover:
+
+1. If matrix is empty, we've found a solution
+2. Pick a column c (one that must be covered)
+3. For each row r that covers c:
+   - Include r in the partial solution
+   - Remove r and all conflicting rows from the matrix
+   - Remove all columns that r covers
+   - Recurse
+   - Restore everything and try the next row
+4. If no rows cover c, backtrack (dead end)
+
+**The MRV heuristic:** Always pick the column with fewest 1s. If a column has only one row covering it, there's no choice—take it. If a column has zero rows, fail fast. This prunes the search tree dramatically.
+
+**Dancing Links (DLX):** The matrix is stored as a sparse doubly-linked structure. Each node links to its neighbors in four directions: left, right, up, down.
+
+```text
+     c1    c2    c3
+      ↓     ↓     ↓
+     [1]←→[1]←→[0]  row 0
+      ↕     ↕
+     [0]←→[1]←→[1]  row 1
+            ↕     ↕
+     [1]←→[0]←→[1]  row 2
+```
+
+**The dancing:** When we "remove" a row, we unlink its nodes but don't delete them:
+
+```text
+node.left.right = node.right
+node.right.left = node.left
+```
+
+The node still remembers its neighbors. To restore during backtracking:
+
+```text
+node.left.right = node
+node.right.left = node
+```
+
+The nodes "dance" in and out of the structure. This makes backtracking O(1)—no copying or rebuilding.
+
+**Why it's fast:** For puzzles like Sudoku, the matrix is sparse and the MRV heuristic guides us to forced moves first. Combined with O(1) backtracking, DLX solves most Sudokus in microseconds.
+
 ## Complexity
 
 - **Time:** Exponential worst case, very fast in practice for puzzles
