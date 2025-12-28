@@ -67,12 +67,37 @@ print(result.solution)  # Close to [0, 0, 0, 0, 0]
 
 ## How It Works
 
+**The biological metaphor:** Evolution optimizes fitness through selection, recombination, and mutation. GA mimics this: fit individuals reproduce, offspring inherit traits from both parents, occasional mutations introduce novelty.
+
+**Selection pressure:** Tournament selection picks k random individuals and keeps the fittest. Higher k = more pressure toward best solutions. Too high and you converge prematurely; too low and you waste time on bad solutions.
+
+**Crossover (recombination):** The key operator. Combine two good solutions hoping the child inherits the best parts of each.
+
+```text
+Parent A: [1, 2, 3, 4, 5]
+Parent B: [5, 4, 3, 2, 1]
+
+Uniform crossover (coin flip each position):
+Child:    [1, 4, 3, 2, 5]
+```
+
+**Mutation:** Random small changes prevent premature convergence. If everyone looks the same, mutation introduces diversity. Rate typically 1-10%.
+
+**Elitism:** Copy the best k individuals unchanged to the next generation. Guarantees you never lose your best solution to bad luck.
+
+**The algorithm:**
+
 1. Evaluate fitness of all individuals
-2. Select parents (tournament selection)
-3. Crossover parents to create children
-4. Mutate children with some probability
-5. Keep elite individuals unchanged
-6. Replace population and repeat
+2. Select parents via tournament: pick k random, keep fittest
+3. Crossover pairs of parents to create children
+4. Mutate children with probability mutation_rate
+5. Keep elite_size best individuals unchanged
+6. Replace population with children + elites
+7. Repeat for max_iter generations
+
+**Building block hypothesis:** GA works when good solutions share "building blocks"—partial solutions that can combine. If your crossover destroys good structure, GA degrades to random search.
+
+**Population diversity:** Track fitness variance. If everyone has similar fitness, increase mutation or restart with fresh individuals.
 
 ## Tips
 

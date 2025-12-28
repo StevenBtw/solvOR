@@ -58,7 +58,7 @@ print(result.solution)  # Close to [0, 0, 0]
 
 ## Cooling Schedules
 
-The `cooling` parameter can be a float (exponential decay rate) or a schedule function:
+The `cooling` parameter can be a float (exponential decay rate), or a schedule function:
 
 ```python
 from solvor import anneal, exponential_cooling, linear_cooling, logarithmic_cooling
@@ -84,9 +84,9 @@ result = anneal(initial, obj, neighbors, cooling=logarithmic_cooling(c=1.0))
 P(accept) = exp(-Δcost / temperature)
 ```
 
-At high temperature, this is near 1—accept almost anything. At low temperature, this approaches 0—only accept improvements. The exponential form comes from statistical mechanics (Boltzmann distribution).
+At high temperature, this is near 1, so accept almost anything. At low temperature, this approaches 0, so only accept improvements. The exponential form comes from statistical mechanics (Boltzmann distribution).
 
-**Why it works:** Early on, high temperature lets you escape local optima by accepting worse moves. As you cool, you become more selective, converging toward a good solution. The probability of accepting a bad move depends on *how bad*—small backward steps are more likely than large ones.
+**Why it works:** Early on, high temperature lets you escape local optima by accepting worse moves. As you cool, you become more selective, converging toward a good solution. The probability of accepting a bad move depends on *how bad*, small backward steps are more likely than large ones.
 
 **The algorithm:**
 

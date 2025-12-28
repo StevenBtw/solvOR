@@ -60,11 +60,30 @@ print(result.solution)
 
 ## How It Works
 
-1. Evaluate all neighbors
-2. Pick the best non-tabu neighbor (or tabu if it's a new best)
-3. Add the move to tabu list with cooldown counter
-4. Decrement all cooldowns, remove expired
-5. Repeat
+**The local search trap:** Greedy hill-climbing gets stuck at local optima. Once you're at a peak, all neighbors are worse, so you stop—even if a better peak exists nearby.
+
+**Tabu's solution:** Allow moving to worse solutions, but prevent cycling by remembering recent moves. The "tabu list" forbids reversing recent decisions for a cooldown period.
+
+**The algorithm:**
+
+1. Evaluate all neighbors (move, new_solution pairs)
+2. Pick the best non-tabu neighbor
+3. *Aspiration:* Accept a tabu move anyway if it's a new global best
+4. Record the move in tabu list with cooldown timer
+5. Decrement all timers, remove expired entries
+6. Repeat until stopping condition
+
+**Why it works:** By forbidding recent moves, you're forced to explore new territory. You might temporarily get worse, but you escape local optima and find better regions.
+
+**The cooldown trade-off:**
+
+- Too short: You cycle back to previous solutions
+- Too long: You block good moves unnecessarily
+- Rule of thumb: Start with √n to n for problem size n
+
+**Moves vs solutions:** We track *moves*, not solutions. A move like "swap cities 3 and 7" is forbidden, not the entire solution. This is more flexible—the same move might be bad from one solution but good from another.
+
+**Intensification vs diversification:** Short-term memory (tabu list) provides diversification. For harder problems, add long-term memory: track frequently visited solutions and penalize them, or restart from elite solutions.
 
 ## Tips
 

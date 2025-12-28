@@ -18,7 +18,7 @@ Cleanup and polish. CP got a diet, docs got a checkup, CI got faster.
 ### Changed
 
 - **CP refactor:** Extracted SAT encoding to `cp_encoder.py` (cp.py went from 861 to 428 lines, much easier to read now). `Model.solve()` defaults to `solver="auto"` which picks DFS for simple constraints and SAT for globals (circuit, no_overlap, cumulative, sum_*). Force a specific solver with `solver="dfs"` or `solver="sat"`. Also, `IntVar` now supports multiplication (`x * 3`, `3 * x`) for expressions like `timeslot * n_rooms + room`.
-- **Docs:** Added references, tips, general readability improvements. Added full signature sections to job-shop, vrp, genetic algorithm pages.
+- **Docs:** Added "How It Works" sections explaining the math behind 14 algorithms (simplex, interior point, dijkstra, bellman-ford, anneal, tabu, genetic, PSO, DE, BFGS, knapsack, bin-packing, SAT, DLX). Also added references, tips, and full signature sections.
 - **Tests:** Removed tests with weak assertions, improved edge case coverage. No bugs found (yet).
 - **CI/pre-commit:** Turned on uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
 - **README:** Added docs badge.

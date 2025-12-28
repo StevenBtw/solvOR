@@ -1,13 +1,13 @@
 # solve_lp_interior
 
-Linear programming using interior point method. While simplex walks along edges of the feasible polytope, interior point cuts straight through the middle. Think of simplex as taking the stairs, interior point as taking the elevator—different path, same destination.
+Linear programming using interior point method. While simplex walks along edges of the feasible polytope, interior point cuts straight through the middle. Think of simplex as taking the stairs, interior point as taking the elevator. Different path, same destination.
 
 ## When to Use
 
 - Same problems as simplex (LP with continuous variables)
 - When simplex is cycling or slow on degenerate problems
 - When you want to understand how modern LP solvers work (HiGHS, CPLEX, Gurobi all use interior point)
-- Educational purposes—learning the "other" way to solve LP
+- Educational purposes, learning the "other" way to solve LP
 
 ## Signature
 
@@ -68,7 +68,7 @@ x, z ≥ 0
 
 We relax complementarity to xᵢzᵢ = μ and drive μ→0.
 
-**Newton's method:** Each iteration solves a linear system (the KKT system) to find a direction, then takes a step while staying positive. The magic is that convergence is polynomial—typically 20-50 iterations regardless of problem size.
+**Newton's method:** Each iteration solves a linear system (the KKT system) to find a direction, then takes a step while staying positive. The magic is that convergence is polynomial, typically 20-50 iterations regardless of problem size.
 
 **Mehrotra predictor-corrector:** Two Newton steps per iteration. First a "predictor" step toward the boundary, then a "corrector" step that recenters. Nearly doubles the practical speed.
 
