@@ -54,6 +54,7 @@ def max_flow[Node](
 
     flow = defaultdict(lambda: defaultdict(int))
     total_flow = 0
+    iterations = 0
 
     def bfs():
         visited = {source}
@@ -74,6 +75,7 @@ def max_flow[Node](
         return None
 
     while path := bfs():
+        iterations += 1
         path_flow = float("inf")
         for u, v in zip(path, path[1:]):
             residual = capacity[u][v] - flow[u][v] + flow[v][u]
@@ -91,7 +93,7 @@ def max_flow[Node](
         total_flow += path_flow
 
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
-    return Result(flows, total_flow, 0, 0)
+    return Result(flows, total_flow, iterations, iterations)
 
 
 def min_cost_flow[Node](
@@ -117,6 +119,7 @@ def min_cost_flow[Node](
     flow = defaultdict(lambda: defaultdict(int))
     total_cost = 0
     total_flow = 0
+    iterations = 0
 
     def bellman_ford():
         dist = {n: float("inf") for n in nodes}
@@ -150,9 +153,10 @@ def min_cost_flow[Node](
         return path, dist[sink]
 
     while total_flow < demand:
+        iterations += 1
         path, path_cost = bellman_ford()
         if path is None:
-            return Result({}, float("inf"), 0, 0, Status.INFEASIBLE)
+            return Result({}, float("inf"), iterations, iterations, Status.INFEASIBLE)
 
         path_flow = demand - total_flow
         for u, v in zip(path, path[1:]):
@@ -173,7 +177,7 @@ def min_cost_flow[Node](
         total_flow += path_flow
 
     flows = {(u, v): flow[u][v] for u in flow for v in flow[u] if flow[u][v] > 0}
-    return Result(flows, total_cost, 0, 0)
+    return Result(flows, total_cost, iterations, iterations)
 
 
 def solve_assignment(
@@ -204,4 +208,4 @@ def solve_assignment(
             j = int(v[1:])
             assignment[i] = j
 
-    return Result(assignment, result.objective, 0, 0, result.status)
+    return Result(assignment, result.objective, result.iterations, result.evaluations, result.status)

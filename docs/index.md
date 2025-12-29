@@ -124,6 +124,7 @@ uv add solvor
 | **Metaheuristics** | `anneal`, `tabu_search`, `lns`, `evolve` | [Local search](https://en.wikipedia.org/wiki/Local_search_(optimization)), [genetic algorithms](https://en.wikipedia.org/wiki/Genetic_algorithm) |
 | **Continuous Optimization** | `adam`, `bfgs`, `nelder_mead`, `bayesian_opt` | [Gradient descent](https://en.wikipedia.org/wiki/Gradient_descent), [quasi-Newton methods](https://en.wikipedia.org/wiki/Quasi-Newton_method) |
 | **Graph Algorithms** | `dijkstra`, `astar`, `bellman_ford`, `floyd_warshall` | [Shortest paths](https://en.wikipedia.org/wiki/Shortest_path_problem), [A* search](https://en.wikipedia.org/wiki/A*_search_algorithm) |
+| **Graph Analysis** | `topological_sort`, `scc`, `pagerank`, `louvain`, `kcore` | [Dependency order](https://en.wikipedia.org/wiki/Topological_sorting), [centrality](https://en.wikipedia.org/wiki/PageRank), [community detection](https://en.wikipedia.org/wiki/Louvain_method) |
 | **Network Flow** | `max_flow`, `min_cost_flow`, `kruskal`, `prim` | [Ford-Fulkerson](https://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm), [MST algorithms](https://en.wikipedia.org/wiki/Minimum_spanning_tree) |
 | **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop` | [Dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming), scheduling |
 | **Assignment** | `solve_hungarian`, `network_simplex` | [Hungarian algorithm](https://en.wikipedia.org/wiki/Hungarian_algorithm) |
@@ -150,6 +151,9 @@ uv add solvor
 - Shortest path → [`dijkstra`](algorithms/graph/shortest-paths.md), [`astar`](algorithms/graph/shortest-paths.md), [`bellman_ford`](algorithms/graph/shortest-paths.md)
 - Maximum flow → [`max_flow`](algorithms/graph/network-flow.md)
 - Spanning tree → [`kruskal`](algorithms/graph/mst.md), [`prim`](algorithms/graph/mst.md)
+- Dependencies → [`topological_sort`](algorithms/graph/dependency-analysis.md), [`strongly_connected_components`](algorithms/graph/dependency-analysis.md)
+- Node importance → [`pagerank`](algorithms/graph/centrality.md), [`kcore`](algorithms/graph/centrality.md)
+- Communities → [`louvain`](algorithms/graph/community-detection.md)
 
 [:material-arrow-right: Full decision guide](getting-started/choosing-solver.md)
 

@@ -449,7 +449,7 @@ graph: dict[Node, list[tuple[Node, float]]] = {
 Iterative solvers support optional progress callbacks:
 
 ```python
-from solvor.types import Progress
+from solvor import Progress
 
 def monitor(p: Progress) -> bool | None:
     print(f"iter {p.iteration}: obj={p.objective}")

@@ -21,6 +21,8 @@ __all__ = [
     "check_non_negative",
     "check_in_range",
     "check_edge_nodes",
+    "check_graph_nodes",
+    "check_integers_valid",
     "warn_large_coefficients",
 ]
 

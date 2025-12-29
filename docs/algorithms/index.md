@@ -10,7 +10,7 @@
 | **[Constraint Programming](constraint-programming/solve-sat.md)** | `solve_sat`, `Model`, `solve_exact_cover` | Logic puzzles, satisfiability, exact cover |
 | **[Metaheuristics](metaheuristics/index.md)** | `anneal`, `tabu_search`, `lns`, `evolve` | Combinatorial, no gradients |
 | **[Continuous](continuous/index.md)** | `adam`, `bfgs`, `nelder_mead`, `bayesian_opt` | Smooth functions, gradients or black-box |
-| **[Graph](graph/index.md)** | `dijkstra`, `astar`, `max_flow`, `kruskal` | Paths, flows, spanning trees |
+| **[Graph](graph/index.md)** | `dijkstra`, `max_flow`, `topological_sort`, `pagerank`, `louvain` | Paths, flows, dependencies, centrality |
 | **[Combinatorial](combinatorial/index.md)** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop` | Packing, scheduling, routing |
 
 ## Quick Decision Tree

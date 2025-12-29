@@ -57,8 +57,7 @@ elif result.status == Status.INFEASIBLE:
 Long-running solvers support progress monitoring via callbacks:
 
 ```python
-from solvor import anneal
-from solvor.types import Progress
+from solvor import anneal, Progress
 
 def monitor(p: Progress) -> bool | None:
     print(f"iter {p.iteration}: obj={p.objective}, best={p.best}")

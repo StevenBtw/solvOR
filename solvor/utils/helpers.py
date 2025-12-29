@@ -21,6 +21,7 @@ __all__ = [
     "is_feasible",
     "random_permutation",
     "pairwise_swap_neighbors",
+    "reconstruct_path",
     "timed_progress",
     "default_progress",
     "Evaluator",
@@ -76,6 +77,16 @@ def pairwise_swap_neighbors(perm: list[int]) -> Iterator[list[int]]:
             neighbor = perm.copy()
             neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
             yield neighbor
+
+
+def reconstruct_path[S](parent: dict[S, S], current: S) -> list[S]:
+    """Reconstruct path from parent dict, used by pathfinding algorithms."""
+    path = [current]
+    while current in parent:
+        current = parent[current]
+        path.append(current)
+    path.reverse()
+    return path
 
 
 def timed_progress(

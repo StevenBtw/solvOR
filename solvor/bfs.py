@@ -35,6 +35,7 @@ from collections import deque
 from collections.abc import Callable, Iterable
 
 from solvor.types import Result, Status
+from solvor.utils import reconstruct_path
 
 __all__ = ["bfs", "dfs"]
 
@@ -59,7 +60,7 @@ def bfs[S](
         iterations += 1
 
         if is_goal and is_goal(current):
-            path = _reconstruct(parent, current)
+            path = reconstruct_path(parent, current)
             return Result(path, len(path) - 1, iterations, len(visited), Status.OPTIMAL)
 
         for neighbor in neighbors(current):
@@ -96,7 +97,7 @@ def dfs[S](
         iterations += 1
 
         if is_goal and is_goal(current):
-            path = _reconstruct(parent, current)
+            path = reconstruct_path(parent, current)
             return Result(path, len(path) - 1, iterations, len(visited), Status.FEASIBLE)
 
         for neighbor in neighbors(current):
@@ -111,12 +112,3 @@ def dfs[S](
         return Result(None, float("inf"), iterations, len(visited), Status.INFEASIBLE)
 
     return Result(visited, len(visited), iterations, len(visited))
-
-
-def _reconstruct(parent, current):
-    path = [current]
-    while current in parent:
-        current = parent[current]
-        path.append(current)
-    path.reverse()
-    return path

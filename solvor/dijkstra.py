@@ -35,6 +35,7 @@ from collections.abc import Callable, Iterable
 from heapq import heappop, heappush
 
 from solvor.types import Result, Status
+from solvor.utils import reconstruct_path
 
 __all__ = ["dijkstra"]
 
@@ -69,7 +70,7 @@ def dijkstra[S](
         closed.add(current)
 
         if is_goal(current):
-            path = _reconstruct(parent, current)
+            path = reconstruct_path(parent, current)
             return Result(path, g[current], iterations, evaluations)
 
         if max_cost is not None and cost > max_cost:
@@ -91,12 +92,3 @@ def dijkstra[S](
     if iterations >= max_iter:
         return Result(None, float("inf"), iterations, evaluations, Status.MAX_ITER)
     return Result(None, float("inf"), iterations, evaluations, Status.INFEASIBLE)
-
-
-def _reconstruct(parent, current):
-    path = [current]
-    while current in parent:
-        current = parent[current]
-        path.append(current)
-    path.reverse()
-    return path

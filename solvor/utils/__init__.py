@@ -18,6 +18,7 @@ from solvor.utils.helpers import (
     is_feasible,
     pairwise_swap_neighbors,
     random_permutation,
+    reconstruct_path,
     report_progress,
     timed_progress,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "is_feasible",
     "random_permutation",
     "pairwise_swap_neighbors",
+    "reconstruct_path",
     "timed_progress",
     "default_progress",
     "report_progress",

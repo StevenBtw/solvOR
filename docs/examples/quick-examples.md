@@ -159,6 +159,74 @@ result = kruskal(n_nodes=4, edges=edges)
 print(result.objective)  # Total weight
 ```
 
+### Topological Sort
+
+```python
+from solvor import topological_sort
+
+deps = {"app": ["ui", "api"], "ui": ["utils"], "api": ["utils"], "utils": []}
+result = topological_sort(deps.keys(), lambda n: deps.get(n, []))
+print(result.solution)  # Build order
+```
+
+### Strongly Connected Components
+
+```python
+from solvor import strongly_connected_components
+
+imports = {"auth": ["user"], "user": ["auth", "db"], "db": []}
+result = strongly_connected_components(imports.keys(), lambda n: imports.get(n, []))
+for scc in result.solution:
+    if len(scc) > 1:
+        print(f"Cycle: {scc}")
+```
+
+### PageRank
+
+```python
+from solvor import pagerank
+
+links = {"home": ["about", "products"], "about": ["home"], "products": ["home"]}
+result = pagerank(links.keys(), lambda n: links.get(n, []))
+for page, score in sorted(result.solution.items(), key=lambda x: -x[1]):
+    print(f"{page}: {score:.3f}")
+```
+
+### Louvain Community Detection
+
+```python
+from solvor import louvain
+
+friends = {"alice": ["bob"], "bob": ["alice"], "carol": ["dave"], "dave": ["carol"]}
+result = louvain(friends.keys(), lambda n: friends.get(n, []))
+for community in result.solution:
+    print(f"Community: {sorted(community)}")
+```
+
+### Articulation Points & Bridges
+
+```python
+from solvor import articulation_points, bridges
+
+network = {"a": ["b", "c"], "b": ["a", "c"], "c": ["a", "b", "d"], "d": ["c"]}
+ap = articulation_points(network.keys(), lambda n: network.get(n, []))
+br = bridges(network.keys(), lambda n: network.get(n, []))
+print(f"Cut vertices: {ap.solution}")
+print(f"Cut edges: {br.solution}")
+```
+
+### K-core Decomposition
+
+```python
+from solvor import kcore_decomposition, kcore
+
+collabs = {"a": ["b", "c"], "b": ["a", "c"], "c": ["a", "b"], "d": ["c"]}
+decomp = kcore_decomposition(collabs.keys(), lambda n: collabs.get(n, []))
+print(f"Core numbers: {decomp.solution}")
+core = kcore(collabs.keys(), lambda n: collabs.get(n, []), k=2)
+print(f"2-core: {core.solution}")
+```
+
 ## Assignment
 
 ### Hungarian

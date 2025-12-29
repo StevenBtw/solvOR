@@ -2,6 +2,26 @@
 
 What broke, what got fixed, and what's new. The optimization journey, documented.
 
+## [0.5.3] 2025-12-29
+
+Some small QoL improvements and ported all the graph algoeithmes from another project (AutoMate) which now relies on solvOR.
+
+### Added
+
+- **Graph analysis:** `topological_sort`, `strongly_connected_components`, `condense` for dependency ordering and cycle detection. `pagerank` for node importance. `louvain` for community detection. `articulation_points`, `bridges` for finding critical connections. `kcore_decomposition`, `kcore` for core/periphery analysis.
+- **Version:** Added `__version__` to package.
+
+### Changed
+
+- **CI:** Parallelized lint/typecheck jobs, added publish version tag verification.
+- **Exports:** Added `Progress`, `ProgressCallback` to public API.
+- **Refactor:** Extracted `reconstruct_path` to utils (shared by dijkstra, bfs, a_star).
+
+### Fixed
+
+- **Flow solvers:** Now track iterations correctly.
+- **Exports:** Fixed missing `__all__` in utils/validate.py.
+
 ## [0.5.2] - 2025-12-28
 
 **Who let de docs out!**

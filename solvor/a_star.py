@@ -42,6 +42,7 @@ from math import sqrt
 from typing import Literal
 
 from solvor.types import Result, Status
+from solvor.utils import reconstruct_path
 
 __all__ = ["astar", "astar_grid"]
 
@@ -88,7 +89,7 @@ def astar[S](
         closed.add(current)
 
         if is_goal(current):
-            path = _reconstruct(parent, current)
+            path = reconstruct_path(parent, current)
             status = Status.OPTIMAL if weight == 1.0 else Status.FEASIBLE
             return Result(path, g[current], iterations, evaluations, status)
 
@@ -174,12 +175,3 @@ def astar_grid(
                     yield (nr, nc), base
 
     return astar(start, goal, neighbors, h, weight=weight, max_iter=max_iter)
-
-
-def _reconstruct(parent, current):
-    path = [current]
-    while current in parent:
-        current = parent[current]
-        path.append(current)
-    path.reverse()
-    return path
