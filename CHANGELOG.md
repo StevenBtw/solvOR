@@ -2,7 +2,7 @@
 
 What broke, what got fixed, and what's new. The optimization journey, documented.
 
-## [0.5.3] 2025-12-29
+## [0.5.3] - 2025-12-29
 
 Some small QoL improvements and ported all the graph algoeithmes from another project (AutoMate) which now relies on solvOR.
 
@@ -308,6 +308,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.5.3]: https://github.com/StevenBtw/solvOR/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/StevenBtw/solvOR/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/StevenBtw/solvOR/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/StevenBtw/solvOR/compare/v0.4.8...v0.5.0
