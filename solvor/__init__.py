@@ -31,7 +31,7 @@ from solvor.powell import powell
 from solvor.sat import solve_sat
 from solvor.simplex import solve_lp
 from solvor.tabu import solve_tsp, tabu_search
-from solvor.types import Result, Status
+from solvor.types import Progress, ProgressCallback, Result, Status
 from solvor.utils import FenwickTree, UnionFind
 from solvor.vrp import Customer, Vehicle, VRPState, solve_vrptw
 
@@ -87,4 +87,6 @@ __all__ = [
     "UnionFind",
     "Status",
     "Result",
+    "Progress",
+    "ProgressCallback",
 ]
