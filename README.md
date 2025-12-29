@@ -23,7 +23,7 @@ Solvor all your optimization needs.
 |----------|---------|----------|
 | **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp` | Resource allocation, scheduling |
 | **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
-| **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
+| **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw`, `solve_tsp` | Packing, scheduling, routing |
 | **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
 | **Population** | `evolve`, `differential_evolution`, `particle_swarm` | Global search, nature-inspired |
 | **Gradient** | `gradient_descent`, `momentum`, `rmsprop`, `adam` | ML, curve fitting |
