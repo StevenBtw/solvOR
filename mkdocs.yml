@@ -1,6 +1,6 @@
 site_name: solvOR
 site_url: https://solvOR.ai
-site_description: Pure Python optimization library - zero dependencies, maximum performance
+site_description: Pure Python optimization library, zero dependencies, maximum performance
 site_author: Steven Bytheway
 repo_url: https://github.com/StevenBtw/solvOR
 repo_name: StevenBtw/solvOR
