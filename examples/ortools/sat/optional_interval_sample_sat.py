@@ -1,0 +1,65 @@
+"""
+OR-Tools Example: optional_interval_sample_sat.py
+
+This is a solvOR implementation of the Google OR-Tools example.
+Original: https://github.com/google/or-tools/blob/stable/ortools/sat/samples/optional_interval_sample_sat.py
+
+solvOR provides pure Python solvers for learning and prototyping.
+For production-scale problems, consider using Google OR-Tools which
+offers compiled C++ solvers with significantly better performance.
+
+Comparison:
+- solvOR: Pure Python, readable, educational, no dependencies
+- OR-Tools: C++ backend, production-ready, 10-100x faster
+"""
+
+#!/usr/bin/env python3
+# Copyright 2010-2025 Google LLC
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Code sample to demonstrates how to build an optional interval."""
+
+from ortools.sat.python import cp_model
+
+
+def optional_interval_sample_sat():
+    """Showcases how to build optional interval variables."""
+    model = cp_model.CpModel()
+    horizon = 100
+
+    # An interval can be created from three affine expressions.
+    start_var = model.new_int_var(0, horizon, "start")
+    duration = 10  # Python cp/sat code accept integer variables or constants.
+    end_var = model.new_int_var(0, horizon, "end")
+    presence_var = model.new_bool_var("presence")
+    interval_var = model.new_optional_interval_var(
+        start_var, duration, end_var + 2, presence_var, "interval"
+    )
+
+    print(f"interval = {repr(interval_var)}")
+
+    # If the size is fixed, a simpler version uses the start expression and the
+    # size.
+    fixed_size_interval_var = model.new_optional_fixed_size_interval_var(
+        start_var, 10, presence_var, "fixed_size_interval_var"
+    )
+    print(f"fixed_size_interval_var = {repr(fixed_size_interval_var)}")
+
+    # A fixed interval can be created using the same API.
+    fixed_interval = model.new_optional_fixed_size_interval_var(
+        5, 10, presence_var, "fixed_interval"
+    )
+    print(f"fixed_interval = {repr(fixed_interval)}")
+
+
+optional_interval_sample_sat()
