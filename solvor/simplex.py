@@ -131,6 +131,19 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
     if matrix[-1][-1] < -eps:
         return Status.INFEASIBLE, iters, matrix, basis, basis_set
 
+    # Pivot out any artificial variables still in basis before removing columns
+    n_cols = len(matrix[0])
+    for i in range(m):
+        if basis[i] in art_cols:
+            # Find a non-artificial column to pivot in
+            for j in range(n_cols - 1 - len(art_cols)):  # Original + slack vars only
+                if j not in basis_set and abs(matrix[i][j]) > eps:
+                    matrix = _pivot(matrix, m, i, j, eps)
+                    basis_set.discard(basis[i])
+                    basis[i] = j
+                    basis_set.add(j)
+                    break
+
     for _ in art_cols:
         for row in matrix:
             del row[-2]
