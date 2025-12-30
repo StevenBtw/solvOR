@@ -8,6 +8,10 @@ What broke, what got fixed, and what's new. The optimization journey, documented
 
 - **MILP:** Greedy rounding + LNS heuristics for binary MIPs. Enable with `lns_iterations` parameter.
 
+### Fixed
+
+- Bugfix for `simplex.py`.
+
 ## [0.5.3] - 2025-12-29
 
 Some small QoL improvements and ported all the graph algorithms from another project (AutoMate) which now relies on solvOR.

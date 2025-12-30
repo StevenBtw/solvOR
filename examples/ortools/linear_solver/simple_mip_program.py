@@ -30,62 +30,60 @@ Comparison:
 """Integer programming examples that show how to use the APIs."""
 # [START program]
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_milp, Status
 # [END import]
 
 
 def main():
     # [START solver]
-    # Create the mip solver with the CP-SAT backend.
-    solver = pywraplp.Solver.CreateSolver("SAT")
-    if not solver:
-        return
+    # solvOR uses solve_milp with matrix representation
+    # Variables: x (index 0), y (index 1)
     # [END solver]
 
     # [START variables]
-    infinity = solver.infinity()
     # x and y are integer non-negative variables.
-    x = solver.IntVar(0.0, infinity, "x")
-    y = solver.IntVar(0.0, infinity, "y")
+    # In solvOR, specify which variables are integers via the integers parameter
+    n_vars = 2
+    integers = [0, 1]  # Both x and y are integers
 
-    print("Number of variables =", solver.NumVariables())
+    print("Number of variables =", n_vars)
     # [END variables]
 
     # [START constraints]
-    # x + 7 * y <= 17.5.
-    solver.Add(x + 7 * y <= 17.5)
+    # x + 7 * y <= 17.5
+    # x <= 3.5
+    A = [
+        [1, 7],   # x + 7*y <= 17.5
+        [1, 0],   # x <= 3.5
+    ]
+    b = [17.5, 3.5]
 
-    # x <= 3.5.
-    solver.Add(x <= 3.5)
-
-    print("Number of constraints =", solver.NumConstraints())
+    print("Number of constraints =", len(b))
     # [END constraints]
 
     # [START objective]
-    # Maximize x + 10 * y.
-    solver.Maximize(x + 10 * y)
+    # Maximize x + 10 * y
+    c = [1, 10]
     # [END objective]
 
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    print("Solving with solvOR MILP (branch and bound)")
+    result = solve_milp(c, A, b, integers, minimize=False)
     # [END solve]
 
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL:
+    if result.status == Status.OPTIMAL:
         print("Solution:")
-        print("Objective value =", solver.Objective().Value())
-        print("x =", x.solution_value())
-        print("y =", y.solution_value())
+        print("Objective value =", result.objective)
+        print("x =", result.solution[0])
+        print("y =", result.solution[1])
     else:
         print("The problem does not have an optimal solution.")
     # [END print_solution]
 
     # [START advanced]
     print("\nAdvanced usage:")
-    print(f"Problem solved in {solver.wall_time():d} milliseconds")
-    print(f"Problem solved in {solver.iterations():d} iterations")
-    print(f"Problem solved in {solver.nodes():d} branch-and-bound nodes")
+    print(f"Problem solved in {result.iterations:d} iterations")
     # [END advanced]
 
 

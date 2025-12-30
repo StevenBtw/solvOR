@@ -30,7 +30,7 @@ Comparison:
 # [START program]
 """MIP example that solves an assignment problem."""
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_milp, Status
 # [END import]
 
 
@@ -54,77 +54,85 @@ def main():
     team_max = 2
     # [END data]
 
-    # Solver
     # [START solver]
-    # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver("SCIP")
-    if not solver:
-        return
+    # Variables: x[worker, task] flattened
+    n_vars = num_workers * num_tasks  # 24 binary variables
+
+    def x_idx(worker, task):
+        return worker * num_tasks + task
+
+    print("Solving with solvOR MILP")
     # [END solver]
 
-    # Variables
-    # [START variables]
-    # x[i, j] is an array of 0-1 variables, which will be 1
-    # if worker i is assigned to task j.
-    x = {}
-    for worker in range(num_workers):
-        for task in range(num_tasks):
-            x[worker, task] = solver.BoolVar(f"x[{worker},{task}]")
-    # [END variables]
-
-    # Constraints
     # [START constraints]
-    # Each worker is assigned at most 1 task.
+    A = []
+    b_rhs = []
+
+    # Each worker is assigned at most 1 task
     for worker in range(num_workers):
-        solver.Add(solver.Sum([x[worker, task] for task in range(num_tasks)]) <= 1)
+        row = [0] * n_vars
+        for task in range(num_tasks):
+            row[x_idx(worker, task)] = 1
+        A.append(row)
+        b_rhs.append(1)
 
-    # Each task is assigned to exactly one worker.
+    # Each task is assigned to exactly one worker: sum == 1
     for task in range(num_tasks):
-        solver.Add(solver.Sum([x[worker, task] for worker in range(num_workers)]) == 1)
+        # sum <= 1
+        row = [0] * n_vars
+        for worker in range(num_workers):
+            row[x_idx(worker, task)] = 1
+        A.append(row)
+        b_rhs.append(1)
+        # sum >= 1
+        row = [0] * n_vars
+        for worker in range(num_workers):
+            row[x_idx(worker, task)] = -1
+        A.append(row)
+        b_rhs.append(-1)
 
-    # Each team takes at most two tasks.
-    team1_tasks = []
+    # Each team takes at most team_max tasks
+    # Team 1
+    row = [0] * n_vars
     for worker in team1:
         for task in range(num_tasks):
-            team1_tasks.append(x[worker, task])
-    solver.Add(solver.Sum(team1_tasks) <= team_max)
+            row[x_idx(worker, task)] = 1
+    A.append(row)
+    b_rhs.append(team_max)
 
-    team2_tasks = []
+    # Team 2
+    row = [0] * n_vars
     for worker in team2:
         for task in range(num_tasks):
-            team2_tasks.append(x[worker, task])
-    solver.Add(solver.Sum(team2_tasks) <= team_max)
+            row[x_idx(worker, task)] = 1
+    A.append(row)
+    b_rhs.append(team_max)
     # [END constraints]
 
-    # Objective
     # [START objective]
-    objective_terms = []
+    c = [0] * n_vars
     for worker in range(num_workers):
         for task in range(num_tasks):
-            objective_terms.append(costs[worker][task] * x[worker, task])
-    solver.Minimize(solver.Sum(objective_terms))
+            c[x_idx(worker, task)] = costs[worker][task]
     # [END objective]
 
-    # Solve
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    integers = list(range(n_vars))
+    result = solve_milp(c, A, b_rhs, integers, minimize=True, max_nodes=10000)
     # [END solve]
 
-    # Print solution.
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
-        print(f"Total cost = {solver.Objective().Value()}\n")
+    if result.status in (Status.OPTIMAL, Status.FEASIBLE):
+        print(f"Total cost = {result.objective}\n")
         for worker in range(num_workers):
             for task in range(num_tasks):
-                if x[worker, task].solution_value() > 0.5:
+                if result.solution[x_idx(worker, task)] > 0.5:
                     print(
                         f"Worker {worker} assigned to task {task}."
                         + f" Cost = {costs[worker][task]}"
                     )
     else:
         print("No solution found.")
-    print(f"Time = {solver.WallTime()} ms")
     # [END print_solution]
 
 

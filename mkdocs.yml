@@ -171,6 +171,7 @@ nav:
       - Classic Problems: examples/classic.md
       - Puzzles: examples/puzzles.md
       - Real World: examples/real-world.md
+      - OR-Tools: examples/ortools.md
   - Cookbook:
       - Overview: cookbook/index.md
       - TSP: cookbook/tsp.md

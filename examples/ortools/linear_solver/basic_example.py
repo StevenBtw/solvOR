@@ -30,81 +30,72 @@ Comparison:
 """Minimal example to call the GLOP solver."""
 # [START program]
 # [START import]
-from ortools.init.python import init
-from ortools.linear_solver import pywraplp
+import solvor
+from solvor import solve_lp, Status
 # [END import]
 
 
 def main():
-    print("Google OR-Tools version:", init.OrToolsVersion.version_string())
+    print("solvOR version:", solvor.__version__)
 
     # [START solver]
-    # Create the linear solver with the GLOP backend.
-    solver = pywraplp.Solver.CreateSolver("GLOP")
-    if not solver:
-        print("Could not create solver GLOP")
-        return
+    # solvOR uses solve_lp with matrix representation
+    # Variables: x (index 0), y (index 1)
     # [END solver]
 
     # [START variables]
     # Create the variables x and y.
-    x_var = solver.NumVar(0, 1, "x")
-    y_var = solver.NumVar(0, 2, "y")
-
-    print("Number of variables =", solver.NumVariables())
+    # x in [0, 1], y in [0, 2] - bounds expressed as constraints
+    n_vars = 2
+    print("Number of variables =", n_vars)
     # [END variables]
 
     # [START constraints]
-    infinity = solver.infinity()
-    # Create a linear constraint, x + y <= 2.
-    constraint = solver.Constraint(-infinity, 2, "ct")
-    constraint.SetCoefficient(x_var, 1)
-    constraint.SetCoefficient(y_var, 1)
+    # x + y <= 2 (original constraint)
+    # x <= 1 (upper bound on x)
+    # y <= 2 (upper bound on y)
+    A = [
+        [1, 1],  # x + y <= 2
+        [1, 0],  # x <= 1
+        [0, 1],  # y <= 2
+    ]
+    b = [2, 1, 2]
 
-    print("Number of constraints =", solver.NumConstraints())
+    print("Number of constraints =", 1)  # Only counting the original constraint
     # [END constraints]
 
     # [START objective]
     # Create the objective function, 3 * x + y.
-    objective = solver.Objective()
-    objective.SetCoefficient(x_var, 3)
-    objective.SetCoefficient(y_var, 1)
-    objective.SetMaximization()
+    c = [3, 1]
     # [END objective]
 
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    result_status = solver.Solve()
+    print("Solving with solvOR simplex")
+    result = solve_lp(c, A, b, minimize=False)
     # [END solve]
 
     # [START print_solution]
-    print(f"Status: {result_status}")
-    if result_status != pywraplp.Solver.OPTIMAL:
+    print(f"Status: {result.status.name}")
+    if result.status != Status.OPTIMAL:
         print("The problem does not have an optimal solution!")
-        if result_status == pywraplp.Solver.FEASIBLE:
+        if result.status == Status.FEASIBLE:
             print("A potentially suboptimal solution was found")
         else:
             print("The solver could not solve the problem.")
             return
 
     print("Solution:")
-    print("Objective value =", objective.Value())
-    print("x =", x_var.solution_value())
-    print("y =", y_var.solution_value())
+    print("Objective value =", result.objective)
+    print("x =", result.solution[0])
+    print("y =", result.solution[1])
     # [END print_solution]
 
     # [START advanced]
     print("Advanced usage:")
-    print(f"Problem solved in {solver.wall_time():d} milliseconds")
-    print(f"Problem solved in {solver.iterations():d} iterations")
+    print(f"Problem solved in {result.iterations:d} iterations")
     # [END advanced]
 
 
 if __name__ == "__main__":
-    init.CppBridge.init_logging("basic_example.py")
-    cpp_flags = init.CppFlags()
-    cpp_flags.stderrthreshold = True
-    cpp_flags.log_prefix = False
-    init.CppBridge.set_flags(cpp_flags)
     main()
 # [END program]

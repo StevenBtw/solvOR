@@ -30,15 +30,17 @@ Comparison:
 """Code sample to demonstrate Boolean variable and literals."""
 
 
-from ortools.sat.python import cp_model
+from solvor import Model
 
 
 def literal_sample_sat():
-    model = cp_model.CpModel()
-    x = model.new_bool_var("x")
-    not_x = ~x
-    print(x)
-    print(not_x)
+    model = Model()
+    # Boolean variable: int_var with domain [0, 1]
+    x = model.int_var(0, 1, "x")
+    # In solvOR, negation is represented as (1 - x) in constraints
+    # For display, we show the variable and its logical complement
+    print(f"x (bool var with domain [0,1])")
+    print(f"not_x = 1 - x (logical negation)")
 
 
 literal_sample_sat()

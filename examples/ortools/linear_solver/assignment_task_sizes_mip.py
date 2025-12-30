@@ -11,6 +11,9 @@ offers compiled C++ solvers with significantly better performance.
 Comparison:
 - solvOR: Pure Python, readable, educational, no dependencies
 - OR-Tools: C++ backend, production-ready, 10-100x faster
+
+Note: This is a Generalized Assignment Problem (GAP) where workers can handle
+multiple tasks up to a capacity limit. Uses MILP with 80 binary variables.
 """
 
 #!/usr/bin/env python3
@@ -30,7 +33,7 @@ Comparison:
 # [START program]
 """MIP example that solves an assignment problem."""
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_milp, Status
 # [END import]
 
 
@@ -57,63 +60,64 @@ def main():
     total_size_max = 15
     # [END data]
 
-    # Solver
     # [START solver]
-    # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver("SCIP")
+    # Variables: x[worker, task] flattened to worker * num_tasks + task
+    n_vars = num_workers * num_tasks  # 80 binary variables
 
-    if not solver:
-        return
+    def x_idx(worker, task):
+        return worker * num_tasks + task
+
+    print("Solving with solvOR MILP")
     # [END solver]
 
-    # Variables
-    # [START variables]
-    # x[i, j] is an array of 0-1 variables, which will be 1
-    # if worker i is assigned to task j.
-    x = {}
-    for worker in range(num_workers):
-        for task in range(num_tasks):
-            x[worker, task] = solver.BoolVar(f"x[{worker},{task}]")
-    # [END variables]
-
-    # Constraints
     # [START constraints]
-    # The total size of the tasks each worker takes on is at most total_size_max.
-    for worker in range(num_workers):
-        solver.Add(
-            solver.Sum(
-                [task_sizes[task] * x[worker, task] for task in range(num_tasks)]
-            )
-            <= total_size_max
-        )
+    A = []
+    b_rhs = []
 
-    # Each task is assigned to exactly one worker.
+    # The total size of tasks each worker takes on is at most total_size_max
+    for worker in range(num_workers):
+        row = [0] * n_vars
+        for task in range(num_tasks):
+            row[x_idx(worker, task)] = task_sizes[task]
+        A.append(row)
+        b_rhs.append(total_size_max)
+
+    # Each task is assigned to exactly one worker: sum_w x[w,t] == 1
     for task in range(num_tasks):
-        solver.Add(solver.Sum([x[worker, task] for worker in range(num_workers)]) == 1)
+        # sum <= 1
+        row = [0] * n_vars
+        for worker in range(num_workers):
+            row[x_idx(worker, task)] = 1
+        A.append(row)
+        b_rhs.append(1)
+        # sum >= 1 → -sum <= -1
+        row = [0] * n_vars
+        for worker in range(num_workers):
+            row[x_idx(worker, task)] = -1
+        A.append(row)
+        b_rhs.append(-1)
     # [END constraints]
 
-    # Objective
     # [START objective]
-    objective_terms = []
+    # Minimize total cost
+    c = [0] * n_vars
     for worker in range(num_workers):
         for task in range(num_tasks):
-            objective_terms.append(costs[worker][task] * x[worker, task])
-    solver.Minimize(solver.Sum(objective_terms))
+            c[x_idx(worker, task)] = costs[worker][task]
     # [END objective]
 
-    # Solve
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    integers = list(range(n_vars))  # All variables are binary
+    # Use branch and bound - simpler constraints work well with B&B
+    result = solve_milp(c, A, b_rhs, integers, minimize=True, max_nodes=100000)
     # [END solve]
 
-    # Print solution.
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
-        print(f"Total cost = {solver.Objective().Value()}\n")
+    if result.status in (Status.OPTIMAL, Status.FEASIBLE):
+        print(f"Total cost = {result.objective}\n")
         for worker in range(num_workers):
             for task in range(num_tasks):
-                if x[worker, task].solution_value() > 0.5:
+                if result.solution[x_idx(worker, task)] > 0.5:
                     print(
                         f"Worker {worker} assigned to task {task}."
                         + f" Cost: {costs[worker][task]}"

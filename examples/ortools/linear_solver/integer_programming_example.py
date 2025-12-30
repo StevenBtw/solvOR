@@ -30,81 +30,66 @@ Comparison:
 """Small example to illustrate solving a MIP problem."""
 # [START program]
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_milp, Status
 # [END import]
 
 
 def IntegerProgrammingExample():
     """Integer programming sample."""
     # [START solver]
-    # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver("SCIP")
-    if not solver:
-        return
+    # solvOR uses solve_milp with matrix representation
+    # Variables: x (index 0), y (index 1), z (index 2)
     # [END solver]
 
     # [START variables]
     # x, y, and z are non-negative integer variables.
-    x = solver.IntVar(0.0, solver.infinity(), "x")
-    y = solver.IntVar(0.0, solver.infinity(), "y")
-    z = solver.IntVar(0.0, solver.infinity(), "z")
+    n_vars = 3
+    integers = [0, 1, 2]  # All three are integers
+    var_names = ["x", "y", "z"]
 
-    print("Number of variables =", solver.NumVariables())
+    print("Number of variables =", n_vars)
     # [END variables]
 
     # [START constraints]
     # 2*x + 7*y + 3*z <= 50
-    constraint0 = solver.Constraint(-solver.infinity(), 50)
-    constraint0.SetCoefficient(x, 2)
-    constraint0.SetCoefficient(y, 7)
-    constraint0.SetCoefficient(z, 3)
-
     # 3*x - 5*y + 7*z <= 45
-    constraint1 = solver.Constraint(-solver.infinity(), 45)
-    constraint1.SetCoefficient(x, 3)
-    constraint1.SetCoefficient(y, -5)
-    constraint1.SetCoefficient(z, 7)
-
     # 5*x + 2*y - 6*z <= 37
-    constraint2 = solver.Constraint(-solver.infinity(), 37)
-    constraint2.SetCoefficient(x, 5)
-    constraint2.SetCoefficient(y, 2)
-    constraint2.SetCoefficient(z, -6)
+    A = [
+        [2, 7, 3],    # 2x + 7y + 3z <= 50
+        [3, -5, 7],   # 3x - 5y + 7z <= 45
+        [5, 2, -6],   # 5x + 2y - 6z <= 37
+    ]
+    b = [50, 45, 37]
 
-    print("Number of constraints =", solver.NumConstraints())
+    print("Number of constraints =", len(b))
     # [END constraints]
 
     # [START objective]
     # Maximize 2*x + 2*y + 3*z
-    objective = solver.Objective()
-    objective.SetCoefficient(x, 2)
-    objective.SetCoefficient(y, 2)
-    objective.SetCoefficient(z, 3)
-    objective.SetMaximization()
+    c = [2, 2, 3]
     # [END objective]
 
     # Solve the problem.
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    print("Solving with solvOR MILP (branch and bound)")
+    result = solve_milp(c, A, b, integers, minimize=False)
     # [END solve]
 
     # Print the solution.
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL:
+    if result.status == Status.OPTIMAL:
         print("Solution:")
-        print(f"Objective value = {solver.Objective().Value()}")
+        print(f"Objective value = {result.objective}")
         # Print the value of each variable in the solution.
-        for variable in [x, y, z]:
-            print(f"{variable.name()} = {variable.solution_value()}")
+        for i, name in enumerate(var_names):
+            print(f"{name} = {result.solution[i]}")
     else:
         print("The problem does not have an optimal solution.")
     # [END print_solution]
 
     # [START advanced]
     print("\nAdvanced usage:")
-    print(f"Problem solved in {solver.wall_time():d} milliseconds")
-    print(f"Problem solved in {solver.iterations():d} iterations")
+    print(f"Problem solved in {result.iterations:d} iterations")
     # [END advanced]
 
 

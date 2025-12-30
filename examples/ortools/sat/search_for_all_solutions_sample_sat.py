@@ -30,43 +30,24 @@ Comparison:
 """Code sample that solves a model and displays all solutions."""
 
 # [START program]
-from ortools.sat.python import cp_model
+from solvor import Model, Status
 
-
-# [START print_solution]
-class VarArraySolutionPrinter(cp_model.CpSolverSolutionCallback):
-    """Print intermediate solutions."""
-
-    def __init__(self, variables: list[cp_model.IntVar]):
-        cp_model.CpSolverSolutionCallback.__init__(self)
-        self.__variables = variables
-        self.__solution_count = 0
-
-    def on_solution_callback(self) -> None:
-        self.__solution_count += 1
-        for v in self.__variables:
-            print(f"{v}={self.value(v)}", end=" ")
-        print()
-
-    @property
-    def solution_count(self) -> int:
-        return self.__solution_count
-        # [END print_solution]
+# [END import]
 
 
 def search_for_all_solutions_sample_sat():
     """Showcases calling the solver to search for all solutions."""
     # Creates the model.
     # [START model]
-    model = cp_model.CpModel()
+    model = Model()
     # [END model]
 
     # Creates the variables.
     # [START variables]
     num_vals = 3
-    x = model.new_int_var(0, num_vals - 1, "x")
-    y = model.new_int_var(0, num_vals - 1, "y")
-    z = model.new_int_var(0, num_vals - 1, "z")
+    x = model.int_var(0, num_vals - 1, "x")
+    y = model.int_var(0, num_vals - 1, "y")
+    z = model.int_var(0, num_vals - 1, "z")
     # [END variables]
 
     # Create the constraints.
@@ -76,16 +57,23 @@ def search_for_all_solutions_sample_sat():
 
     # Create a solver and solve.
     # [START solve]
-    solver = cp_model.CpSolver()
-    solution_printer = VarArraySolutionPrinter([x, y, z])
-    # Enumerate all solutions.
-    solver.parameters.enumerate_all_solutions = True
-    # Solve.
-    status = solver.solve(model, solution_printer)
+    # Enumerate all solutions (use large limit to get all)
+    result = model.solve(solution_limit=1000)
     # [END solve]
 
-    print(f"Status = {solver.status_name(status)}")
-    print(f"Number of solutions found: {solution_printer.solution_count}")
+    # [START print_solution]
+    if result.status == Status.OPTIMAL and hasattr(result, "solutions") and result.solutions:
+        for sol in result.solutions:
+            print(f"x={sol['x']} y={sol['y']} z={sol['z']}")
+        print(f"Status = OPTIMAL")
+        print(f"Number of solutions found: {len(result.solutions)}")
+    elif result.status == Status.OPTIMAL and result.solution:
+        print(f"x={result.solution['x']} y={result.solution['y']} z={result.solution['z']}")
+        print(f"Status = OPTIMAL")
+        print(f"Number of solutions found: 1")
+    else:
+        print("No solution found.")
+    # [END print_solution]
 
 
 search_for_all_solutions_sample_sat()

@@ -30,61 +30,58 @@ Comparison:
 """Minimal example to call the GLOP solver."""
 # [START program]
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_lp, Status
 # [END import]
 
 
 def main():
     # [START solver]
-    # Create the linear solver with the GLOP backend.
-    solver = pywraplp.Solver.CreateSolver("GLOP")
-    if not solver:
-        return
+    # solvOR uses solve_lp with matrix representation
+    # Variables: x (index 0), y (index 1)
     # [END solver]
 
     # [START variables]
-    infinity = solver.infinity()
-    # Create the variables x and y.
-    x = solver.NumVar(0.0, infinity, "x")
-    y = solver.NumVar(0.0, infinity, "y")
-
-    print("Number of variables =", solver.NumVariables())
+    # Variables are implicit in solvOR - defined by constraint matrix dimensions
+    # x >= 0 and y >= 0 are default (non-negative)
+    n_vars = 2
+    print("Number of variables =", n_vars)
     # [END variables]
 
     # [START constraints]
-    # x + 7 * y <= 17.5.
-    solver.Add(x + 7 * y <= 17.5)
+    # x + 7 * y <= 17.5
+    # x <= 3.5
+    A = [
+        [1, 7],   # x + 7*y <= 17.5
+        [1, 0],   # x <= 3.5
+    ]
+    b = [17.5, 3.5]
 
-    # x <= 3.5.
-    solver.Add(x <= 3.5)
-
-    print("Number of constraints =", solver.NumConstraints())
+    print("Number of constraints =", len(b))
     # [END constraints]
 
     # [START objective]
-    # Maximize x + 10 * y.
-    solver.Maximize(x + 10 * y)
+    # Maximize x + 10 * y
+    c = [1, 10]
     # [END objective]
 
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    print("Solving with solvOR simplex")
+    result = solve_lp(c, A, b, minimize=False)
     # [END solve]
 
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL:
+    if result.status == Status.OPTIMAL:
         print("Solution:")
-        print("Objective value =", solver.Objective().Value())
-        print("x =", x.solution_value())
-        print("y =", y.solution_value())
+        print("Objective value =", result.objective)
+        print("x =", result.solution[0])
+        print("y =", result.solution[1])
     else:
         print("The problem does not have an optimal solution.")
     # [END print_solution]
 
     # [START advanced]
     print("\nAdvanced usage:")
-    print(f"Problem solved in {solver.wall_time():d} milliseconds")
-    print(f"Problem solved in {solver.iterations():d} iterations")
+    print(f"Problem solved in {result.iterations:d} iterations")
     # [END advanced]
 
 

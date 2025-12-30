@@ -30,19 +30,11 @@ Comparison:
 """A simple knapsack problem."""
 # [START program]
 # [START import]
-from ortools.algorithms.python import knapsack_solver
+from solvor import solve_knapsack
 # [END import]
 
 
 def main():
-    # Create the solver.
-    # [START solver]
-    solver = knapsack_solver.KnapsackSolver(
-        knapsack_solver.SolverType.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER,
-        "KnapsackExample",
-    )
-    # [END solver]
-
     # [START data]
     values = [
         # fmt:off
@@ -54,29 +46,24 @@ def main():
     ]
     weights = [
         # fmt: off
-      [7, 0, 30, 22, 80, 94, 11, 81, 70, 64, 59, 18, 0, 36, 3, 8, 15, 42, 9, 0,
-       42, 47, 52, 32, 26, 48, 55, 6, 29, 84, 2, 4, 18, 56, 7, 29, 93, 44, 71,
-       3, 86, 66, 31, 65, 0, 79, 20, 65, 52, 13],
+      7, 0, 30, 22, 80, 94, 11, 81, 70, 64, 59, 18, 0, 36, 3, 8, 15, 42, 9, 0,
+      42, 47, 52, 32, 26, 48, 55, 6, 29, 84, 2, 4, 18, 56, 7, 29, 93, 44, 71,
+      3, 86, 66, 31, 65, 0, 79, 20, 65, 52, 13
         # fmt: on
     ]
-    capacities = [850]
+    capacity = 850
     # [END data]
 
     # [START solve]
-    solver.init(values, weights, capacities)
-    computed_value = solver.solve()
+    result = solve_knapsack(values, weights, capacity)
     # [END solve]
 
     # [START print_solution]
-    packed_items = []
-    packed_weights = []
-    total_weight = 0
-    print("Total value =", computed_value)
-    for i in range(len(values)):
-        if solver.best_solution_contains(i):
-            packed_items.append(i)
-            packed_weights.append(weights[0][i])
-            total_weight += weights[0][i]
+    packed_items = [i for i, selected in enumerate(result.solution) if selected]
+    packed_weights = [weights[i] for i in packed_items]
+    total_weight = sum(packed_weights)
+
+    print("Total value =", int(result.objective))
     print("Total weight:", total_weight)
     print("Packed items:", packed_items)
     print("Packed_weights:", packed_weights)

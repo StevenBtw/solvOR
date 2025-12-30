@@ -30,7 +30,8 @@ Comparison:
 """Solve a simple bin packing problem using a MIP solver."""
 # [START program]
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_bin_pack
+
 # [END import]
 
 
@@ -46,6 +47,7 @@ def create_data_model():
     data["bin_capacity"] = 100
     return data
 
+
 # [END data_model]
 
 
@@ -56,72 +58,46 @@ def main():
     # [END program_part1]
 
     # [START solver]
-    # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver("SCIP")
-
-    if not solver:
-        return
+    # solvOR uses solve_bin_pack for bin packing problems
+    # Note: This uses a fast BFD heuristic. Full MIP formulation would be too slow.
     # [END solver]
 
-    # [START program_part2]
     # [START variables]
-    # Variables
-    # x[i, j] = 1 if item i is packed in bin j.
-    x = {}
-    for i in data["items"]:
-        for j in data["bins"]:
-            x[(i, j)] = solver.IntVar(0, 1, "x_%i_%i" % (i, j))
-
-    # y[j] = 1 if bin j is used.
-    y = {}
-    for j in data["bins"]:
-        y[j] = solver.IntVar(0, 1, "y[%i]" % j)
+    # Variables handled internally by bin packing solver
     # [END variables]
 
     # [START constraints]
-    # Constraints
-    # Each item must be in exactly one bin.
-    for i in data["items"]:
-        solver.Add(sum(x[i, j] for j in data["bins"]) == 1)
-
-    # The amount packed in each bin cannot exceed its capacity.
-    for j in data["bins"]:
-        solver.Add(
-            sum(x[(i, j)] * data["weights"][i] for i in data["items"])
-            <= y[j] * data["bin_capacity"]
-        )
+    # Constraints handled internally by bin packing solver
     # [END constraints]
 
     # [START objective]
-    # Objective: minimize the number of bins used.
-    solver.Minimize(solver.Sum([y[j] for j in data["bins"]]))
+    # Objective: minimize the number of bins used (default)
     # [END objective]
 
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    print("Solving with solvOR bin packing (best-fit-decreasing)")
+    result = solve_bin_pack(data["weights"], data["bin_capacity"])
     # [END solve]
 
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL:
-        num_bins = 0
-        for j in data["bins"]:
-            if y[j].solution_value() == 1:
-                bin_items = []
-                bin_weight = 0
-                for i in data["items"]:
-                    if x[i, j].solution_value() > 0:
-                        bin_items.append(i)
-                        bin_weight += data["weights"][i]
-                if bin_items:
-                    num_bins += 1
-                    print("Bin number", j)
-                    print("  Items packed:", bin_items)
-                    print("  Total weight:", bin_weight)
-                    print()
+    if result.objective > 0:
+        # Group items by bin
+        bins_content = {}
+        for i, bin_id in enumerate(result.solution):
+            if bin_id not in bins_content:
+                bins_content[bin_id] = []
+            bins_content[bin_id].append(i)
+
+        for bin_id in sorted(bins_content.keys()):
+            bin_items = bins_content[bin_id]
+            bin_weight = sum(data["weights"][i] for i in bin_items)
+            print("Bin number", bin_id)
+            print("  Items packed:", bin_items)
+            print("  Total weight:", bin_weight)
+            print()
+
         print()
-        print("Number of bins used:", num_bins)
-        print("Time = ", solver.WallTime(), " milliseconds")
+        print("Number of bins used:", int(result.objective))
     else:
         print("The problem does not have an optimal solution.")
     # [END print_solution]

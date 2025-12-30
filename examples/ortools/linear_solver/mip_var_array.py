@@ -31,7 +31,7 @@ Comparison:
 
 # [START program]
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_milp, Status
 # [END import]
 
 
@@ -60,59 +60,46 @@ def main():
     data = create_data_model()
     # [END data]
     # [END program_part1]
+
     # [START solver]
-    # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver("SCIP")
-    if not solver:
-        return
+    n = data["num_vars"]
+    print("Number of variables =", n)
     # [END solver]
 
-    # [START program_part2]
-    # [START variables]
-    infinity = solver.infinity()
-    x = {}
-    for j in range(data["num_vars"]):
-        x[j] = solver.IntVar(0, infinity, "x[%i]" % j)
-    print("Number of variables =", solver.NumVariables())
-    # [END variables]
-
     # [START constraints]
+    # RowConstraint(0, bound) means: 0 <= sum <= bound
+    # Convert to: sum <= bound AND -sum <= 0
+    A = []
+    b = []
+
     for i in range(data["num_constraints"]):
-        constraint = solver.RowConstraint(0, data["bounds"][i], "")
-        for j in range(data["num_vars"]):
-            constraint.SetCoefficient(x[j], data["constraint_coeffs"][i][j])
-    print("Number of constraints =", solver.NumConstraints())
-    # In Python, you can also set the constraints as follows.
-    # for i in range(data['num_constraints']):
-    #  constraint_expr = \
-    # [data['constraint_coeffs'][i][j] * x[j] for j in range(data['num_vars'])]
-    #  solver.Add(sum(constraint_expr) <= data['bounds'][i])
+        # sum <= bound
+        A.append(data["constraint_coeffs"][i])
+        b.append(data["bounds"][i])
+        # sum >= 0 → -sum <= 0
+        A.append([-c for c in data["constraint_coeffs"][i]])
+        b.append(0)
+
+    print("Number of constraints =", data["num_constraints"])
     # [END constraints]
 
     # [START objective]
-    objective = solver.Objective()
-    for j in range(data["num_vars"]):
-        objective.SetCoefficient(x[j], data["obj_coeffs"][j])
-    objective.SetMaximization()
-    # In Python, you can also set the objective as follows.
-    # obj_expr = [data['obj_coeffs'][j] * x[j] for j in range(data['num_vars'])]
-    # solver.Maximize(solver.Sum(obj_expr))
+    c = data["obj_coeffs"]
     # [END objective]
 
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    print("Solving with solvOR MILP")
+    integers = list(range(n))
+    result = solve_milp(c, A, b, integers, minimize=False, max_nodes=10000)
     # [END solve]
 
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL:
-        print("Objective value =", solver.Objective().Value())
-        for j in range(data["num_vars"]):
-            print(x[j].name(), " = ", x[j].solution_value())
+    if result.status == Status.OPTIMAL:
+        print("Objective value =", result.objective)
+        for j in range(n):
+            print(f"x[{j}]  =  {result.solution[j]}")
         print()
-        print(f"Problem solved in {solver.wall_time():d} milliseconds")
-        print(f"Problem solved in {solver.iterations():d} iterations")
-        print(f"Problem solved in {solver.nodes():d} branch-and-bound nodes")
+        print(f"Problem solved in {result.iterations} iterations")
     else:
         print("The problem does not have an optimal solution.")
     # [END print_solution]

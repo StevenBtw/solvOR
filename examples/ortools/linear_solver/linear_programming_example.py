@@ -30,65 +30,61 @@ Comparison:
 """Linear optimization example."""
 # [START program]
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_lp, Status
 # [END import]
 
 
 def LinearProgrammingExample():
     """Linear programming sample."""
-    # Instantiate a Glop solver, naming it LinearExample.
+    # solvOR uses solve_lp with matrix representation
     # [START solver]
-    solver = pywraplp.Solver.CreateSolver("GLOP")
-    if not solver:
-        return
+    # Variables: x (index 0), y (index 1)
     # [END solver]
 
     # Create the two variables and let them take on any non-negative value.
     # [START variables]
-    x = solver.NumVar(0, solver.infinity(), "x")
-    y = solver.NumVar(0, solver.infinity(), "y")
-
-    print("Number of variables =", solver.NumVariables())
+    n_vars = 2
+    print("Number of variables =", n_vars)
     # [END variables]
 
     # [START constraints]
     # Constraint 0: x + 2y <= 14.
-    solver.Add(x + 2 * y <= 14.0)
-
-    # Constraint 1: 3x - y >= 0.
-    solver.Add(3 * x - y >= 0.0)
-
+    # Constraint 1: 3x - y >= 0  →  -3x + y <= 0
     # Constraint 2: x - y <= 2.
-    solver.Add(x - y <= 2.0)
+    A = [
+        [1, 2],    # x + 2y <= 14
+        [-3, 1],   # -3x + y <= 0 (flipped from 3x - y >= 0)
+        [1, -1],   # x - y <= 2
+    ]
+    b = [14.0, 0.0, 2.0]
 
-    print("Number of constraints =", solver.NumConstraints())
+    print("Number of constraints =", len(b))
     # [END constraints]
 
     # [START objective]
     # Objective function: 3x + 4y.
-    solver.Maximize(3 * x + 4 * y)
+    c = [3, 4]
     # [END objective]
 
     # Solve the system.
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    print("Solving with solvOR simplex")
+    result = solve_lp(c, A, b, minimize=False)
     # [END solve]
 
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL:
+    if result.status == Status.OPTIMAL:
         print("Solution:")
-        print(f"Objective value = {solver.Objective().Value():0.1f}")
-        print(f"x = {x.solution_value():0.1f}")
-        print(f"y = {y.solution_value():0.1f}")
+        print(f"Objective value = {result.objective:0.1f}")
+        print(f"x = {result.solution[0]:0.1f}")
+        print(f"y = {result.solution[1]:0.1f}")
     else:
         print("The problem does not have an optimal solution.")
     # [END print_solution]
 
     # [START advanced]
     print("\nAdvanced usage:")
-    print(f"Problem solved in {solver.wall_time():d} milliseconds")
-    print(f"Problem solved in {solver.iterations():d} iterations")
+    print(f"Problem solved in {result.iterations:d} iterations")
     # [END advanced]
 
 

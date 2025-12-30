@@ -11,6 +11,10 @@ offers compiled C++ solvers with significantly better performance.
 Comparison:
 - solvOR: Pure Python, readable, educational, no dependencies
 - OR-Tools: C++ backend, production-ready, 10-100x faster
+
+Note: This problem requires exactly one allowed pair from each group to work.
+Solved by enumerating all 125 group configurations (5x5x5) and using Hungarian
+algorithm for each 6-worker assignment. Much faster than general MILP.
 """
 
 #!/usr/bin/env python3
@@ -30,7 +34,7 @@ Comparison:
 # [START program]
 """Solve assignment problem for given group of workers."""
 # [START import]
-from ortools.linear_solver import pywraplp
+from solvor import solve_hungarian
 # [END import]
 
 
@@ -82,112 +86,45 @@ def main():
     ]
     # [END allowed_groups]
 
-    # Solver.
     # [START solver]
-    # Create the mip solver with the SCIP backend.
-    solver = pywraplp.Solver.CreateSolver("SCIP")
-    if not solver:
-        return
+    # Enumerate all 125 valid group configurations (5 × 5 × 5)
+    # For each, solve 6×6 assignment with Hungarian algorithm
+    print("Solving with solvOR Hungarian algorithm (enumeration)")
+
+    best_cost = float('inf')
+    best_assignment = None
+    best_workers = None
     # [END solver]
 
-    # Variables
-    # [START variables]
-    # x[worker, task] is an array of 0-1 variables, which will be 1
-    # if the worker is assigned to the task.
-    x = {}
-    for worker in range(num_workers):
-        for task in range(num_tasks):
-            x[worker, task] = solver.BoolVar(f"x[{worker},{task}]")
-    # [END variables]
-
-    # Constraints
-    # [START constraints]
-    # The total size of the tasks each worker takes on is at most total_size_max.
-    for worker in range(num_workers):
-        solver.Add(solver.Sum([x[worker, task] for task in range(num_tasks)]) <= 1)
-
-    # Each task is assigned to exactly one worker.
-    for task in range(num_tasks):
-        solver.Add(solver.Sum([x[worker, task] for worker in range(num_workers)]) == 1)
-    # [END constraints]
-
-    # [START assignments]
-    # Create variables for each worker, indicating whether they work on some task.
-    work = {}
-    for worker in range(num_workers):
-        work[worker] = solver.BoolVar(f"work[{worker}]")
-
-    for worker in range(num_workers):
-        solver.Add(
-            work[worker] == solver.Sum([x[worker, task] for task in range(num_tasks)])
-        )
-
-    # Group1
-    constraint_g1 = solver.Constraint(1, 1)
-    for index, _ in enumerate(group1):
-        # a*b can be transformed into 0 <= a + b - 2*p <= 1 with p in [0,1]
-        # p is True if a AND b, False otherwise
-        constraint = solver.Constraint(0, 1)
-        constraint.SetCoefficient(work[group1[index][0]], 1)
-        constraint.SetCoefficient(work[group1[index][1]], 1)
-        p = solver.BoolVar(f"g1_p{index}")
-        constraint.SetCoefficient(p, -2)
-
-        constraint_g1.SetCoefficient(p, 1)
-
-    # Group2
-    constraint_g2 = solver.Constraint(1, 1)
-    for index, _ in enumerate(group2):
-        # a*b can be transformed into 0 <= a + b - 2*p <= 1 with p in [0,1]
-        # p is True if a AND b, False otherwise
-        constraint = solver.Constraint(0, 1)
-        constraint.SetCoefficient(work[group2[index][0]], 1)
-        constraint.SetCoefficient(work[group2[index][1]], 1)
-        p = solver.BoolVar(f"g2_p{index}")
-        constraint.SetCoefficient(p, -2)
-
-        constraint_g2.SetCoefficient(p, 1)
-
-    # Group3
-    constraint_g3 = solver.Constraint(1, 1)
-    for index, _ in enumerate(group3):
-        # a*b can be transformed into 0 <= a + b - 2*p <= 1 with p in [0,1]
-        # p is True if a AND b, False otherwise
-        constraint = solver.Constraint(0, 1)
-        constraint.SetCoefficient(work[group3[index][0]], 1)
-        constraint.SetCoefficient(work[group3[index][1]], 1)
-        p = solver.BoolVar(f"g3_p{index}")
-        constraint.SetCoefficient(p, -2)
-
-        constraint_g3.SetCoefficient(p, 1)
-    # [END assignments]
-
-    # Objective
-    # [START objective]
-    objective_terms = []
-    for worker in range(num_workers):
-        for task in range(num_tasks):
-            objective_terms.append(costs[worker][task] * x[worker, task])
-    solver.Minimize(solver.Sum(objective_terms))
-    # [END objective]
-
-    # Solve
     # [START solve]
-    print(f"Solving with {solver.SolverVersion()}")
-    status = solver.Solve()
+    for pair1 in group1:
+        for pair2 in group2:
+            for pair3 in group3:
+                # Selected workers from this configuration
+                workers = pair1 + pair2 + pair3  # 6 workers
+
+                # Build 6×6 cost submatrix for these workers
+                submatrix = [[costs[w][t] for t in range(num_tasks)] for w in workers]
+
+                # Solve assignment for this configuration
+                result = solve_hungarian(submatrix)
+
+                if result.objective < best_cost:
+                    best_cost = result.objective
+                    best_assignment = result.solution
+                    best_workers = workers
     # [END solve]
 
-    # Print solution.
     # [START print_solution]
-    if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
-        print(f"Total cost = {solver.Objective().Value()}\n")
-        for worker in range(num_workers):
-            for task in range(num_tasks):
-                if x[worker, task].solution_value() > 0.5:
-                    print(
-                        f"Worker {worker} assigned to task {task}."
-                        + f" Cost: {costs[worker][task]}"
-                    )
+    if best_assignment is not None:
+        print(f"Total cost = {best_cost}\n")
+        for i, worker in enumerate(best_workers):
+            task = best_assignment[i]
+            if task != -1:
+                print(
+                    f"Worker {worker} assigned to task {task}."
+                    + f" Cost: {costs[worker][task]}"
+                )
     else:
         print("No solution found.")
     # [END print_solution]
