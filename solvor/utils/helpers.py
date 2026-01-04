@@ -10,7 +10,7 @@ function wrapping, progress reporting, and solution manipulation.
 
 from collections.abc import Callable, Iterator
 from os import environ
-from random import Random, randint
+from random import Random
 from time import perf_counter
 
 from solvor.types import Progress, ProgressCallback
