@@ -84,5 +84,5 @@ class Progress:
     evaluations: int = 0
 
 
-# Callback type for progress reporting. Return True to stop early.
+# Callback type for progress reporting. Return True to stop early, None/False to continue.
 ProgressCallback = Callable[["Progress"], bool | None]
