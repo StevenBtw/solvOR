@@ -67,15 +67,8 @@ class TestNQueens:
         m = Model()
         queens = [m.int_var(0, n - 1, f"q{i}") for i in range(n)]
 
-        # All different columns
+        # All different columns (diagonal constraints tested in TestNQueensFull)
         m.add(m.all_different(queens))
-
-        # Diagonal constraints via !=
-        for i in range(n):
-            for j in range(i + 1, n):
-                # |q[i] - q[j]| != |i - j|
-                # This is tricky in CP, we'll use a simpler encoding
-                pass
 
         result = m.solve()
         assert result.status == Status.OPTIMAL
