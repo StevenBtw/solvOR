@@ -36,6 +36,7 @@ Parameters:
     neighbors: returns list of (move, new_solution) pairs
     cooldown: how long moves stay tabu (default: 10)
     max_no_improve: stop after this many iterations without improvement
+    seed: random seed for tie-breaking when multiple neighbors have equal cost
 
 Genetic is population-based (more overhead, better diversity), anneal is
 probabilistic (simpler setup), tabu is greedy with memory (more predictable).
