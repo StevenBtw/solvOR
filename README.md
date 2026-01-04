@@ -355,7 +355,7 @@ The classic "what fits in your bag" problem. Select items to maximize value with
 values = [60, 100, 120]
 weights = [10, 20, 30]
 result = solve_knapsack(values, weights, capacity=50)
-# result.solution = [1, 1, 1] - which items to take
+# result.solution = (1, 2) - indices of selected items
 ```
 
 ### solve_bin_pack
