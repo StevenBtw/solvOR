@@ -264,9 +264,9 @@ class TestSolutionPool:
     def test_solution_limit_multiple(self):
         """solution_limit > 1 finds multiple solutions."""
         m = Model()
-        m.int_var(1, 3, "x")
-        m.int_var(1, 3, "y")
-        m.add(m.all_different([m._vars["x"], m._vars["y"]]))
+        x = m.int_var(1, 3, "x")
+        y = m.int_var(1, 3, "y")
+        m.add(m.all_different([x, y]))
         result = m.solve(solution_limit=10)
         assert result.ok
         if result.solutions:
