@@ -67,6 +67,9 @@ class FenwickTree:
         """Return number of elements."""
         return self._n
 
+    def __repr__(self) -> str:
+        return f"FenwickTree(n={self._n})"
+
 
 class UnionFind:
     """
