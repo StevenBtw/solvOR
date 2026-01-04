@@ -8,8 +8,7 @@ you're searching in the dark without structure to exploit. And they parallelize
 beautifully while most solvers don't.
 
 Unlike anneal/tabu (single solution), this evolves a whole population. More
-overhead, but better diversity and less likely to get trapped. Great at
-multi-objective optimization (Pareto fronts) and parallelizes beautifully.
+overhead, but better diversity and less likely to get trapped.
 
     from solvor.genetic import evolve
 
