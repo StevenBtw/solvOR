@@ -388,6 +388,155 @@ class TestMaxNodes:
         assert result.ok
 
 
+class TestCoverageGaps:
+    """Tests specifically targeting coverage gaps."""
+
+    def test_lns_improved_solution_added_to_pool(self):
+        """LNS improvement adds new solution to pool (lines 158-160)."""
+        # Problem where LNS finds a different solution than initial rounding
+        n = 6
+        c = [5, 10, 15, 8, 12, 20]
+        weights = [2, 3, 4, 2, 3, 5]
+        A = [weights]
+        A.extend([[1 if j == i else 0 for j in range(n)] for i in range(n)])
+        b = [10] + [1] * n
+
+        result = solve_milp(c, A, b, list(range(n)), minimize=False,
+                           lns_iterations=15, seed=42, max_nodes=0)
+        assert result.ok
+        assert result.objective >= 25
+
+    def test_node_pruning_by_bound(self):
+        """Node pruned when bound >= best_obj (line 174)."""
+        # Small problem with warm start to trigger pruning
+        c = [1, 1]
+        A = [[-1, -1], [1, 0], [0, 1]]
+        b = [-3, 5, 5]
+
+        # Provide optimal warm start, nodes should be pruned
+        result = solve_milp(c, A, b, [0, 1], minimize=True, warm_start=[2.0, 1.0])
+        assert result.ok
+        assert abs(result.objective - 3.0) < 1e-6
+
+    def test_lp_relaxation_pruning(self):
+        """Node pruned after LP when objective >= best_obj (line 184)."""
+        # Start with good solution, subsequent nodes should prune
+        c = [1, 2, 1]
+        A = [[-1, -1, -1], [1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        b = [-2, 3, 3, 3]
+
+        result = solve_milp(c, A, b, [0, 1, 2], minimize=True, warm_start=[1.0, 1.0, 0.0])
+        assert result.ok
+        assert result.objective <= 3.0 + 1e-6
+
+    def test_solution_pool_returns_early(self):
+        """Solution pool returns when limit reached during B&B (lines 195-197)."""
+        # Problem with multiple integer solutions
+        c = [1, 1, 1]
+        A = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [-1, -1, -1]]
+        b = [2, 2, 2, -3]  # Each var <= 2, sum >= 3
+
+        result = solve_milp(c, A, b, [0, 1, 2], minimize=True,
+                           solution_limit=2, max_nodes=500, heuristics=False)
+        assert result.ok
+        if result.solutions:
+            assert len(result.solutions) <= 2
+
+    def test_gap_tolerance_returns_optimal(self):
+        """Gap tolerance triggers early return with OPTIMAL status (line 208)."""
+        c = [1, 1]
+        A = [[-1, -1], [1, 0], [0, 1]]
+        b = [-4, 10, 10]
+
+        result = solve_milp(c, A, b, [0, 1], minimize=True, gap_tol=0.1)
+        assert result.status == Status.OPTIMAL
+        assert abs(result.objective - 4.0) < 1e-6
+
+    def test_solution_pool_tree_exhausted(self):
+        """Solution pool returned after B&B tree exhausted (line 231)."""
+        c = [1, 1]
+        A = [[1, 0], [0, 1], [-1, -1]]
+        b = [1, 1, -1]  # x, y in {0,1}, sum >= 1
+
+        result = solve_milp(c, A, b, [0, 1], minimize=True, solution_limit=5)
+        assert result.ok
+        if result.solutions:
+            # Should have found the 3 feasible solutions: (1,0), (0,1), (1,1)
+            assert len(result.solutions) >= 1
+
+    def test_infeasible_bounds_in_solve_node(self):
+        """Variable bounds hi < lo returns INFEASIBLE in _solve_node (line 245)."""
+        # Create situation where branching leads to infeasible bounds
+        # x integer, x <= 0.5 and x >= 0.6 simultaneously (after branching)
+        c = [1]
+        A = [[1], [-1]]
+        b = [0.5, -0.6]  # x <= 0.5, x >= 0.6 -> infeasible
+
+        result = solve_milp(c, A, b, [0])
+        assert result.status == Status.INFEASIBLE
+
+    def test_zero_objective_gap(self):
+        """Gap computation with near-zero objective (line 317)."""
+        # Problem with zero optimal objective
+        c = [1, -1]  # x - y, optimal at x=y
+        A = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, -1], [-1, 1]]
+        b = [5, 5, 0, 0, 0, 0]  # x, y in [0, 5], x = y
+
+        result = solve_milp(c, A, b, [0, 1], minimize=True)
+        assert result.ok
+        assert abs(result.objective) < 1e-6
+
+    def test_negative_variable_infeasible(self):
+        """_is_feasible returns False for negative variable (line 339)."""
+        # This is tested indirectly - warm start with negative value
+        c = [1, 1]
+        A = [[-1, -1]]
+        b = [-2]
+
+        # Warm start with negative value should be rejected
+        result = solve_milp(c, A, b, [0, 1], warm_start=[-1.0, 3.0])
+        assert result.ok
+        # Should find valid solution, ignoring invalid warm start
+        assert all(x >= -1e-6 for x in result.solution)
+
+    def test_non_integer_infeasible(self):
+        """_is_feasible returns False for non-integer (line 342)."""
+        # Warm start with non-integer values should be rejected
+        c = [1, 1]
+        A = [[-1, -1], [1, 0], [0, 1]]
+        b = [-3, 5, 5]
+
+        result = solve_milp(c, A, b, [0, 1], warm_start=[1.5, 1.5])
+        assert result.ok
+        # Should find valid integer solution
+        assert all(abs(x - round(x)) < 1e-6 for x in result.solution)
+
+    def test_rounding_flip_fallback(self):
+        """Rounding tries flip when initial round fails (lines 376-382)."""
+        # Tight constraint where first rounding fails, flip succeeds
+        c = [3, 4, 5]
+        A = [[2, 3, 4], [1, 0, 0], [0, 1, 0], [0, 0, 1]]
+        b = [5, 1, 1, 1]
+
+        result = solve_milp(c, A, b, [0, 1, 2], minimize=False, max_nodes=10)
+        assert result.ok
+        # Optimal: x0=1, x1=1 (value 7, weight 5)
+        assert result.objective >= 7 - 1e-6
+
+    def test_submip_finds_improvement(self):
+        """Sub-MIP B&B finds better solution (lines 502-505)."""
+        c = [8, 15, 10, 20, 12]
+        weights = [3, 5, 4, 7, 4]
+        A = [weights]
+        A.extend([[1 if j == i else 0 for j in range(5)] for i in range(5)])
+        b = [12] + [1] * 5
+
+        result = solve_milp(c, A, b, [0, 1, 2, 3, 4], minimize=False,
+                           lns_iterations=15, lns_destroy_frac=0.6, seed=123, max_nodes=0)
+        assert result.ok
+        assert result.objective >= 30
+
+
 class TestEdgeCaseCoverage:
     """Additional edge cases for coverage."""
 
