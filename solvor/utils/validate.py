@@ -159,12 +159,16 @@ def check_integers_valid(
     *,
     name: str = "integers",
 ) -> None:
-    """Check that integer variable indices are valid."""
+    """Check that integer variable indices are valid and unique."""
+    seen: set[int] = set()
     for idx in integers:
         if not isinstance(idx, int):
             raise TypeError(f"{name} must contain integers, got {type(idx).__name__}")
         if idx < 0 or idx >= n_vars:
             raise ValueError(f"Invalid index in {name}: {idx} (valid range: 0 to {n_vars - 1})")
+        if idx in seen:
+            raise ValueError(f"Duplicate index in {name}: {idx}")
+        seen.add(idx)
 
 
 def check_edge_nodes(
