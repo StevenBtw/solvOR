@@ -10,7 +10,7 @@ function wrapping, progress reporting, and solution manipulation.
 
 from collections.abc import Callable, Iterator
 from os import environ
-from random import randint
+from random import Random, randint
 from time import perf_counter
 
 from solvor.types import Progress, ProgressCallback
@@ -60,11 +60,12 @@ def is_feasible(
     return True
 
 
-def random_permutation(n: int) -> list[int]:
+def random_permutation(n: int, seed: int | None = None) -> list[int]:
     """Generate a random permutation of [0, 1, ..., n-1]."""
+    rng = Random(seed) if seed is not None else Random()
     perm = list(range(n))
     for i in range(n - 1, 0, -1):
-        j = randint(0, i)
+        j = rng.randint(0, i)
         perm[i], perm[j] = perm[j], perm[i]
     return perm
 
