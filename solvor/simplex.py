@@ -144,6 +144,7 @@ def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
                     basis_set.add(j)
                     break
 
+    # Remove artificial columns (one at a time to preserve RHS at [-1])
     for _ in art_cols:
         for row in matrix:
             del row[-2]
