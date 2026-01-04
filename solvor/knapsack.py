@@ -163,7 +163,5 @@ def _greedy_fallback(
     selected.sort()  # Return in original order
     selected_tuple = tuple(selected)
     objective = sum(values[i] for i in selected)
-    if minimize:
-        objective = -objective
 
     return Result(selected_tuple, objective, 0, n, Status.FEASIBLE)

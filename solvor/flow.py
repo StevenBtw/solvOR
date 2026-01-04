@@ -57,6 +57,7 @@ def max_flow[Node](
     iterations = 0
 
     def bfs():
+        """Find augmenting path from source to sink via BFS."""
         visited = {source}
         queue = deque([(source, [source])])
 

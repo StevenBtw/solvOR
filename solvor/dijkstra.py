@@ -58,7 +58,7 @@ def dijkstra[S](
     heap: list[tuple[float, int, S]] = [(0.0, counter, start)]
     counter += 1
     iterations = 0
-    evaluations = 1
+    evaluations = 1  # Counts nodes added to frontier (start + discovered neighbors)
 
     while heap and iterations < max_iter:
         cost, _, current = heappop(heap)

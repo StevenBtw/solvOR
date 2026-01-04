@@ -39,7 +39,6 @@ or when one worker handles multiple tasks / one task needs multiple workers
 """
 
 from collections.abc import Sequence
-from math import inf
 
 from solvor.types import Result
 
@@ -82,14 +81,14 @@ def solve_hungarian(
     for i in range(1, n + 1):
         col_match[0] = i
         current_col = 0
-        min_slack = [inf] * (n + 1)
+        min_slack = [float("inf")] * (n + 1)
         used = [False] * (n + 1)
 
         while col_match[current_col] != 0:
             iterations += 1
             used[current_col] = True
             matched_row = col_match[current_col]
-            delta = inf
+            delta = float("inf")
             next_col = 0
 
             for j in range(1, n + 1):

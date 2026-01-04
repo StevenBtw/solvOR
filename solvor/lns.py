@@ -80,7 +80,7 @@ def _get_accept_fn(
         return _accept_all
     if accept == "simulated_annealing":
         return _make_sa_accept(start_temp, cooling_rate)
-    raise ValueError(f"Unknown acceptance criterion: {accept}")
+    raise ValueError(f"Unknown acceptance criterion: {accept}. Use 'improving', 'accept_all', or 'simulated_annealing'")
 
 
 def lns[T](

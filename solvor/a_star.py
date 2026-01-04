@@ -77,7 +77,7 @@ def astar[S](
     heap: list[tuple[float, float, int, S]] = [(f_start, 0.0, counter, start)]
     counter += 1
     iterations = 0
-    evaluations = 1
+    evaluations = 1  # Counts nodes added to frontier (start + discovered neighbors)
 
     while heap and iterations < max_iter:
         _, _, _, current = heappop(heap)

@@ -67,6 +67,9 @@ class FenwickTree:
         """Return number of elements."""
         return self._n
 
+    def __repr__(self) -> str:
+        return f"FenwickTree(n={self._n})"
+
 
 class UnionFind:
     """
@@ -137,3 +140,10 @@ class UnionFind:
                 comp_map[root] = set()
             comp_map[root].add(i)
         return list(comp_map.values())
+
+    def __len__(self) -> int:
+        """Return number of elements."""
+        return len(self._parent)
+
+    def __repr__(self) -> str:
+        return f"UnionFind(n={len(self._parent)}, components={self._count})"
