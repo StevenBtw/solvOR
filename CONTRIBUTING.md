@@ -19,7 +19,7 @@ git clone https://github.com/StevenBtw/solvOR.git
 cd solvOR
 
 # Install with dev dependencies
-uv sync --extra dev
+uv sync --all-extras
 
 # Run tests
 uv run pytest
