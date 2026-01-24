@@ -2,9 +2,11 @@
 
 What broke, what got fixed, and what's new.
 
-## [0.5.4] - Unreleased
+## [0.5.4] - 2026-01-24
 
 ### Added
+
+- **Column Generation:** Added `solve_cg()` for problems with exponentially many variables. Implements Dantzig-Wolfe decomposition with LP master problem and customizable pricing. Built-in cutting stock mode with knapsack pricing, or provide your own pricing function for bin packing, vehicle routing, crew scheduling, graph coloring, etc.
 
 - **OR-Tools Examples:*** 24 converted examples showing solvOR as drop-in replacement for Google OR-Tools Organized by category:
   - **Linear Solver (13):** LP, MIP, assignment, bin packing, knapsack problems using `solve_lp`, `solve_milp`, `solve_hungarian`, `solve_bin_pack`

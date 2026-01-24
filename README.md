@@ -19,7 +19,7 @@ Solvor all your optimization needs.
 
 | Category | Solvors | Use Case |
 |----------|---------|----------|
-| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp` | Resource allocation, scheduling |
+| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp`, `solve_cg` | Resource allocation, cutting stock |
 | **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
 | **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
 | **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
@@ -89,6 +89,20 @@ When some variables must be integers. Diet problems, scheduling with discrete sl
 ```python
 # same as above, but x must be integer
 result = solve_milp(c=[2, 3], A=[[-1, -1], [1, 0]], b=[-4, 3], integers=[0])
+```
+
+### solve_cg
+
+Column generation for problems with exponentially many variables. Cutting stock, bin packing, vehicle routing, crew scheduling.
+
+```python
+# Cutting stock: minimize rolls to cut required pieces
+result = solve_cg(
+    demands=[97, 610, 395, 211],
+    roll_width=100,
+    piece_sizes=[45, 36, 31, 14],
+)
+print(result.objective)  # 454 rolls
 ```
 
 </details>
@@ -421,6 +435,7 @@ Result(
 |---------|--------|
 | Linear constraints, continuous | `solve_lp`, `solve_lp_interior` |
 | Linear constraints, integers | `solve_milp` |
+| Cutting stock, crew scheduling | `solve_cg` |
 | Boolean satisfiability | `solve_sat` |
 | Discrete vars, complex constraints | `Model` |
 | Knapsack, subset selection | `solve_knapsack` |

@@ -1,6 +1,6 @@
 [project]
 name = "solvOR"
-version = "0.5.3"
+version = "0.5.4"
 description = "Solvor all your optimization needs."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -29,14 +29,14 @@ PyPI = "https://pypi.org/project/solvOR/"
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "ruff>=0.14.10",
+    "ruff>=0.14.14",
     "pre-commit>=4.5.1",
-    "ty>=0.0.8",
+    "ty>=0.0.13",
 ]
 docs = [
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
-    "mkdocstrings[python]>=0.27",
+    "mkdocstrings[python]>=1.0.2",
     "mkdocs-git-revision-date-localized-plugin>=1.3",
 ]
 

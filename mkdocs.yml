@@ -131,6 +131,7 @@ nav:
           - solve_lp: algorithms/linear-programming/solve-lp.md
           - solve_lp_interior: algorithms/linear-programming/solve-lp-interior.md
           - solve_milp: algorithms/linear-programming/solve-milp.md
+          - solve_cg: algorithms/linear-programming/solve-cg.md
       - Constraint Programming:
           - solve_sat: algorithms/constraint-programming/solve-sat.md
           - Model (CP): algorithms/constraint-programming/cp.md
@@ -181,6 +182,7 @@ nav:
       - Diet Problem: cookbook/diet.md
       - Nurse Scheduling: cookbook/nurse-scheduling.md
       - Bin Packing: cookbook/bin-packing.md
+      - Cutting Stock: cookbook/cutting-stock.md
       - Job Shop: cookbook/job-shop.md
       - Shortest Path Grid: cookbook/shortest-path-grid.md
       - Max Flow: cookbook/max-flow.md

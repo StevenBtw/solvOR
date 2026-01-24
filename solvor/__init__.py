@@ -1,6 +1,6 @@
 """Solvor - Pure Python Optimization Solvers."""
 
-__version__ = "0.5.3"
+__version__ = "0.5.4"
 
 from solvor.a_star import astar, astar_grid
 from solvor.anneal import anneal, exponential_cooling, linear_cooling, logarithmic_cooling
@@ -10,6 +10,7 @@ from solvor.bellman_ford import bellman_ford
 from solvor.bfgs import bfgs, lbfgs
 from solvor.bfs import bfs, dfs
 from solvor.bin_pack import solve_bin_pack
+from solvor.cg import solve_cg
 from solvor.community import louvain
 from solvor.cp import Model
 from solvor.differential_evolution import differential_evolution
@@ -88,6 +89,7 @@ __all__ = [
     "solve_job_shop",
     "solve_knapsack",
     "solve_bin_pack",
+    "solve_cg",
     "lns",
     "alns",
     "nelder_mead",
