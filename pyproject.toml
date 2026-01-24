@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
 authors = [
-    { name = "Steven Bytheway" }
+    { name = "Steven Grond" }
 ]
 license = { text = "Apache-2.0" }
 keywords = ["optimization", "solver", "linear-programming", "sat", "metaheuristics", "operations-research"]
