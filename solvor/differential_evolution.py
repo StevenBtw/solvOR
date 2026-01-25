@@ -149,8 +149,14 @@ def differential_evolution(
         if _population_converged(population, tol):
             break
 
-        if report_progress(on_progress, progress_interval, iteration,
-                          evaluate.to_user(best_obj), evaluate.to_user(best_obj), evaluate.evals):
+        if report_progress(
+            on_progress,
+            progress_interval,
+            iteration,
+            evaluate.to_user(best_obj),
+            evaluate.to_user(best_obj),
+            evaluate.evals,
+        ):
             return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
     final_obj = evaluate.to_user(best_obj)

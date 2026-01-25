@@ -126,8 +126,14 @@ def evolve[T](
                     # Increase mutation when stagnating
                     current_mutation_rate = min(0.5, current_mutation_rate * 1.2)
 
-        if report_progress(on_progress, progress_interval, iteration + 1,
-                          evaluate.to_user(pop[0].fitness), evaluate.to_user(best_fitness), evaluate.evals):
+        if report_progress(
+            on_progress,
+            progress_interval,
+            iteration + 1,
+            evaluate.to_user(pop[0].fitness),
+            evaluate.to_user(best_fitness),
+            evaluate.evals,
+        ):
             return Result(best_solution, evaluate.to_user(best_fitness), iteration + 1, evaluate.evals, Status.FEASIBLE)
 
     final_obj = evaluate.to_user(best_fitness)
