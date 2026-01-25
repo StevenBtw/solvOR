@@ -120,8 +120,14 @@ def lns[T](
                 best_solution, best_obj = current, current_obj
                 best_iter = iteration
 
-        if report_progress(on_progress, progress_interval, iteration,
-                          evaluate.to_user(current_obj), evaluate.to_user(best_obj), evaluate.evals):
+        if report_progress(
+            on_progress,
+            progress_interval,
+            iteration,
+            evaluate.to_user(current_obj),
+            evaluate.to_user(best_obj),
+            evaluate.evals,
+        ):
             return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
         if iteration - best_iter >= max_no_improve:
@@ -236,8 +242,14 @@ def alns[T](
             update_weights(d_weights, d_scores, d_counts)
             update_weights(r_weights, r_scores, r_counts)
 
-        if report_progress(on_progress, progress_interval, iteration,
-                          evaluate.to_user(current_obj), evaluate.to_user(best_obj), evaluate.evals):
+        if report_progress(
+            on_progress,
+            progress_interval,
+            iteration,
+            evaluate.to_user(current_obj),
+            evaluate.to_user(best_obj),
+            evaluate.evals,
+        ):
             return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
         if iteration - best_iter >= max_no_improve:

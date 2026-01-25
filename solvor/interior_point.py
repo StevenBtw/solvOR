@@ -116,8 +116,7 @@ def solve_lp_interior(
         alpha_d = _step_length(z, dz_aff, n_total)
 
         # Affine gap after step
-        mu_aff = sum((x[j] + alpha_p * dx_aff[j]) * (z[j] + alpha_d * dz_aff[j])
-                     for j in range(n_total)) / n_total
+        mu_aff = sum((x[j] + alpha_p * dx_aff[j]) * (z[j] + alpha_d * dz_aff[j]) for j in range(n_total)) / n_total
 
         # Centering parameter (Mehrotra heuristic)
         if mu > 1e-12:
@@ -155,8 +154,7 @@ def solve_lp_interior(
         objective = -objective
 
     # Check final feasibility
-    primal_inf = sqrt(sum((sum(A_aug[i][j] * x[j] for j in range(n_total)) - b[i]) ** 2
-                          for i in range(m)))
+    primal_inf = sqrt(sum((sum(A_aug[i][j] * x[j] for j in range(n_total)) - b[i]) ** 2 for i in range(m)))
     if primal_inf < 0.01:
         return Result(solution, objective, max_iter, max_iter, Status.FEASIBLE)
 
@@ -202,12 +200,10 @@ def _solve_newton(A_aug, x, z, rb, rc, xz, m, n_total, eps):
     rc_mod = [rc[j] - xz[j] / max(x[j], eps) for j in range(n_total)]
 
     # Build A D A' (m x m)
-    ADA = [[sum(A_aug[i][j] * d[j] * A_aug[k][j] for j in range(n_total))
-            for k in range(m)] for i in range(m)]
+    ADA = [[sum(A_aug[i][j] * d[j] * A_aug[k][j] for j in range(n_total)) for k in range(m)] for i in range(m)]
 
     # RHS: -rb - A D rc_mod
-    rhs = [-rb[i] - sum(A_aug[i][j] * d[j] * rc_mod[j] for j in range(n_total))
-           for i in range(m)]
+    rhs = [-rb[i] - sum(A_aug[i][j] * d[j] * rc_mod[j] for j in range(n_total)) for i in range(m)]
 
     # Solve ADA @ dy = rhs
     dy = _solve_cholesky(ADA, rhs, m, eps)
@@ -215,8 +211,7 @@ def _solve_newton(A_aug, x, z, rb, rc, xz, m, n_total, eps):
         return None, None, None
 
     # Back-substitute: dx = D (A'dy + rc_mod)
-    dx = [d[j] * (sum(A_aug[i][j] * dy[i] for i in range(m)) + rc_mod[j])
-          for j in range(n_total)]
+    dx = [d[j] * (sum(A_aug[i][j] * dy[i] for i in range(m)) + rc_mod[j]) for j in range(n_total)]
 
     # Back-substitute: dz = (-xz - Z*dx) / X
     dz = [(-xz[j] - z[j] * dx[j]) / max(x[j], eps) for j in range(n_total)]
