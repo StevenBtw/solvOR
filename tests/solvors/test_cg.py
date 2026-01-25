@@ -340,26 +340,26 @@ class TestProgress:
 class TestInternalFunctions:
     def test_knapsack_empty(self):
         """Knapsack with empty inputs."""
-        from solvor.cg import _knapsack_pricing
+        from solvor.utils.pricing import knapsack_pricing
 
-        pattern, value = _knapsack_pricing([], 100, [], 1e-9)
+        pattern, value = knapsack_pricing([], 100, [], 1e-9)
         assert pattern == ()
         assert value == 0.0
 
     def test_knapsack_zero_values(self):
         """Knapsack with all zero values."""
-        from solvor.cg import _knapsack_pricing
+        from solvor.utils.pricing import knapsack_pricing
 
-        pattern, value = _knapsack_pricing([10, 20], 100, [0.0, 0.0], 1e-9)
+        pattern, value = knapsack_pricing([10, 20], 100, [0.0, 0.0], 1e-9)
         assert pattern == (0, 0)
         assert value == 0.0
 
     def test_greedy_knapsack(self):
         """Test greedy knapsack fallback directly."""
-        from solvor.cg import _greedy_knapsack
+        from solvor.utils.pricing import greedy_knapsack
 
         # Test with valid inputs
-        pattern, value = _greedy_knapsack(
+        pattern, value = greedy_knapsack(
             sizes=[10, 20, 30],
             capacity=100,
             values=[1.0, 2.0, 3.0],
@@ -370,9 +370,9 @@ class TestInternalFunctions:
 
     def test_greedy_with_zero_values(self):
         """Greedy with zero or negative values."""
-        from solvor.cg import _greedy_knapsack
+        from solvor.utils.pricing import greedy_knapsack
 
-        pattern, value = _greedy_knapsack(
+        pattern, value = greedy_knapsack(
             sizes=[10, 20],
             capacity=100,
             values=[0.0, -1.0],

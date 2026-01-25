@@ -8,6 +8,7 @@ dependencies = []
 authors = [
     { name = "Steven Grond" }
 ]
+
 license = { text = "Apache-2.0" }
 keywords = ["optimization", "solver", "linear-programming", "sat", "metaheuristics", "operations-research"]
 classifiers = [

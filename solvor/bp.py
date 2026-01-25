@@ -62,6 +62,7 @@ from typing import NamedTuple
 
 from solvor.types import ProgressCallback, Result, Status
 from solvor.utils.helpers import report_progress
+from solvor.utils.pricing import greedy_knapsack, knapsack_pricing, simplex_phase
 from solvor.utils.validate import check_non_negative, check_positive, check_sequence_lengths
 
 __all__ = ["solve_bp"]
@@ -151,7 +152,7 @@ def _solve_bp_cutting_stock(
     column_set: set[tuple[int, ...]] = set(columns)
 
     def pricing_fn(duals):
-        return _knapsack_pricing(piece_sizes, roll_width, duals, eps)
+        return knapsack_pricing(piece_sizes, roll_width, duals, eps)
 
     return _branch_and_price(
         demands,
@@ -420,7 +421,7 @@ def _solve_bounded_master_lp(columns, demands, col_bounds, eps):
     for i in range(n_upper):
         basis.append(n + n_surplus + i)
 
-    _simplex_phase(tab, basis, n + n_surplus + n_slack + n_surplus_bounds, n_rows, eps)
+    simplex_phase(tab, basis, n + n_surplus + n_slack + n_surplus_bounds, n_rows, eps)
 
     if tab[-1][-1] < -eps:
         return [0.0] * n, [0.0] * m, float("inf")
@@ -437,7 +438,7 @@ def _solve_bounded_master_lp(columns, demands, col_bounds, eps):
             for j in range(n_vars + 1):
                 tab[-1][j] -= cost * tab[i][j]
 
-    _simplex_phase(tab, basis, n + n_surplus + n_slack + n_surplus_bounds, n_rows, eps)
+    simplex_phase(tab, basis, n + n_surplus + n_slack + n_surplus_bounds, n_rows, eps)
 
     x_vals = [0.0] * n
     for i, b in enumerate(basis):
@@ -449,54 +450,6 @@ def _solve_bounded_master_lp(columns, demands, col_bounds, eps):
     objective = -tab[-1][-1]
 
     return x_vals, duals, objective
-
-
-def _simplex_phase(tab, basis, n_orig, n_rows, eps):
-    """Run simplex iterations on tableau in place."""
-    n_cols = len(tab[0])
-    basis_set = set(basis)
-
-    for _ in range(100_000):
-        # Bland's rule
-        enter = -1
-        for j in range(n_orig):
-            if j not in basis_set and tab[-1][j] < -eps:
-                enter = j
-                break
-
-        if enter == -1:
-            return
-
-        # Minimum ratio test
-        leave = -1
-        min_ratio = float("inf")
-        for i in range(n_rows):
-            if tab[i][enter] > eps:
-                ratio = tab[i][-1] / tab[i][enter]
-                if ratio < min_ratio - eps:
-                    min_ratio = ratio
-                    leave = i
-                elif abs(ratio - min_ratio) <= eps and leave >= 0 and basis[i] < basis[leave]:
-                    leave = i
-
-        if leave == -1:
-            return
-
-        # Pivot
-        piv = tab[leave][enter]
-        for j in range(n_cols):
-            tab[leave][j] /= piv
-
-        for i in range(n_rows + 1):
-            if i != leave:
-                factor = tab[i][enter]
-                if abs(factor) > eps:
-                    for j in range(n_cols):
-                        tab[i][j] -= factor * tab[leave][j]
-
-        basis_set.discard(basis[leave])
-        basis[leave] = enter
-        basis_set.add(enter)
 
 
 def _most_fractional(x_vals, eps):
@@ -546,73 +499,3 @@ def _round_solution(x_vals, columns, demands, eps):
             total += rounded[j]
 
     return solution, float(total)
-
-
-def _knapsack_pricing(sizes, capacity, values, eps):
-    """Solve bounded knapsack for pricing."""
-    n = len(sizes)
-    if n == 0:
-        return (), 0.0
-
-    max_copies = [int(capacity // sizes[i]) if sizes[i] > 0 else 0 for i in range(n)]
-
-    # Scale to integers for DP
-    scale = 100
-    cap_int = int(capacity * scale + 0.5)
-    sizes_int = [max(1, int(sizes[i] * scale + 0.5)) for i in range(n)]
-
-    dp_val = [-float("inf")] * (cap_int + 1)
-    dp_pat = [[0] * n for _ in range(cap_int + 1)]
-    dp_val[0] = 0.0
-
-    for i in range(n):
-        if values[i] <= eps:
-            continue
-
-        size_i = sizes_int[i]
-        for _ in range(max_copies[i]):
-            for w in range(cap_int, size_i - 1, -1):
-                prev_w = w - size_i
-                if dp_val[prev_w] > -float("inf"):
-                    new_val = dp_val[prev_w] + values[i]
-                    if new_val > dp_val[w] + eps:
-                        dp_val[w] = new_val
-                        dp_pat[w] = list(dp_pat[prev_w])
-                        dp_pat[w][i] += 1
-
-    best_w = 0
-    best_val = 0.0
-    for w in range(cap_int + 1):
-        if dp_val[w] > best_val + eps:
-            best_val = dp_val[w]
-            best_w = w
-
-    best_pat = dp_pat[best_w] if best_val > eps else [0] * n
-
-    # Fall back to greedy if scaling caused infeasibility
-    total_size = sum(best_pat[i] * sizes[i] for i in range(n))
-    if total_size > capacity + eps:
-        return _greedy_knapsack(sizes, capacity, values, max_copies)
-
-    return tuple(best_pat), best_val
-
-
-def _greedy_knapsack(sizes, capacity, values, max_copies):
-    """Greedy fallback for knapsack."""
-    n = len(sizes)
-    indices = sorted(range(n), key=lambda i: values[i] / sizes[i] if sizes[i] > 0 else 0.0, reverse=True)
-
-    pattern = [0] * n
-    remaining = capacity
-    total_val = 0.0
-
-    for i in indices:
-        if values[i] <= 0 or sizes[i] <= 0:
-            continue
-        copies = min(max_copies[i], int(remaining / sizes[i]))
-        if copies > 0:
-            pattern[i] = copies
-            remaining -= copies * sizes[i]
-            total_val += copies * values[i]
-
-    return tuple(pattern), total_val

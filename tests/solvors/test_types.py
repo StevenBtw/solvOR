@@ -38,6 +38,20 @@ class TestResult:
         returned = result.log("prefix: ")
         assert returned is result
 
+    def test_result_repr(self):
+        result = Result(solution=[1, 2, 3], objective=123.456789, iterations=50, status=Status.OPTIMAL)
+        repr_str = repr(result)
+        assert "Result" in repr_str
+        assert "OPTIMAL" in repr_str
+        assert "123.457" in repr_str  # 6 significant figures
+        assert "iter=50" in repr_str
+
+    def test_result_repr_feasible(self):
+        result = Result(solution=None, objective=0.0, iterations=100, status=Status.FEASIBLE)
+        repr_str = repr(result)
+        assert "FEASIBLE" in repr_str
+        assert "iter=100" in repr_str
+
     def test_result_log_with_debug(self, capsys, monkeypatch):
         monkeypatch.setenv("DEBUG", "1")
         # Need to reimport to pick up the env var

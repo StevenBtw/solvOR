@@ -66,6 +66,10 @@ class Result[T]:
             print(msg)
         return self
 
+    def __repr__(self) -> str:
+        """Concise representation for debugging."""
+        return f"Result({self.status.name}, obj={self.objective:.6g}, iter={self.iterations})"
+
 
 @dataclass(frozen=True, slots=True)
 class Progress:
