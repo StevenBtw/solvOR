@@ -34,7 +34,8 @@ to find good solutions quickly (~95% of optimal).
 # [START program]
 """Solve a multiple knapsack problem using a MIP solver."""
 # [START import]
-from solvor import solve_milp, Status
+from solvor import Status, solve_milp
+
 # [END import]
 
 
@@ -79,8 +80,9 @@ def main():
 
     # [START solve]
     # Heuristics + LNS finds near-optimal solution for large binary problems
-    result = solve_milp(c, A, b_rhs, list(range(n_vars)), minimize=False,
-                        max_nodes=0, lns_iterations=50, lns_destroy_frac=0.4, seed=42)
+    result = solve_milp(
+        c, A, b_rhs, list(range(n_vars)), minimize=False, max_nodes=0, lns_iterations=50, lns_destroy_frac=0.4, seed=42
+    )
     # [END solve]
 
     # [START print_solution]

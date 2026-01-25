@@ -30,7 +30,8 @@ Comparison:
 """Minimal example to call the GLOP solver."""
 # [START program]
 # [START import]
-from solvor import solve_lp, Status
+from solvor import Status, solve_lp
+
 # [END import]
 
 
@@ -51,8 +52,8 @@ def main():
     # x + 7 * y <= 17.5
     # x <= 3.5
     A = [
-        [1, 7],   # x + 7*y <= 17.5
-        [1, 0],   # x <= 3.5
+        [1, 7],  # x + 7*y <= 17.5
+        [1, 0],  # x <= 3.5
     ]
     b = [17.5, 3.5]
 
