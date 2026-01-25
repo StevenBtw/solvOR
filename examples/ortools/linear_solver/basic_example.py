@@ -31,7 +31,8 @@ Comparison:
 # [START program]
 # [START import]
 import solvor
-from solvor import solve_lp, Status
+from solvor import Status, solve_lp
+
 # [END import]
 
 

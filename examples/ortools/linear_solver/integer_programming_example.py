@@ -30,7 +30,8 @@ Comparison:
 """Small example to illustrate solving a MIP problem."""
 # [START program]
 # [START import]
-from solvor import solve_milp, Status
+from solvor import Status, solve_milp
+
 # [END import]
 
 
@@ -55,9 +56,9 @@ def IntegerProgrammingExample():
     # 3*x - 5*y + 7*z <= 45
     # 5*x + 2*y - 6*z <= 37
     A = [
-        [2, 7, 3],    # 2x + 7y + 3z <= 50
-        [3, -5, 7],   # 3x - 5y + 7z <= 45
-        [5, 2, -6],   # 5x + 2y - 6z <= 37
+        [2, 7, 3],  # 2x + 7y + 3z <= 50
+        [3, -5, 7],  # 3x - 5y + 7z <= 45
+        [5, 2, -6],  # 5x + 2y - 6z <= 37
     ]
     b = [50, 45, 37]
 
