@@ -30,7 +30,8 @@ Comparison:
 """Linear optimization example."""
 # [START program]
 # [START import]
-from solvor import solve_lp, Status
+from solvor import Status, solve_lp
+
 # [END import]
 
 
@@ -52,9 +53,9 @@ def LinearProgrammingExample():
     # Constraint 1: 3x - y >= 0  →  -3x + y <= 0
     # Constraint 2: x - y <= 2.
     A = [
-        [1, 2],    # x + 2y <= 14
-        [-3, 1],   # -3x + y <= 0 (flipped from 3x - y >= 0)
-        [1, -1],   # x - y <= 2
+        [1, 2],  # x + 2y <= 14
+        [-3, 1],  # -3x + y <= 0 (flipped from 3x - y >= 0)
+        [1, -1],  # x - y <= 2
     ]
     b = [14.0, 0.0, 2.0]
 

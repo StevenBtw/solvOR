@@ -31,7 +31,8 @@ Comparison:
 
 # [START program]
 # [START import]
-from solvor import solve_milp, Status
+from solvor import Status, solve_milp
+
 # [END import]
 
 
@@ -51,6 +52,7 @@ def create_data_model():
     data["num_vars"] = 5
     data["num_constraints"] = 4
     return data
+
 
 # [END data_model]
 
