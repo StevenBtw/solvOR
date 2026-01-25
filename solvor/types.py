@@ -23,11 +23,11 @@ _DEBUG = bool(environ.get("DEBUG"))
 class Status(IntEnum):
     """Solver outcome status."""
 
-    OPTIMAL = auto()    # Proven optimal (exact solvers)
-    FEASIBLE = auto()   # Feasible but not proven optimal (heuristics)
-    INFEASIBLE = auto() # No feasible solution exists
+    OPTIMAL = auto()  # Proven optimal (exact solvers)
+    FEASIBLE = auto()  # Feasible but not proven optimal (heuristics)
+    INFEASIBLE = auto()  # No feasible solution exists
     UNBOUNDED = auto()  # Objective can improve infinitely
-    MAX_ITER = auto()   # Iteration limit reached
+    MAX_ITER = auto()  # Iteration limit reached
 
 
 @dataclass(frozen=True, slots=True)

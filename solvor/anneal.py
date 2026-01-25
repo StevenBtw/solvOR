@@ -125,8 +125,9 @@ def anneal[T](
             if obj < best_obj:
                 best_solution, best_obj = solution, obj
 
-        if report_progress(on_progress, progress_interval, iteration,
-                          evaluate.to_user(obj), evaluate.to_user(best_obj), evaluate.evals):
+        if report_progress(
+            on_progress, progress_interval, iteration, evaluate.to_user(obj), evaluate.to_user(best_obj), evaluate.evals
+        ):
             return Result(best_solution, evaluate.to_user(best_obj), iteration, evaluate.evals, Status.FEASIBLE)
 
     final_obj = evaluate.to_user(best_obj)
