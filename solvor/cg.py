@@ -112,23 +112,15 @@ def solve_cg(
 
     if cutting_stock:
         assert roll_width is not None and piece_sizes is not None
-        return _solve_cutting_stock(
-            roll_width, piece_sizes, demands,
-            max_iter, eps, on_progress, progress_interval
-        )
+        return _solve_cutting_stock(roll_width, piece_sizes, demands, max_iter, eps, on_progress, progress_interval)
 
     assert pricing_fn is not None
     if initial_columns is None:
         raise ValueError("Custom mode requires initial_columns")
-    return _solve_custom(
-        demands, pricing_fn, initial_columns,
-        max_iter, eps, on_progress, progress_interval
-    )
+    return _solve_custom(demands, pricing_fn, initial_columns, max_iter, eps, on_progress, progress_interval)
 
 
-def _solve_cutting_stock(
-    roll_width, piece_sizes, demands, max_iter, eps, on_progress, progress_interval
-):
+def _solve_cutting_stock(roll_width, piece_sizes, demands, max_iter, eps, on_progress, progress_interval):
     """Cutting stock via column generation with knapsack pricing."""
     n = check_sequence_lengths((piece_sizes, "piece_sizes"), (demands, "demands"))
 
@@ -183,9 +175,12 @@ def _solve_cutting_stock(
         produced = sum(p[i] * cnt for p, cnt in solution.items())
         if produced < demands[i]:
             return Result(
-                solution, float(total_rolls), iteration, iteration,
+                solution,
+                float(total_rolls),
+                iteration,
+                iteration,
                 Status.INFEASIBLE,
-                error=f"Demand not met for piece {i}: {produced} < {demands[i]}"
+                error=f"Demand not met for piece {i}: {produced} < {demands[i]}",
             )
 
     lb = ceil(lp_obj - eps)
@@ -194,9 +189,7 @@ def _solve_cutting_stock(
     return Result(solution, float(total_rolls), iteration, iteration, status)
 
 
-def _solve_custom(
-    demands, pricing_fn, initial_columns, max_iter, eps, on_progress, progress_interval
-):
+def _solve_custom(demands, pricing_fn, initial_columns, max_iter, eps, on_progress, progress_interval):
     """Generic column generation with user-provided pricing."""
     m = len(demands)
 
@@ -272,8 +265,8 @@ def _solve_master_lp(
     for i in range(m):
         for j, col in enumerate(columns):
             tab[i][j] = float(col[i])
-        tab[i][n + i] = -1.0       # surplus
-        tab[i][n + m + i] = 1.0    # artificial
+        tab[i][n + i] = -1.0  # surplus
+        tab[i][n + m + i] = 1.0  # artificial
         tab[i][-1] = float(demands[i])
 
     # Phase 1: minimize artificials
@@ -433,11 +426,7 @@ def _greedy_knapsack(
 ) -> tuple[tuple[int, ...], float]:
     """Greedy fallback: sort by value/size density."""
     n = len(sizes)
-    indices = sorted(
-        range(n),
-        key=lambda i: values[i] / sizes[i] if sizes[i] > 0 else 0.0,
-        reverse=True
-    )
+    indices = sorted(range(n), key=lambda i: values[i] / sizes[i] if sizes[i] > 0 else 0.0, reverse=True)
 
     pattern = [0] * n
     remaining = capacity

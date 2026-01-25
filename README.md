@@ -19,7 +19,7 @@ Solvor all your optimization needs.
 
 | Category | Solvors | Use Case |
 |----------|---------|----------|
-| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp`, `solve_cg` | Resource allocation, cutting stock |
+| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp`, `solve_cg`, `solve_bp` | Resource allocation, cutting stock |
 | **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
 | **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
 | **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
@@ -103,6 +103,20 @@ result = solve_cg(
     piece_sizes=[45, 36, 31, 14],
 )
 print(result.objective)  # 454 rolls
+```
+
+### solve_bp
+
+Branch-and-price for optimal integer solutions. Combines column generation with branch-and-bound for proven optimality.
+
+```python
+# Cutting stock with guaranteed integer optimality
+result = solve_bp(
+    demands=[97, 610, 395, 211],
+    roll_width=100,
+    piece_sizes=[45, 36, 31, 14],
+)
+print(result.objective)  # Integer optimal
 ```
 
 </details>
@@ -435,7 +449,7 @@ Result(
 |---------|--------|
 | Linear constraints, continuous | `solve_lp`, `solve_lp_interior` |
 | Linear constraints, integers | `solve_milp` |
-| Cutting stock, crew scheduling | `solve_cg` |
+| Cutting stock, crew scheduling | `solve_cg`, `solve_bp` |
 | Boolean satisfiability | `solve_sat` |
 | Discrete vars, complex constraints | `Model` |
 | Knapsack, subset selection | `solve_knapsack` |

@@ -132,6 +132,7 @@ nav:
           - solve_lp_interior: algorithms/linear-programming/solve-lp-interior.md
           - solve_milp: algorithms/linear-programming/solve-milp.md
           - solve_cg: algorithms/linear-programming/solve-cg.md
+          - solve_bp: algorithms/linear-programming/solve-bp.md
       - Constraint Programming:
           - solve_sat: algorithms/constraint-programming/solve-sat.md
           - Model (CP): algorithms/constraint-programming/cp.md

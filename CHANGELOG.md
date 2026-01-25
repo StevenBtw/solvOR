@@ -2,6 +2,12 @@
 
 What broke, what got fixed, and what's new.
 
+## [Unreleased]
+
+### Added
+
+- **Branch-and-Price:** Added `solve_bp()` for optimal integer solutions via branch-and-price. Combines column generation with branch-and-bound to find provably optimal integer solutions. Same interface as `solve_cg()` with additional B&B parameters (`max_nodes`, `gap_tol`).
+
 ## [0.5.4] - 2026-01-24
 
 ### Added

@@ -131,6 +131,7 @@ Round up LP solution → 454 rolls
 
 ## See Also
 
+- [solve_bp](solve-bp.md) - Branch-and-price for proven integer optimality
 - [solve_lp](solve-lp.md) - Underlying LP solver
 - [solve_milp](solve-milp.md) - When you need exact integer solutions
 - [Bin Packing](../combinatorial/bin-packing.md) - Heuristic alternative
