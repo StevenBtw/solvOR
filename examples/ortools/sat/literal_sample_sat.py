@@ -39,8 +39,8 @@ def literal_sample_sat():
     x = model.int_var(0, 1, "x")
     # In solvOR, negation is represented as (1 - x) in constraints
     # For display, we show the variable and its logical complement
-    print(f"x (bool var with domain [0,1])")
-    print(f"not_x = 1 - x (logical negation)")
+    print("x (bool var with domain [0,1])")
+    print("not_x = 1 - x (logical negation)")
 
 
 literal_sample_sat()

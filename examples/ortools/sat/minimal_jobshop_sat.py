@@ -31,7 +31,8 @@ Comparison:
 """Minimal jobshop example."""
 # [START import]
 import collections
-from solvor import solve_job_shop, Status
+
+from solvor import Status, solve_job_shop
 
 # [END import]
 
@@ -59,9 +60,7 @@ def main() -> None:
     if result.status == Status.OPTIMAL or result.status == Status.FEASIBLE:
         print("Solution:")
         # Named tuple to manipulate solution information.
-        assigned_task_type = collections.namedtuple(
-            "assigned_task_type", "start job index duration"
-        )
+        assigned_task_type = collections.namedtuple("assigned_task_type", "start job index duration")
 
         # Create one list of assigned tasks per machine.
         assigned_jobs = collections.defaultdict(list)
