@@ -30,7 +30,8 @@ Comparison:
 # [START program]
 """MIP example that solves an assignment problem."""
 # [START import]
-from solvor import solve_milp, Status
+from solvor import Status, solve_milp
+
 # [END import]
 
 
@@ -127,10 +128,7 @@ def main():
         for worker in range(num_workers):
             for task in range(num_tasks):
                 if result.solution[x_idx(worker, task)] > 0.5:
-                    print(
-                        f"Worker {worker} assigned to task {task}."
-                        + f" Cost = {costs[worker][task]}"
-                    )
+                    print(f"Worker {worker} assigned to task {task}." + f" Cost = {costs[worker][task]}")
     else:
         print("No solution found.")
     # [END print_solution]
