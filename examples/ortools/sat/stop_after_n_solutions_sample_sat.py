@@ -51,13 +51,13 @@ def stop_after_n_solutions_sample_sat():
         for sol in result.solutions:
             print(f"x={sol['x']} y={sol['y']} z={sol['z']}")
         print(f"Stop search after {len(result.solutions)} solutions")
-        print(f"Status = OPTIMAL")
+        print("Status = OPTIMAL")
         print(f"Number of solutions found: {len(result.solutions)}")
         assert len(result.solutions) == 5
     elif result.status == Status.OPTIMAL and result.solution:
         print(f"x={result.solution['x']} y={result.solution['y']} z={result.solution['z']}")
-        print(f"Status = OPTIMAL")
-        print(f"Number of solutions found: 1")
+        print("Status = OPTIMAL")
+        print("Number of solutions found: 1")
     else:
         print("No solution found.")
 

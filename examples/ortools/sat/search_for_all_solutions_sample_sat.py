@@ -65,12 +65,12 @@ def search_for_all_solutions_sample_sat():
     if result.status == Status.OPTIMAL and hasattr(result, "solutions") and result.solutions:
         for sol in result.solutions:
             print(f"x={sol['x']} y={sol['y']} z={sol['z']}")
-        print(f"Status = OPTIMAL")
+        print("Status = OPTIMAL")
         print(f"Number of solutions found: {len(result.solutions)}")
     elif result.status == Status.OPTIMAL and result.solution:
         print(f"x={result.solution['x']} y={result.solution['y']} z={result.solution['z']}")
-        print(f"Status = OPTIMAL")
-        print(f"Number of solutions found: 1")
+        print("Status = OPTIMAL")
+        print("Number of solutions found: 1")
     else:
         print("No solution found.")
     # [END print_solution]

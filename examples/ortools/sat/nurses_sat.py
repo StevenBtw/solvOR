@@ -129,7 +129,7 @@ def main() -> None:
                 if not is_working:
                     print(f"  Nurse {n} does not work")
         if sol_idx + 1 >= 5:
-            print(f"Stop search after 5 solutions")
+            print("Stop search after 5 solutions")
             break
     # [END solution_printer]
 

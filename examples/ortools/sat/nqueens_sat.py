@@ -32,6 +32,7 @@ Comparison:
 # [START import]
 import sys
 import time
+
 from solvor import Model, Status
 
 # [END import]
