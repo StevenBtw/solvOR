@@ -192,8 +192,7 @@ def condense[S](
 
     # Convert to adjacency dict with frozenset keys
     adjacency: dict[frozenset[S], list[frozenset[S]]] = {
-        condensed_nodes[i]: [condensed_nodes[j] for j in condensed_edges[i]]
-        for i in range(len(condensed_nodes))
+        condensed_nodes[i]: [condensed_nodes[j] for j in condensed_edges[i]] for i in range(len(condensed_nodes))
     }
 
     return Result(
