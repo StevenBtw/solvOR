@@ -6,7 +6,7 @@
 
 | Category | Solvers | When to Use |
 |----------|---------|-------------|
-| **[Linear Programming](linear-programming/solve-lp.md)** | `solve_lp`, `solve_milp` | Linear objectives, linear constraints |
+| **[Linear Programming](linear-programming/solve-lp.md)** | `solve_lp`, `solve_milp`, `solve_cg`, `solve_bp` | Linear objectives, linear constraints, column generation |
 | **[Constraint Programming](constraint-programming/solve-sat.md)** | `solve_sat`, `Model`, `solve_exact_cover` | Logic puzzles, satisfiability, exact cover |
 | **[Metaheuristics](metaheuristics/index.md)** | `anneal`, `tabu_search`, `lns`, `evolve` | Combinatorial, no gradients |
 | **[Continuous](continuous/index.md)** | `adam`, `bfgs`, `nelder_mead`, `bayesian_opt` | Smooth functions, gradients or black-box |
@@ -42,7 +42,7 @@ Some solvers prove optimality, others don't.
 
 | Guarantee | Solvers |
 |-----------|---------|
-| **Optimal** | `solve_lp`, `solve_milp`, `dijkstra`, `bellman_ford`, `kruskal`, `solve_hungarian` |
+| **Optimal** | `solve_lp`, `solve_milp`, `solve_bp`, `dijkstra`, `bellman_ford`, `kruskal`, `solve_hungarian` |
 | **Heuristic** | `anneal`, `tabu_search`, `evolve`, `particle_swarm` |
 | **Local optimum** | `gradient_descent`, `adam`, `bfgs`, `nelder_mead` |
 
