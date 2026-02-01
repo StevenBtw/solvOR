@@ -171,7 +171,7 @@ Examples! Finally they all work (and can be used as extra tests! optional for no
 
 ## [0.4.7] - 2025-12-25
 
-Added a changelog (this file), a whole lot of solvors and some much needed optimizations, working on some more examples, but they need a bit more work still. 
+Added a changelog (this file), a whole lot of solvors and some much needed optimizations, working on some more examples, but they need a bit more work still.
 This could have been a 0.5.0 release, if it wasn't for the examples, readme and wiki. Will probably add the examples in the next release, then 0.5.0 with extra tests and more polish (readme/wiki/etc.).
 
 ### Added
@@ -233,7 +233,7 @@ Gradient-free optimizers join the party.
 ### Changed
 
 - Rewrote `cp.py` constraint propagation now cleaner
-- Rewrote `sat.py` SAT solver improvements, some I knew, some I learned about today 
+- Rewrote `sat.py` SAT solver improvements, some I knew, some I learned about today
 - Rewrote `utils.py` split into data_structures, helpers, validate
 
 ## [0.4.4] - 2025-12-23
