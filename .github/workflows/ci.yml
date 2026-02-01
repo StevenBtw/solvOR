@@ -92,7 +92,7 @@ jobs:
         run: uv run pytest tests/solvors/ -v -k "Rust" --no-cov
       - name: Verify Rust backend is used
         run: |
-          uv run python -c "from solvor._rust import rust_available; assert rust_available(), 'Rust should be available'"
+          uv run python -c "from solvor.rust import rust_available; assert rust_available(), 'Rust should be available'"
 
   test-examples:
     runs-on: ubuntu-latest

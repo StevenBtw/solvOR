@@ -120,7 +120,7 @@ Measured on a typical laptop (Macbook Pro M1, 16GB RAM):
 ## Checking Backend Availability
 
 ```python
-from solvor._rust import RUST_AVAILABLE, get_backend
+from solvor.rust import RUST_AVAILABLE, get_backend
 
 # Check if Rust extension is available
 print(f"Rust available: {RUST_AVAILABLE}")
