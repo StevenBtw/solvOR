@@ -2,7 +2,7 @@
 
 import pytest
 
-from solvor._rust import get_backend, rust_available
+from solvor.rust import get_backend, rust_available
 
 
 class TestBackendRouting:

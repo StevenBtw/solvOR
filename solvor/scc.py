@@ -56,7 +56,7 @@ single path), you may need to increase the recursion limit:
 from collections import defaultdict, deque
 from collections.abc import Callable, Iterable
 
-from solvor._rust import with_rust_backend
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 
 __all__ = [

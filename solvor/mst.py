@@ -43,7 +43,7 @@ or shortest paths (that's dijkstra).
 from collections.abc import Iterable
 from heapq import heappop, heappush
 
-from solvor._rust import with_rust_backend
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import UnionFind, check_edge_nodes, check_positive
 

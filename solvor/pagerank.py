@@ -51,7 +51,7 @@ the edge direction in your neighbors function.
 
 from collections.abc import Callable, Iterable
 
-from solvor._rust import with_rust_backend
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 
 __all__ = ["pagerank", "pagerank_edges"]

@@ -33,7 +33,7 @@ and usually faster in practice.
 For single-source: also dijkstra. For negative edges single-source: bellman_ford.
 """
 
-from solvor._rust import with_rust_backend
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import check_edge_nodes, check_positive
 

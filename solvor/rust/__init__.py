@@ -5,14 +5,14 @@ Python and Rust implementations of solvOR algorithms.
 
 The main pattern is a decorator-based approach:
 
-    from solvor._rust import with_rust_backend
+    from solvor.rust import with_rust_backend
 
     @with_rust_backend
     def my_algorithm(...) -> Result:
         # Pure Python implementation - stays readable
         ...
 
-Rust adapters are registered separately in _rust_adapters.py.
+Rust adapters are registered separately in adapters.py.
 """
 
 from __future__ import annotations
@@ -25,7 +25,14 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from types import ModuleType
 
-__all__ = ["get_backend", "get_rust_module", "rust_available", "rust_adapter", "with_rust_backend"]
+__all__ = [
+    "RUST_AVAILABLE",
+    "get_backend",
+    "get_rust_module",
+    "rust_available",
+    "rust_adapter",
+    "with_rust_backend",
+]
 
 _rust_available: bool | None = None
 _warned = False
@@ -48,6 +55,10 @@ def rust_available() -> bool:
         except ImportError:
             _rust_available = False
     return _rust_available
+
+
+# Convenience constant for checking availability
+RUST_AVAILABLE = rust_available()
 
 
 def _warn_fallback() -> None:

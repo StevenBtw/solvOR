@@ -41,7 +41,7 @@ With a good distance estimate, use a_star.
 from collections.abc import Callable, Iterable
 from heapq import heappop, heappush
 
-from solvor._rust import with_rust_backend
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import reconstruct_path
 

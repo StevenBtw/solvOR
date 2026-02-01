@@ -36,7 +36,7 @@ backend="python" for the pure Python implementation.
 Don't use this for: non-negative edges (use dijkstra), or all-pairs (floyd_warshall).
 """
 
-from solvor._rust import with_rust_backend
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import check_edge_nodes, check_in_range, check_positive
 

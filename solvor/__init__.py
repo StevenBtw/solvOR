@@ -3,7 +3,7 @@
 __version__ = "0.6.0"
 
 # Register Rust adapters (must be after algorithm imports)
-import solvor._rust_adapters  # noqa: F401, E402
+import solvor.rust.adapters  # noqa: F401, E402
 from solvor.a_star import astar, astar_grid
 from solvor.anneal import anneal, exponential_cooling, linear_cooling, logarithmic_cooling
 from solvor.articulation import articulation_points, bridges

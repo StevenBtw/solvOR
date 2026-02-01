@@ -11,7 +11,7 @@ Each adapter is registered with @rust_adapter("function_name") and handles:
 
 from __future__ import annotations
 
-from solvor._rust import get_rust_module, rust_adapter
+from solvor.rust import get_rust_module, rust_adapter
 from solvor.types import Result, Status
 
 

@@ -296,7 +296,7 @@ class TestSCCEdgesRust:
 
     @pytest.fixture(autouse=True)
     def require_rust(self):
-        from solvor._rust import rust_available
+        from solvor.rust import rust_available
 
         if not rust_available():
             pytest.skip("Rust backend not available")
