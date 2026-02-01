@@ -4,16 +4,30 @@ What broke, what got fixed, and what's new.
 
 ## [0.6.0] - 2026-01-31
 
-**Rust acceleration!** Optional Rust backend for graph algorithms with 30-50x speedup, ported from Grafeo.
+**Rust acceleration!** Optional Rust backend for graph algorithms with 3-60x speedup, ported from [Grafeo](https://github.com/GrafeoDB/grafeo).
 
 ### Added
 
 - **Rust Backend:** Optional high-performance Rust implementations via PyO3. Algorithms automatically use Rust when available, with seamless Python fallback. Use `backend="rust"` or `backend="python"` to force a specific implementation.
 
-- **floyd_warshall:** First algorithm with Rust backend. 30-50x speedup on benchmarks (e.g., 250 nodes: 956ms → 20ms).
+- **Algorithms with Rust backends:**
+  - `floyd_warshall` - All-pairs shortest paths (45-60x speedup)
+  - `bellman_ford` - Negative weight shortest paths (10-20x speedup)
+  - `dijkstra_edges` - Single-source shortest paths (5-10x speedup)
+  - `bfs_edges`, `dfs_edges` - Graph traversal (3-5x speedup)
+  - `pagerank_edges` - Node importance ranking (10-15x speedup)
+  - `strongly_connected_components_edges`, `topological_sort_edges` - Dependency analysis (5-10x speedup)
+  - `kruskal` - Minimum spanning tree (5-10x speedup)
+
+- **Two API styles for graph algorithms:**
+  - Callback-based (`dijkstra`, `bfs`, etc.) - Flexible, works with any node type, pure Python
+  - Edge-list (`dijkstra_edges`, `bfs_edges`, etc.) - Integer nodes 0..n-1, Rust-accelerated
+
+- **Performance documentation:** New [Performance page](https://solvOR.ai/getting-started/performance/) with benchmarks, backend usage guide, and API comparison.
 
 - **Backend Infrastructure:**
-  - `solvor/_rust.py` - Backend detection and routing
+  - `solvor/_rust.py` - Backend detection and routing with `@with_rust_backend` decorator
+  - `solvor/_rust_adapters.py` - Rust adapter implementations (isolated from algorithm files)
   - `rust/` - Rust crate with PyO3 bindings
   - Multi-platform wheel builds (Linux, macOS, Windows) via GitHub Actions
 
