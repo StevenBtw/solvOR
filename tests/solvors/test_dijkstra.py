@@ -1,5 +1,7 @@
 """Tests for Dijkstra's algorithm."""
 
+import pytest
+
 from solvor.dijkstra import dijkstra, dijkstra_edges
 from solvor.types import Status
 
@@ -171,3 +173,47 @@ class TestDijkstraEdgesPython:
         edges = [(0, 1, 1.0)]
         result = dijkstra_edges(3, edges, 0, target=2, backend="python")
         assert result.status == Status.INFEASIBLE
+
+    def test_multiple_paths_python(self):
+        """Test all-distances mode with multiple paths to same node (exercises heap dedup)."""
+        # Multiple paths to node 2: 0->1->2 (cost 3) and 0->2 (cost 5)
+        edges = [(0, 1, 1.0), (1, 2, 2.0), (0, 2, 5.0)]
+        result = dijkstra_edges(3, edges, 0, backend="python")
+        assert result.solution[2] == 3.0  # Shortest path is 0->1->2
+
+
+class TestDijkstraEdgesRust:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor._rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_simple_path_rust(self):
+        edges = [(0, 1, 1.0), (1, 2, 2.0), (0, 2, 10.0)]
+        result = dijkstra_edges(3, edges, 0, target=2, backend="rust")
+        assert result.solution == [0, 1, 2]
+        assert result.objective == 3.0
+
+    def test_all_distances_rust(self):
+        edges = [(0, 1, 1.0), (1, 2, 2.0)]
+        result = dijkstra_edges(3, edges, 0, backend="rust")
+        assert result.solution[0] == 0.0
+        assert result.solution[1] == 1.0
+        assert result.solution[2] == 3.0
+
+    def test_no_path_rust(self):
+        edges = [(0, 1, 1.0)]
+        result = dijkstra_edges(3, edges, 0, target=2, backend="rust")
+        assert result.status == Status.INFEASIBLE
+
+    def test_large_graph_rust(self):
+        """Test Rust handles larger graphs correctly."""
+        n = 100
+        edges = [(i, i + 1, 1.0) for i in range(n - 1)]
+        result = dijkstra_edges(n, edges, 0, target=n - 1, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == n - 1

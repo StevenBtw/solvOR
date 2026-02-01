@@ -1,5 +1,7 @@
 """Tests for PageRank algorithm."""
 
+import pytest
+
 from solvor.pagerank import pagerank, pagerank_edges
 from solvor.types import Status
 
@@ -182,3 +184,31 @@ class TestPageRankEdgesPython:
         edges = [(1, 0), (2, 0), (3, 0)]
         result = pagerank_edges(4, edges, backend="python")
         assert result.solution[0] > result.solution[1]
+
+
+class TestPageRankEdgesRust:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor._rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_simple_rust(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = pagerank_edges(3, edges, backend="rust")
+        assert abs(sum(result.solution.values()) - 1.0) < 0.01
+
+    def test_star_rust(self):
+        edges = [(1, 0), (2, 0), (3, 0)]
+        result = pagerank_edges(4, edges, backend="rust")
+        assert result.solution[0] > result.solution[1]
+
+    def test_large_graph_rust(self):
+        """Test Rust handles larger graphs correctly."""
+        n = 100
+        edges = [(i, (i + 1) % n) for i in range(n)]
+        result = pagerank_edges(n, edges, backend="rust")
+        assert abs(sum(result.solution.values()) - 1.0) < 0.01
