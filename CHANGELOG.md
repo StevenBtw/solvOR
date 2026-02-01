@@ -2,7 +2,7 @@
 
 What broke, what got fixed, and what's new.
 
-## [0.6.0] - 2026-01-31
+## [0.6.0] - 2026-02-01
 
 **Rust acceleration!** Optional Rust backend for graph algorithms with 3-60x speedup, ported from [Grafeo](https://github.com/GrafeoDB/grafeo).
 
