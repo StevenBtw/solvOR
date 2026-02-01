@@ -1,6 +1,6 @@
 [project]
 name = "solvOR"
-version = "0.5.5"
+version = "0.6.0"
 description = "Solvor all your optimization needs."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -33,6 +33,7 @@ dev = [
     "ruff>=0.14.14",
     "pre-commit>=4.5.1",
     "ty>=0.0.14",
+    "maturin>=1.7,<2.0",
 ]
 docs = [
     "mkdocs>=1.6",
@@ -42,8 +43,15 @@ docs = [
 ]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "."
+module-name = "solvor._solvor_rust"
+manifest-path = "rust/Cargo.toml"
+include = ["solvor/**/*.py", "py.typed"]
 
 [tool.ruff]
 line-length = 120

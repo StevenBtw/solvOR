@@ -32,12 +32,14 @@ back (e.g., trading routes where some legs earn profit).
 Don't use this for: non-negative edges (use dijkstra), or all-pairs (floyd_warshall).
 """
 
+from solvor._rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import check_edge_nodes, check_in_range, check_positive
 
 __all__ = ["bellman_ford"]
 
 
+@with_rust_backend
 def bellman_ford(
     start: int,
     edges: list[tuple[int, int, float]],

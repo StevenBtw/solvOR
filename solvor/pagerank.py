@@ -44,9 +44,10 @@ the edge direction in your neighbors function.
 
 from collections.abc import Callable, Iterable
 
+from solvor._rust import with_rust_backend
 from solvor.types import Result, Status
 
-__all__ = ["pagerank"]
+__all__ = ["pagerank", "pagerank_edges"]
 
 
 def pagerank[S](
@@ -104,3 +105,20 @@ def pagerank[S](
             return Result(scores, max_diff, iterations, n)
 
     return Result(scores, max_diff, iterations, n, Status.MAX_ITER)
+
+
+@with_rust_backend
+def pagerank_edges(
+    n_nodes: int,
+    edges: list[tuple[int, int]],
+    *,
+    damping: float = 0.85,
+    max_iter: int = 100,
+    tol: float = 1e-6,
+) -> Result:
+    """Edge-list PageRank for integer node graphs."""
+    adj: list[list[int]] = [[] for _ in range(n_nodes)]
+    for u, v in edges:
+        adj[u].append(v)
+
+    return pagerank(range(n_nodes), lambda s: adj[s], damping=damping, max_iter=max_iter, tol=tol)

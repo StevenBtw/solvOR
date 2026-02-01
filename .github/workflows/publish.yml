@@ -3,14 +3,19 @@ name: Publish to PyPI
 on:
   release:
     types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  # Verify version matches tag
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Verify version matches tag
+        if: github.event_name == 'release'
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
           PKG=$(grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
@@ -20,30 +25,147 @@ jobs:
           fi
           echo "Version verified: $PKG"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Build package
-        run: uv build
-
-      - name: Upload dist
+  # Build wheels for Linux
+  linux:
+    needs: verify
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: ubuntu-latest
+            target: x86_64
+          - runner: ubuntu-latest
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+          manylinux: auto
+      - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist/
+          name: wheels-linux-${{ matrix.platform.target }}
+          path: dist
 
-  publish:
-    needs: build
+  # Build wheels for Linux (musl)
+  musllinux:
+    needs: verify
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+          manylinux: musllinux_1_2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-musllinux-${{ matrix.target }}
+          path: dist
+
+  # Build wheels for Windows
+  windows:
+    needs: verify
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        target: [x64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.target }}
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows-${{ matrix.target }}
+          path: dist
+
+  # Build wheels for macOS
+  macos:
+    needs: verify
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      matrix:
+        platform:
+          - runner: macos-13
+            target: x86_64
+          - runner: macos-14
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --find-interpreter
+          sccache: "true"
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-macos-${{ matrix.platform.target }}
+          path: dist
+
+  # Build source distribution
+  sdist:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-sdist
+          path: dist
+
+  # Publish to PyPI
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    needs: [linux, musllinux, windows, macos, sdist]
     environment: pypi
     permissions:
       id-token: write
     steps:
-      - name: Download dist
+      - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
-          name: dist
-          path: dist/
-
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

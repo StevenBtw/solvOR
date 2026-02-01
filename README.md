@@ -481,10 +481,36 @@ Result(
 
 ---
 
+## Performance
+
+**Have your cake and eat it too.** solvOR gives you both:
+
+- **Readable Python** - Every algorithm is implemented in clear, documented Python you can study and modify
+- **Rust Performance** - Optional drop-in Rust backends with 30-50x speedup for compute-heavy algorithms
+
+```python
+from solvor import floyd_warshall
+
+# Automatically uses Rust when available (30-50x faster)
+result = floyd_warshall(n_nodes, edges)
+
+# Force a specific backend
+result = floyd_warshall(n_nodes, edges, backend="python")  # for debugging/learning
+result = floyd_warshall(n_nodes, edges, backend="rust")    # explicit performance
+```
+
+| Algorithm | Python | Rust | Speedup |
+|-----------|--------|------|---------|
+| floyd_warshall (250 nodes) | 956ms | 20ms | **48x** |
+
+Pre-built wheels include Rust extensions for Linux, macOS, and Windows. If Rust isn't available, solvOR falls back to Python automatically.
+
+---
+
 ## Philosophy
 
-1. **Pure Python:** no numpy, no scipy, no compiled extensions. Copy it, change it, break it, learn from it.
-2. **Readable:** each solvor fits in one file you can actually read
+1. **Readable first:** every algorithm in clear Python you can actually understand
+2. **Performance when needed:** optional Rust backends, zero-copy where possible
 3. **Consistent:** same Result format, same minimize/maximize convention
 4. **Practical:** solves real problems (and AoC puzzles)
 

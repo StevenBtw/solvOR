@@ -2,6 +2,26 @@
 
 What broke, what got fixed, and what's new.
 
+## [0.6.0] - 2026-01-31
+
+**Rust acceleration!** Optional Rust backend for graph algorithms with 30-50x speedup, ported from Grafeo.
+
+### Added
+
+- **Rust Backend:** Optional high-performance Rust implementations via PyO3. Algorithms automatically use Rust when available, with seamless Python fallback. Use `backend="rust"` or `backend="python"` to force a specific implementation.
+
+- **floyd_warshall:** First algorithm with Rust backend. 30-50x speedup on benchmarks (e.g., 250 nodes: 956ms → 20ms).
+
+- **Backend Infrastructure:**
+  - `solvor/_rust.py` - Backend detection and routing
+  - `rust/` - Rust crate with PyO3 bindings
+  - Multi-platform wheel builds (Linux, macOS, Windows) via GitHub Actions
+
+### Changed
+
+- **Build System:** Switched from hatchling to maturin for mixed Python/Rust builds.
+- **CI:** New `publish.yml` workflow builds wheels for all platforms.
+
 ## [0.5.5] - 2026-01-31
 
 ### Added
@@ -338,6 +358,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.6.0]: https://github.com/StevenBtw/solvOR/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/StevenBtw/solvOR/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/StevenBtw/solvOR/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/StevenBtw/solvOR/compare/v0.5.2...v0.5.3

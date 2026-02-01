@@ -1,6 +1,5 @@
 """Tests for shared pricing utilities."""
 
-
 from solvor.utils.pricing import greedy_knapsack, knapsack_pricing, simplex_phase
 
 

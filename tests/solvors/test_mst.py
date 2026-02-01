@@ -203,3 +203,24 @@ class TestStress:
         result = kruskal(n, edges)
         assert result.status == Status.OPTIMAL
         assert len(result.solution) == n - 1
+
+
+class TestKruskalPythonBackend:
+    """Test Python backend explicitly."""
+
+    def test_simple_python(self):
+        edges = [(0, 1, 1), (1, 2, 2), (0, 2, 3)]
+        result = kruskal(3, edges, backend="python")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 3
+
+    def test_disconnected_python(self):
+        edges = [(0, 1, 1)]
+        result = kruskal(3, edges, backend="python")
+        assert result.status == Status.INFEASIBLE
+
+    def test_allow_forest_python(self):
+        edges = [(0, 1, 1), (2, 3, 2)]
+        result = kruskal(4, edges, allow_forest=True, backend="python")
+        assert result.status == Status.FEASIBLE
+        assert result.objective == 3

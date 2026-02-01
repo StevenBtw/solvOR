@@ -1,6 +1,6 @@
 """Tests for PageRank algorithm."""
 
-from solvor.pagerank import pagerank
+from solvor.pagerank import pagerank, pagerank_edges
 from solvor.types import Status
 
 
@@ -147,3 +147,38 @@ class TestPageRankStress:
         result = pagerank(nodes, lambda v: graph.get(v, []))
         assert result.status == Status.OPTIMAL
         assert result.iterations < 100
+
+
+class TestPageRankEdges:
+    """Tests for edge-list PageRank variant."""
+
+    def test_simple(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = pagerank_edges(3, edges)
+        # Cycle should have equal ranks
+        assert abs(result.solution[0] - result.solution[1]) < 0.01
+
+    def test_star(self):
+        # All point to node 0
+        edges = [(1, 0), (2, 0), (3, 0)]
+        result = pagerank_edges(4, edges)
+        assert result.solution[0] > result.solution[1]
+
+    def test_sums_to_one(self):
+        edges = [(0, 1), (1, 2), (2, 0), (0, 2)]
+        result = pagerank_edges(3, edges)
+        assert abs(sum(result.solution.values()) - 1.0) < 0.01
+
+
+class TestPageRankEdgesPython:
+    """Test Python backend explicitly."""
+
+    def test_simple_python(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = pagerank_edges(3, edges, backend="python")
+        assert abs(sum(result.solution.values()) - 1.0) < 0.01
+
+    def test_star_python(self):
+        edges = [(1, 0), (2, 0), (3, 0)]
+        result = pagerank_edges(4, edges, backend="python")
+        assert result.solution[0] > result.solution[1]

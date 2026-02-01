@@ -151,3 +151,23 @@ class TestStress:
         for i in range(n):
             for j in range(n):
                 assert result.solution[i][j] == abs(i - j)
+
+
+class TestPythonBackend:
+    """Test Python backend explicitly to ensure fallback works."""
+
+    def test_simple_python(self):
+        edges = [(0, 1, 3), (1, 2, 1), (0, 2, 6)]
+        result = floyd_warshall(3, edges, backend="python")
+        assert result.status == Status.OPTIMAL
+        assert result.solution[0][2] == 4
+
+    def test_negative_cycle_python(self):
+        edges = [(0, 1, 1), (1, 2, -3), (2, 0, 1)]
+        result = floyd_warshall(3, edges, backend="python")
+        assert result.status == Status.UNBOUNDED
+
+    def test_undirected_python(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = floyd_warshall(3, edges, directed=False, backend="python")
+        assert result.solution[2][0] == 3
