@@ -52,7 +52,7 @@ features = ["pyo3/extension-module"]
 python-source = "."
 module-name = "solvor._solvor_rust"
 manifest-path = "rust/Cargo.toml"
-include = ["solvor/**/*.py", "py.typed"]
+include = ["solvor/**/*.py", "py.typed", "LICENSE"]
 
 [tool.ruff]
 line-length = 120
