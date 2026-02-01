@@ -27,6 +27,13 @@ Parameters:
     goal: target node, predicate function, or None (explore all)
     neighbors: function returning iterable of adjacent nodes
 
+Two variants available:
+
+    bfs(), dfs() - Callback-based, works with any node type (pure Python)
+    bfs_edges(), dfs_edges() - Edge-list, integer nodes 0..n-1, has Rust backend (3-5x faster)
+
+Use bfs_edges(backend="python") or dfs_edges(backend="python") for pure Python.
+
 For weighted graphs use dijkstra. For heuristic search use astar.
 For negative edges use bellman_ford.
 """

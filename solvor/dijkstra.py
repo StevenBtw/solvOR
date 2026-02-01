@@ -26,6 +26,13 @@ Parameters:
     goal: target node, or predicate function returning True at goal
     neighbors: function returning (neighbor, edge_cost) pairs
 
+Two variants available:
+
+    dijkstra() - Callback-based, works with any node type (pure Python)
+    dijkstra_edges() - Edge-list, integer nodes 0..n-1, has Rust backend (5-10x faster)
+
+Use dijkstra_edges(backend="python") for the pure Python implementation.
+
 For negative edges use bellman_ford, Dijkstra's negativity was legendary,
 just not in his algorithm. For unweighted graphs use bfs (simpler).
 With a good distance estimate, use a_star.

@@ -20,7 +20,7 @@ from __future__ import annotations
 import functools
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Literal, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -31,9 +31,6 @@ _rust_available: bool | None = None
 _warned = False
 _logger = logging.getLogger("solvor")
 _adapters: dict[str, Callable] = {}
-
-P = ParamSpec("P")
-T = TypeVar("T")
 
 
 def rust_available() -> bool:
@@ -111,7 +108,7 @@ def get_rust_module() -> ModuleType:
     return solvor._solvor_rust
 
 
-def rust_adapter(name: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
+def rust_adapter[**P, T](name: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Register a Rust adapter function for an algorithm.
 
     Args:
@@ -131,7 +128,7 @@ def rust_adapter(name: str) -> Callable[[Callable[P, T]], Callable[P, T]]:
     return decorator
 
 
-def with_rust_backend(fn: Callable[P, T]) -> Callable[..., T]:
+def with_rust_backend[**P, T](fn: Callable[P, T]) -> Callable[..., T]:
     """Decorator that adds Rust backend support with minimal code changes.
 
     Adds a `backend` parameter to the function. Routes to registered Rust
