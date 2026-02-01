@@ -1,6 +1,6 @@
 """Solvor - Pure Python Optimization Solvers."""
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 # Register Rust adapters (must be after algorithm imports)
 import solvor.rust.adapters  # noqa: F401, E402

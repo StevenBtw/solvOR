@@ -2,6 +2,14 @@
 
 What broke, what got fixed, and what's new.
 
+## [0.6.1] - 2026-02-01
+
+### Fixed
+
+- **Build:** Fixed LICENSE file not included in source distribution.
+- **CI:** Updated macOS runner from deprecated macos-13 to macos-14.
+- **PyPI:** Normalized package name to lowercase `solvor` for wheel compatibility.
+
 ## [0.6.0] - 2026-02-01
 
 **Rust acceleration!** Optional Rust backend for graph algorithms with 3-60x speedup, ported from [Grafeo](https://github.com/GrafeoDB/grafeo).
