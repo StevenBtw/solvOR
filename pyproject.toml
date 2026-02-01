@@ -1,5 +1,5 @@
 [project]
-name = "solvOR"
+name = "solvor"
 version = "0.6.0"
 description = "Solvor all your optimization needs."
 readme = "README.md"
