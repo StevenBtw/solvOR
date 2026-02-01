@@ -170,7 +170,7 @@ class TestLouvainStress:
         """K_5_5 bipartite graph."""
         left = [f"L{i}" for i in range(5)]
         right = [f"R{i}" for i in range(5)]
-        graph = {l: right[:] for l in left}
+        graph = {node: right[:] for node in left}
         graph.update({r: left[:] for r in right})
         result = louvain(left + right, lambda v: graph.get(v, []))
         # All nodes accounted for

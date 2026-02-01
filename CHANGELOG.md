@@ -26,15 +26,18 @@ What broke, what got fixed, and what's new.
 - **Performance documentation:** New [Performance page](https://solvOR.ai/getting-started/performance/) with benchmarks, backend usage guide, and API comparison.
 
 - **Backend Infrastructure:**
-  - `solvor/_rust.py` - Backend detection and routing with `@with_rust_backend` decorator
-  - `solvor/_rust_adapters.py` - Rust adapter implementations (isolated from algorithm files)
+  - `solvor/rust/` - Backend detection, routing, and adapters
   - `rust/` - Rust crate with PyO3 bindings
   - Multi-platform wheel builds (Linux, macOS, Windows) via GitHub Actions
+
+- **Developer Tooling:**
+  - Added [prek](https://github.com/j178/prek) for fast pre-commit hooks (Rust-based, uv-compatible)
 
 ### Changed
 
 - **Build System:** Switched from hatchling to maturin for mixed Python/Rust builds.
 - **CI:** New `publish.yml` workflow builds wheels for all platforms.
+- **Code Organization:** Moved Rust backend utilities to `solvor/rust/` module.
 
 ## [0.5.5] - 2026-01-31
 
