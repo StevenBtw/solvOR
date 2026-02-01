@@ -38,6 +38,13 @@ Parameters:
     max_iter: maximum iterations (default 100)
     tol: convergence tolerance (default 1e-6)
 
+Two variants available:
+
+    pagerank() - Callback-based, works with any node type (pure Python)
+    pagerank_edges() - Edge-list, integer nodes 0..n-1, has Rust backend (10-15x faster)
+
+Use pagerank_edges(backend="python") for the pure Python implementation.
+
 Works with any hashable node type. For incoming edges (predecessors), swap
 the edge direction in your neighbors function.
 """

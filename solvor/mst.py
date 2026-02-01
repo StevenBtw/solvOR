@@ -31,6 +31,10 @@ Parameters:
     edges: list of (u, v, weight) tuples
     graph: adjacency dict (Prim's)
     allow_forest: return partial result for disconnected graphs
+    backend: "auto", "rust", or "python" (default: "auto") - for kruskal only
+
+Kruskal has an optional Rust backend (5-10x faster). Use kruskal(backend="python")
+for the pure Python implementation. Prim is pure Python only.
 
 Both algorithms return the same MST. Don't use this for directed graphs
 or shortest paths (that's dijkstra).

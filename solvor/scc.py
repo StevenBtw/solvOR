@@ -36,6 +36,13 @@ Parameters:
     nodes: iterable of all nodes in the graph
     neighbors: function returning iterable of outgoing edges (successors)
 
+Two variants available:
+
+    strongly_connected_components(), topological_sort() - Callback-based, any node type (pure Python)
+    *_edges() variants - Edge-list, integer nodes 0..n-1, Rust backend (5-10x faster)
+
+Use *_edges(backend="python") for the pure Python implementation.
+
 Works with any hashable node type. For incoming edges (predecessors), swap
 the edge direction in your neighbors function.
 
