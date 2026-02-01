@@ -648,7 +648,7 @@ class TestExpressionOperators:
         """Test Expr + Expr."""
         m = Model()
         x = m.int_var(0, 5, "x")
-        y = m.int_var(0, 5, "y")
+        _y = m.int_var(0, 5, "y")  # noqa: F841
         expr = (x + 1) + 2  # Expr + int
         m.add(expr == 6)
         result = m.solve(solver="sat")
@@ -953,7 +953,7 @@ class TestEdgeCaseCoverage:
     def test_sum_le_empty(self):
         """Test sum_le with empty list."""
         m = Model()
-        x = m.int_var(1, 5, "x")
+        _x = m.int_var(1, 5, "x")  # noqa: F841
         m.add(m.sum_le([], 5))  # sum([]) <= 5 is always true
         result = m.solve()
         assert result.ok
@@ -1055,7 +1055,7 @@ class TestEdgeCaseCoverage:
         # Create 5 == (y + 2) => y == 3
         # Need to construct this manually via Expr
         expr = y + 2
-        constraint = (5).__eq__(expr)  # Won't work with plain int
+        _constraint = (5).__eq__(expr)  # noqa: F841  Won't work with plain int
         # Instead, use expr == 5 which covers the same path via symmetry
         m.add(expr == 5)
         result = m.solve(solver="sat")

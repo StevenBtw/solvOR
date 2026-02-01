@@ -1,5 +1,7 @@
 """Tests for Bellman-Ford algorithm."""
 
+import pytest
+
 from solvor.bellman_ford import bellman_ford
 from solvor.types import Status
 
@@ -112,3 +114,60 @@ class TestStress:
         result = bellman_ford(0, edges, n, target=n - 1)
         assert result.status == Status.OPTIMAL
         assert result.objective == n - 1
+
+
+class TestPythonBackend:
+    """Test Python backend explicitly."""
+
+    def test_simple_path_python(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = bellman_ford(0, edges, 3, target=2, backend="python")
+        assert result.status == Status.OPTIMAL
+        assert result.solution == [0, 1, 2]
+
+    def test_negative_cycle_python(self):
+        edges = [(0, 1, 1), (1, 2, -1), (2, 0, -1)]
+        result = bellman_ford(0, edges, 3, backend="python")
+        assert result.status == Status.UNBOUNDED
+
+    def test_all_distances_python(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = bellman_ford(0, edges, 3, backend="python")
+        assert result.solution[0] == 0
+        assert result.solution[1] == 1
+        assert result.solution[2] == 3
+
+
+class TestRustBackend:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_simple_path_rust(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = bellman_ford(0, edges, 3, target=2, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.solution == [0, 1, 2]
+
+    def test_negative_cycle_rust(self):
+        edges = [(0, 1, 1), (1, 2, -1), (2, 0, -1)]
+        result = bellman_ford(0, edges, 3, backend="rust")
+        assert result.status == Status.UNBOUNDED
+
+    def test_all_distances_rust(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = bellman_ford(0, edges, 3, backend="rust")
+        assert result.solution[0] == 0
+        assert result.solution[1] == 1
+        assert result.solution[2] == 3
+
+    def test_negative_edges_rust(self):
+        edges = [(0, 1, 5), (1, 2, -3), (2, 3, 1)]
+        result = bellman_ford(0, edges, 4, target=3, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 3

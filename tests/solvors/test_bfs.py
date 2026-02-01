@@ -1,6 +1,8 @@
 """Tests for BFS and DFS solvers."""
 
-from solvor.bfs import bfs, dfs
+import pytest
+
+from solvor.bfs import bfs, bfs_edges, dfs, dfs_edges
 from solvor.types import Status
 
 
@@ -135,3 +137,103 @@ class TestStress:
         result = bfs(0, n, lambda node: graph.get(node, []))
         assert result.status == Status.OPTIMAL
         assert result.objective == n
+
+
+class TestBFSEdges:
+    """Tests for edge-list BFS variant."""
+
+    def test_simple_path(self):
+        edges = [(0, 1), (1, 2), (0, 2)]
+        result = bfs_edges(3, edges, 0, target=2)
+        assert result.solution == [0, 2]
+        assert result.objective == 1
+
+    def test_no_path(self):
+        edges = [(0, 1)]
+        result = bfs_edges(3, edges, 0, target=2)
+        assert result.status == Status.INFEASIBLE
+
+    def test_explore_all(self):
+        edges = [(0, 1), (1, 2)]
+        result = bfs_edges(3, edges, 0)
+        assert 0 in result.solution
+        assert 1 in result.solution
+        assert 2 in result.solution
+
+
+class TestDFSEdges:
+    """Tests for edge-list DFS variant."""
+
+    def test_finds_path(self):
+        edges = [(0, 1), (1, 2)]
+        result = dfs_edges(3, edges, 0, target=2)
+        assert result.solution[0] == 0
+        assert result.solution[-1] == 2
+
+    def test_no_path(self):
+        edges = [(0, 1)]
+        result = dfs_edges(3, edges, 0, target=2)
+        assert result.status == Status.INFEASIBLE
+
+
+class TestBFSDFSEdgesPython:
+    """Test Python backend explicitly."""
+
+    def test_bfs_path_python(self):
+        edges = [(0, 1), (1, 2), (0, 2)]
+        result = bfs_edges(3, edges, 0, target=2, backend="python")
+        assert result.solution == [0, 2]
+
+    def test_bfs_explore_python(self):
+        edges = [(0, 1), (1, 2)]
+        result = bfs_edges(3, edges, 0, backend="python")
+        assert len(result.solution) == 3
+
+    def test_dfs_path_python(self):
+        edges = [(0, 1), (1, 2)]
+        result = dfs_edges(3, edges, 0, target=2, backend="python")
+        assert result.solution[-1] == 2
+
+    def test_dfs_explore_python(self):
+        edges = [(0, 1), (1, 2)]
+        result = dfs_edges(3, edges, 0, backend="python")
+        assert len(result.solution) == 3
+
+
+class TestBFSDFSEdgesRust:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_bfs_path_rust(self):
+        edges = [(0, 1), (1, 2), (0, 2)]
+        result = bfs_edges(3, edges, 0, target=2, backend="rust")
+        assert result.solution == [0, 2]
+
+    def test_bfs_explore_rust(self):
+        edges = [(0, 1), (1, 2)]
+        result = bfs_edges(3, edges, 0, backend="rust")
+        assert len(result.solution) == 3
+
+    def test_dfs_path_rust(self):
+        edges = [(0, 1), (1, 2)]
+        result = dfs_edges(3, edges, 0, target=2, backend="rust")
+        assert result.solution[-1] == 2
+
+    def test_dfs_explore_rust(self):
+        edges = [(0, 1), (1, 2)]
+        result = dfs_edges(3, edges, 0, backend="rust")
+        assert len(result.solution) == 3
+
+    def test_bfs_large_graph_rust(self):
+        """Test Rust handles larger graphs correctly."""
+        n = 100
+        edges = [(i, i + 1) for i in range(n - 1)]
+        result = bfs_edges(n, edges, 0, target=n - 1, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == n - 1

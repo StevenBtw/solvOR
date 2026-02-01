@@ -1,5 +1,7 @@
 """Tests for Minimum Spanning Tree algorithms."""
 
+import pytest
+
 from solvor.mst import kruskal, prim
 from solvor.types import Status
 
@@ -203,3 +205,60 @@ class TestStress:
         result = kruskal(n, edges)
         assert result.status == Status.OPTIMAL
         assert len(result.solution) == n - 1
+
+
+class TestKruskalPythonBackend:
+    """Test Python backend explicitly."""
+
+    def test_simple_python(self):
+        edges = [(0, 1, 1), (1, 2, 2), (0, 2, 3)]
+        result = kruskal(3, edges, backend="python")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 3
+
+    def test_disconnected_python(self):
+        edges = [(0, 1, 1)]
+        result = kruskal(3, edges, backend="python")
+        assert result.status == Status.INFEASIBLE
+
+    def test_allow_forest_python(self):
+        edges = [(0, 1, 1), (2, 3, 2)]
+        result = kruskal(4, edges, allow_forest=True, backend="python")
+        assert result.status == Status.FEASIBLE
+        assert result.objective == 3
+
+
+class TestKruskalRustBackend:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_simple_rust(self):
+        edges = [(0, 1, 1), (1, 2, 2), (0, 2, 3)]
+        result = kruskal(3, edges, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 3
+
+    def test_disconnected_rust(self):
+        edges = [(0, 1, 1)]
+        result = kruskal(3, edges, backend="rust")
+        assert result.status == Status.INFEASIBLE
+
+    def test_allow_forest_rust(self):
+        edges = [(0, 1, 1), (2, 3, 2)]
+        result = kruskal(4, edges, allow_forest=True, backend="rust")
+        assert result.status == Status.FEASIBLE
+        assert result.objective == 3
+
+    def test_large_graph_rust(self):
+        """Test Rust handles larger graphs correctly."""
+        n = 100
+        edges = [(i, i + 1, 1.0) for i in range(n - 1)]
+        result = kruskal(n, edges, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.objective == n - 1

@@ -36,6 +36,13 @@ Parameters:
     nodes: iterable of all nodes in the graph
     neighbors: function returning iterable of outgoing edges (successors)
 
+Two variants available:
+
+    strongly_connected_components(), topological_sort() - Callback-based, any node type (pure Python)
+    *_edges() variants - Edge-list, integer nodes 0..n-1, Rust backend (5-10x faster)
+
+Use *_edges(backend="python") for the pure Python implementation.
+
 Works with any hashable node type. For incoming edges (predecessors), swap
 the edge direction in your neighbors function.
 
@@ -49,9 +56,16 @@ single path), you may need to increase the recursion limit:
 from collections import defaultdict, deque
 from collections.abc import Callable, Iterable
 
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 
-__all__ = ["strongly_connected_components", "topological_sort", "condense"]
+__all__ = [
+    "strongly_connected_components",
+    "topological_sort",
+    "condense",
+    "strongly_connected_components_edges",
+    "topological_sort_edges",
+]
 
 
 def strongly_connected_components[S](
@@ -201,3 +215,29 @@ def condense[S](
         iterations,
         len(node_list),
     )
+
+
+@with_rust_backend
+def strongly_connected_components_edges(
+    n_nodes: int,
+    edges: list[tuple[int, int]],
+) -> Result:
+    """Edge-list SCC for integer node graphs."""
+    adj: list[list[int]] = [[] for _ in range(n_nodes)]
+    for u, v in edges:
+        adj[u].append(v)
+
+    return strongly_connected_components(range(n_nodes), lambda s: adj[s])
+
+
+@with_rust_backend
+def topological_sort_edges(
+    n_nodes: int,
+    edges: list[tuple[int, int]],
+) -> Result:
+    """Edge-list topological sort for integer node graphs."""
+    adj: list[list[int]] = [[] for _ in range(n_nodes)]
+    for u, v in edges:
+        adj[u].append(v)
+
+    return topological_sort(range(n_nodes), lambda s: adj[s])

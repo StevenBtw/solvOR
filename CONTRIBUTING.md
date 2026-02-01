@@ -623,6 +623,67 @@ def _helper(...):
 
 The CI will automatically pick up new tests - no workflow changes needed.
 
+## Rust Backends
+
+solvOR uses optional Rust implementations for performance-critical algorithms. The philosophy: **readable Python for learning, Rust for speed**.
+
+### Architecture
+
+```
+solvor/
+├── floyd_warshall.py    # Python implementation + backend routing
+├── _rust.py             # Backend detection and routing utilities
+└── ...
+
+rust/
+├── Cargo.toml
+└── src/
+    ├── lib.rs           # PyO3 module entry
+    ├── types.rs         # Status, Progress types
+    ├── callback.rs      # Progress callback handling
+    ├── algorithms/      # Pure Rust implementations
+    └── bindings/        # PyO3 wrappers
+```
+
+### Adding a Rust Backend
+
+1. **Keep the Python implementation** - It stays for readability and fallback
+2. **Add Rust algorithm** in `rust/src/algorithms/<name>.rs`
+3. **Add PyO3 binding** in `rust/src/bindings/<category>.rs`
+4. **Register in `lib.rs`** with `m.add_function(...)`
+5. **Add backend parameter** to Python function:
+
+```python
+def my_algorithm(..., backend: Literal["auto", "rust", "python"] | None = None) -> Result:
+    selected = get_backend(backend)
+    if selected == "rust":
+        return _my_algorithm_rust(...)
+    return _my_algorithm_python(...)
+```
+
+### Development
+
+```bash
+# Build Rust extension (debug)
+uv run maturin develop
+
+# Build with optimizations (for benchmarking)
+uv run maturin develop --release
+
+# Run Rust tests
+cargo test --manifest-path rust/Cargo.toml
+
+# Check Rust code
+cargo check --manifest-path rust/Cargo.toml
+```
+
+### Guidelines
+
+- **Python stays readable** - Don't optimize Python code at the expense of clarity
+- **Rust is optional** - Package must work without Rust (fallback to Python)
+- **Same API** - Rust and Python must have identical function signatures
+- **Test both backends** - Use `backend` parameter in tests to verify parity
+
 ## Testing
 
 Tests are organized into two categories:

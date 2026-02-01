@@ -2,6 +2,43 @@
 
 What broke, what got fixed, and what's new.
 
+## [0.6.0] - 2026-01-31
+
+**Rust acceleration!** Optional Rust backend for graph algorithms with 3-60x speedup, ported from [Grafeo](https://github.com/GrafeoDB/grafeo).
+
+### Added
+
+- **Rust Backend:** Optional high-performance Rust implementations via PyO3. Algorithms automatically use Rust when available, with seamless Python fallback. Use `backend="rust"` or `backend="python"` to force a specific implementation.
+
+- **Algorithms with Rust backends:**
+  - `floyd_warshall` - All-pairs shortest paths (45-60x speedup)
+  - `bellman_ford` - Negative weight shortest paths (10-20x speedup)
+  - `dijkstra_edges` - Single-source shortest paths (5-10x speedup)
+  - `bfs_edges`, `dfs_edges` - Graph traversal (3-5x speedup)
+  - `pagerank_edges` - Node importance ranking (10-15x speedup)
+  - `strongly_connected_components_edges`, `topological_sort_edges` - Dependency analysis (5-10x speedup)
+  - `kruskal` - Minimum spanning tree (5-10x speedup)
+
+- **Two API styles for graph algorithms:**
+  - Callback-based (`dijkstra`, `bfs`, etc.) - Flexible, works with any node type, pure Python
+  - Edge-list (`dijkstra_edges`, `bfs_edges`, etc.) - Integer nodes 0..n-1, Rust-accelerated
+
+- **Performance documentation:** New [Performance page](https://solvOR.ai/getting-started/performance/) with benchmarks, backend usage guide, and API comparison.
+
+- **Backend Infrastructure:**
+  - `solvor/rust/` - Backend detection, routing, and adapters
+  - `rust/` - Rust crate with PyO3 bindings
+  - Multi-platform wheel builds (Linux, macOS, Windows) via GitHub Actions
+
+- **Developer Tooling:**
+  - Added [prek](https://github.com/j178/prek) for fast pre-commit hooks (Rust-based, uv-compatible)
+
+### Changed
+
+- **Build System:** Switched from hatchling to maturin for mixed Python/Rust builds.
+- **CI:** New `publish.yml` workflow builds wheels for all platforms.
+- **Code Organization:** Moved Rust backend utilities to `solvor/rust/` module.
+
 ## [0.5.5] - 2026-01-31
 
 ### Added
@@ -137,7 +174,7 @@ Examples! Finally they all work (and can be used as extra tests! optional for no
 
 ## [0.4.7] - 2025-12-25
 
-Added a changelog (this file), a whole lot of solvors and some much needed optimizations, working on some more examples, but they need a bit more work still. 
+Added a changelog (this file), a whole lot of solvors and some much needed optimizations, working on some more examples, but they need a bit more work still.
 This could have been a 0.5.0 release, if it wasn't for the examples, readme and wiki. Will probably add the examples in the next release, then 0.5.0 with extra tests and more polish (readme/wiki/etc.).
 
 ### Added
@@ -199,7 +236,7 @@ Gradient-free optimizers join the party.
 ### Changed
 
 - Rewrote `cp.py` constraint propagation now cleaner
-- Rewrote `sat.py` SAT solver improvements, some I knew, some I learned about today 
+- Rewrote `sat.py` SAT solver improvements, some I knew, some I learned about today
 - Rewrote `utils.py` split into data_structures, helpers, validate
 
 ## [0.4.4] - 2025-12-23
@@ -338,6 +375,7 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[0.6.0]: https://github.com/StevenBtw/solvOR/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/StevenBtw/solvOR/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/StevenBtw/solvOR/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/StevenBtw/solvOR/compare/v0.5.2...v0.5.3

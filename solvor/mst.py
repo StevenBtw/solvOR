@@ -31,6 +31,10 @@ Parameters:
     edges: list of (u, v, weight) tuples
     graph: adjacency dict (Prim's)
     allow_forest: return partial result for disconnected graphs
+    backend: "auto", "rust", or "python" (default: "auto") - for kruskal only
+
+Kruskal has an optional Rust backend (5-10x faster). Use kruskal(backend="python")
+for the pure Python implementation. Prim is pure Python only.
 
 Both algorithms return the same MST. Don't use this for directed graphs
 or shortest paths (that's dijkstra).
@@ -39,12 +43,14 @@ or shortest paths (that's dijkstra).
 from collections.abc import Iterable
 from heapq import heappop, heappush
 
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import UnionFind, check_edge_nodes, check_positive
 
 __all__ = ["kruskal", "prim"]
 
 
+@with_rust_backend
 def kruskal(
     n_nodes: int,
     edges: list[tuple[int, int, float]],

@@ -1,0 +1,20 @@
+[package]
+name = "solvor-rs"
+version = "0.6.0"
+edition = "2024"
+license = "Apache-2.0"
+description = "Rust acceleration for solvOR optimization library"
+
+[lib]
+name = "_solvor_rust"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.27", features = ["extension-module"] }
+hashbrown = "0.16.1"
+ahash = "0.8"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3

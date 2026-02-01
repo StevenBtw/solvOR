@@ -1,6 +1,14 @@
 """Tests for SCC and topological sort."""
 
-from solvor.scc import condense, strongly_connected_components, topological_sort
+import pytest
+
+from solvor.scc import (
+    condense,
+    strongly_connected_components,
+    strongly_connected_components_edges,
+    topological_sort,
+    topological_sort_edges,
+)
 from solvor.types import Status
 
 
@@ -232,3 +240,86 @@ class TestStress:
         assert result.objective == 100
         for scc in result.solution:
             assert len(scc) == 2
+
+
+class TestSCCEdges:
+    """Tests for edge-list SCC variant."""
+
+    def test_single_cycle(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = strongly_connected_components_edges(3, edges)
+        assert result.objective == 1
+        assert len(result.solution[0]) == 3
+
+    def test_linear(self):
+        edges = [(0, 1), (1, 2)]
+        result = strongly_connected_components_edges(3, edges)
+        assert result.objective == 3
+
+
+class TestTopoEdges:
+    """Tests for edge-list topological sort variant."""
+
+    def test_linear(self):
+        edges = [(0, 1), (1, 2)]
+        result = topological_sort_edges(3, edges)
+        assert result.status == Status.OPTIMAL
+        assert result.solution.index(0) < result.solution.index(1)
+
+    def test_cycle_fails(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = topological_sort_edges(3, edges)
+        assert result.status == Status.INFEASIBLE
+
+
+class TestSCCEdgesPython:
+    """Test Python backend explicitly."""
+
+    def test_scc_python(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = strongly_connected_components_edges(3, edges, backend="python")
+        assert result.objective == 1
+
+    def test_topo_python(self):
+        edges = [(0, 1), (1, 2)]
+        result = topological_sort_edges(3, edges, backend="python")
+        assert result.status == Status.OPTIMAL
+
+    def test_topo_cycle_python(self):
+        edges = [(0, 1), (1, 0)]
+        result = topological_sort_edges(2, edges, backend="python")
+        assert result.status == Status.INFEASIBLE
+
+
+class TestSCCEdgesRust:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_scc_rust(self):
+        edges = [(0, 1), (1, 2), (2, 0)]
+        result = strongly_connected_components_edges(3, edges, backend="rust")
+        assert result.objective == 1
+
+    def test_topo_rust(self):
+        edges = [(0, 1), (1, 2)]
+        result = topological_sort_edges(3, edges, backend="rust")
+        assert result.status == Status.OPTIMAL
+
+    def test_topo_cycle_rust(self):
+        edges = [(0, 1), (1, 0)]
+        result = topological_sort_edges(2, edges, backend="rust")
+        assert result.status == Status.INFEASIBLE
+
+    def test_large_scc_rust(self):
+        """Test Rust handles larger graphs correctly."""
+        n = 100
+        edges = [(i, (i + 1) % n) for i in range(n)]
+        result = strongly_connected_components_edges(n, edges, backend="rust")
+        assert result.objective == 1
+        assert len(result.solution[0]) == n

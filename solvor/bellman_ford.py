@@ -25,19 +25,25 @@ Parameters:
     edges: list of (from, to, weight) tuples
     n_nodes: number of nodes in graph
     target: optional destination node
+    backend: "auto", "rust", or "python" (default: "auto")
 
 Negative weights model situations where traversing an edge gives you something
 back (e.g., trading routes where some legs earn profit).
 
+Backend: This function has an optional Rust backend (10-20x faster). Use
+backend="python" for the pure Python implementation.
+
 Don't use this for: non-negative edges (use dijkstra), or all-pairs (floyd_warshall).
 """
 
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import check_edge_nodes, check_in_range, check_positive
 
 __all__ = ["bellman_ford"]
 
 
+@with_rust_backend
 def bellman_ford(
     start: int,
     edges: list[tuple[int, int, float]],

@@ -125,6 +125,7 @@ nav:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
       - Choosing a Solver: getting-started/choosing-solver.md
+      - Performance: getting-started/performance.md
   - Algorithms:
       - Overview: algorithms/index.md
       - Linear Programming:

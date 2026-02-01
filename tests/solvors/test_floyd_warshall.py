@@ -1,5 +1,7 @@
 """Tests for Floyd-Warshall algorithm."""
 
+import pytest
+
 from solvor.floyd_warshall import floyd_warshall
 from solvor.types import Status
 
@@ -151,3 +153,58 @@ class TestStress:
         for i in range(n):
             for j in range(n):
                 assert result.solution[i][j] == abs(i - j)
+
+
+class TestPythonBackend:
+    """Test Python backend explicitly to ensure fallback works."""
+
+    def test_simple_python(self):
+        edges = [(0, 1, 3), (1, 2, 1), (0, 2, 6)]
+        result = floyd_warshall(3, edges, backend="python")
+        assert result.status == Status.OPTIMAL
+        assert result.solution[0][2] == 4
+
+    def test_negative_cycle_python(self):
+        edges = [(0, 1, 1), (1, 2, -3), (2, 0, 1)]
+        result = floyd_warshall(3, edges, backend="python")
+        assert result.status == Status.UNBOUNDED
+
+    def test_undirected_python(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = floyd_warshall(3, edges, directed=False, backend="python")
+        assert result.solution[2][0] == 3
+
+
+class TestRustBackend:
+    """Test Rust backend explicitly."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_simple_rust(self):
+        edges = [(0, 1, 3), (1, 2, 1), (0, 2, 6)]
+        result = floyd_warshall(3, edges, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.solution[0][2] == 4
+
+    def test_negative_cycle_rust(self):
+        edges = [(0, 1, 1), (1, 2, -3), (2, 0, 1)]
+        result = floyd_warshall(3, edges, backend="rust")
+        assert result.status == Status.UNBOUNDED
+
+    def test_undirected_rust(self):
+        edges = [(0, 1, 1), (1, 2, 2)]
+        result = floyd_warshall(3, edges, directed=False, backend="rust")
+        assert result.solution[2][0] == 3
+
+    def test_large_graph_rust(self):
+        """Test Rust handles larger graphs correctly."""
+        n = 100
+        edges = [(i, j, abs(i - j)) for i in range(n) for j in range(n) if i != j]
+        result = floyd_warshall(n, edges, backend="rust")
+        assert result.status == Status.OPTIMAL
+        assert result.solution[0][n - 1] == n - 1

@@ -26,6 +26,13 @@ Parameters:
     goal: target node, or predicate function returning True at goal
     neighbors: function returning (neighbor, edge_cost) pairs
 
+Two variants available:
+
+    dijkstra() - Callback-based, works with any node type (pure Python)
+    dijkstra_edges() - Edge-list, integer nodes 0..n-1, has Rust backend (5-10x faster)
+
+Use dijkstra_edges(backend="python") for the pure Python implementation.
+
 For negative edges use bellman_ford, Dijkstra's negativity was legendary,
 just not in his algorithm. For unweighted graphs use bfs (simpler).
 With a good distance estimate, use a_star.
@@ -34,10 +41,11 @@ With a good distance estimate, use a_star.
 from collections.abc import Callable, Iterable
 from heapq import heappop, heappush
 
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import reconstruct_path
 
-__all__ = ["dijkstra"]
+__all__ = ["dijkstra", "dijkstra_edges"]
 
 
 def dijkstra[S](
@@ -92,3 +100,36 @@ def dijkstra[S](
     if iterations >= max_iter:
         return Result(None, float("inf"), iterations, evaluations, Status.MAX_ITER)
     return Result(None, float("inf"), iterations, evaluations, Status.INFEASIBLE)
+
+
+@with_rust_backend
+def dijkstra_edges(
+    n_nodes: int,
+    edges: list[tuple[int, int, float]],
+    source: int,
+    *,
+    target: int | None = None,
+) -> Result:
+    """Edge-list Dijkstra for integer node graphs."""
+    adj: list[list[tuple[int, float]]] = [[] for _ in range(n_nodes)]
+    for u, v, w in edges:
+        adj[u].append((v, w))
+
+    if target is not None:
+        return dijkstra(source, target, lambda s: adj[s])
+
+    # All-distances mode: minimal Dijkstra to collect distances
+    dist: dict[int, float] = {source: 0.0}
+    heap: list[tuple[float, int]] = [(0.0, source)]
+    iterations = 0
+    while heap:
+        d, u = heappop(heap)
+        if d > dist.get(u, float("inf")):
+            continue
+        iterations += 1
+        for v, w in adj[u]:
+            nd = d + w
+            if nd < dist.get(v, float("inf")):
+                dist[v] = nd
+                heappush(heap, (nd, v))
+    return Result(dist, 0.0, iterations, 0)

@@ -74,6 +74,26 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./junit.xml
 
+  test-rust:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          python-version: "3.13"
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - run: uv sync --extra dev
+      - name: Build Rust extension
+        run: uv run maturin develop --release
+      - name: Run tests with Rust backend
+        run: uv run pytest tests/solvors/ -v -k "Rust" --no-cov
+      - name: Verify Rust backend is used
+        run: |
+          uv run python -c "from solvor.rust import rust_available; assert rust_available(), 'Rust should be available'"
+
   test-examples:
     runs-on: ubuntu-latest
     needs: lint

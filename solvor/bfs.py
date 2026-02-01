@@ -27,6 +27,13 @@ Parameters:
     goal: target node, predicate function, or None (explore all)
     neighbors: function returning iterable of adjacent nodes
 
+Two variants available:
+
+    bfs(), dfs() - Callback-based, works with any node type (pure Python)
+    bfs_edges(), dfs_edges() - Edge-list, integer nodes 0..n-1, has Rust backend (3-5x faster)
+
+Use bfs_edges(backend="python") or dfs_edges(backend="python") for pure Python.
+
 For weighted graphs use dijkstra. For heuristic search use astar.
 For negative edges use bellman_ford.
 """
@@ -34,10 +41,11 @@ For negative edges use bellman_ford.
 from collections import deque
 from collections.abc import Callable, Iterable
 
+from solvor.rust import with_rust_backend
 from solvor.types import Result, Status
 from solvor.utils import reconstruct_path
 
-__all__ = ["bfs", "dfs"]
+__all__ = ["bfs", "dfs", "bfs_edges", "dfs_edges"]
 
 
 def bfs[S](
@@ -112,3 +120,42 @@ def dfs[S](
         return Result(None, float("inf"), iterations, len(visited), Status.INFEASIBLE)
 
     return Result(visited, len(visited), iterations, len(visited))
+
+
+@with_rust_backend
+def bfs_edges(
+    n_nodes: int,
+    edges: list[tuple[int, int]],
+    source: int,
+    *,
+    target: int | None = None,
+) -> Result:
+    """Edge-list BFS for integer node graphs."""
+    adj: list[list[int]] = [[] for _ in range(n_nodes)]
+    for u, v in edges:
+        adj[u].append(v)
+
+    result = bfs(source, target, lambda s: adj[s])
+    if target is None:
+        # Convert visited set to sorted list for consistent output
+        return Result(sorted(result.solution), 0, result.iterations, result.evaluations)
+    return result
+
+
+@with_rust_backend
+def dfs_edges(
+    n_nodes: int,
+    edges: list[tuple[int, int]],
+    source: int,
+    *,
+    target: int | None = None,
+) -> Result:
+    """Edge-list DFS for integer node graphs."""
+    adj: list[list[int]] = [[] for _ in range(n_nodes)]
+    for u, v in edges:
+        adj[u].append(v)
+
+    result = dfs(source, target, lambda s: adj[s])
+    if target is None:
+        return Result(sorted(result.solution), 0, result.iterations, result.evaluations)
+    return result

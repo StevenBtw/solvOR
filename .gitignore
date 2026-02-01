@@ -5,6 +5,11 @@ dist/
 .venv/
 .cl*/*
 
+# Rust
+rust/target/
+*.pyd
+*.so
+
 # VS Code
 .vscode/
 
