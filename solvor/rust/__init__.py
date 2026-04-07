@@ -154,9 +154,9 @@ def with_rust_backend[**P, T](fn: Callable[P, T]) -> Callable[..., T]:
 
     @functools.wraps(fn)
     def wrapper(
-        *args: P.args,
+        *args,
         backend: Literal["auto", "rust", "python"] | None = None,
-        **kwargs: P.kwargs,
+        **kwargs,
     ) -> T:
         selected = get_backend(backend)
         if selected == "rust":

@@ -833,7 +833,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "maturin", marker = "extra == 'dev'", specifier = ">=1,<2.0" },
+    { name = "maturin", marker = "extra == 'dev'", specifier = ">=1.7,<2.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6" },
     { name = "mkdocs-git-revision-date-localized-plugin", marker = "extra == 'docs'", specifier = ">=1.5.1" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9" },

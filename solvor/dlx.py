@@ -161,6 +161,7 @@ def _build_links(matrix, columns=None, secondary=None):
                     first = node
                     prev_node = node
                 else:
+                    assert prev_node is not None
                     node.left = prev_node
                     prev_node.right = node
                     prev_node = node

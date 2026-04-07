@@ -42,7 +42,7 @@ __all__ = ["max_flow", "min_cost_flow", "solve_assignment"]
 
 
 def max_flow[Node](
-    graph: dict[Node, list[tuple[Node, int, ...]]],
+    graph: dict[Node, list[tuple[Node, int] | tuple[Node, int, int]]],
     source: Node,
     sink: Node,
 ) -> Result:
@@ -202,7 +202,7 @@ def solve_assignment(
     result = min_cost_flow(graph, source, sink, min(n, m))
 
     assignment = [-1] * n
-    flow_solution: dict[tuple[str, str], float] = result.solution  # type: ignore[assignment]
+    flow_solution: dict[tuple[str, str], float] = result.solution
     for (u, v), f in flow_solution.items():
         if f > 0 and u.startswith("L") and v.startswith("R"):
             i = int(u[1:])
