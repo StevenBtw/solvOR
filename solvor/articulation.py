@@ -153,7 +153,7 @@ def bridges[S](
                 # Edge (v, w) is a bridge if low[w] > discovery[v]
                 if low[w] > discovery[v]:
                     # Canonical ordering for consistent results
-                    edge = (v, w) if v < w else (w, v)  # type: ignore[operator]
+                    edge = (v, w) if v < w else (w, v)  # type: ignore[operator]  # ty: ignore[unsupported-operator]
                     bridge_list.append(edge)
 
             elif w != parent[v]:
