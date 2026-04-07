@@ -1,5 +1,6 @@
 //! PyO3 bindings for centrality algorithms.
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 
@@ -27,6 +28,18 @@ pub fn pagerank(
     max_iter: usize,
     tol: f64,
 ) -> PyResult<Py<PyDict>> {
+    if !(0.0..1.0).contains(&damping) {
+        return Err(PyValueError::new_err(format!(
+            "damping {damping} must be in [0, 1)"
+        )));
+    }
+    if max_iter == 0 {
+        return Err(PyValueError::new_err("max_iter must be positive"));
+    }
+    if tol <= 0.0 {
+        return Err(PyValueError::new_err("tol must be positive"));
+    }
+
     let result = py.detach(|| pr::pagerank(n_nodes, &edges, damping, max_iter, tol));
 
     let dict = PyDict::new(py);

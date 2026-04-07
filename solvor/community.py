@@ -153,7 +153,7 @@ def louvain[S](
     # Calculate final modularity
     modularity = 0.0
     for comm in communities:
-        edges_within = sum(adj[v].get(w, 0.0) for v in comm for w in comm if v < w)
+        edges_within = sum(adj[v].get(w, 0.0) for v in comm for w in comm if v < w)  # ty: ignore[unsupported-operator]
         comm_deg = sum(degree[v] for v in comm)
         modularity += edges_within / total_weight - resolution * (comm_deg / (2 * total_weight)) ** 2
 

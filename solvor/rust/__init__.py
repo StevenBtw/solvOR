@@ -136,7 +136,7 @@ def rust_adapter[**P, T](name: str) -> Callable[[Callable[P, T]], Callable[P, T]
         _adapters[name] = fn
         return fn
 
-    return decorator
+    return decorator  # ty: ignore[invalid-return-type]
 
 
 def with_rust_backend[**P, T](fn: Callable[P, T]) -> Callable[..., T]:
@@ -154,9 +154,9 @@ def with_rust_backend[**P, T](fn: Callable[P, T]) -> Callable[..., T]:
 
     @functools.wraps(fn)
     def wrapper(
-        *args: P.args,
+        *args,
         backend: Literal["auto", "rust", "python"] | None = None,
-        **kwargs: P.kwargs,
+        **kwargs,
     ) -> T:
         selected = get_backend(backend)
         if selected == "rust":

@@ -1,5 +1,6 @@
 //! PyO3 bindings for graph traversal algorithms.
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 
@@ -26,6 +27,19 @@ pub fn dijkstra(
     source: usize,
     target: Option<usize>,
 ) -> PyResult<Py<PyDict>> {
+    if source >= n_nodes {
+        return Err(PyValueError::new_err(format!(
+            "source {source} out of range for {n_nodes} nodes"
+        )));
+    }
+    if let Some(t) = target {
+        if t >= n_nodes {
+            return Err(PyValueError::new_err(format!(
+                "target {t} out of range for {n_nodes} nodes"
+            )));
+        }
+    }
+
     let result = py.detach(|| dij::dijkstra(n_nodes, &edges, source, target));
 
     let dict = PyDict::new(py);
@@ -84,6 +98,19 @@ pub fn bfs(
     source: usize,
     target: Option<usize>,
 ) -> PyResult<Py<PyDict>> {
+    if source >= n_nodes {
+        return Err(PyValueError::new_err(format!(
+            "source {source} out of range for {n_nodes} nodes"
+        )));
+    }
+    if let Some(t) = target {
+        if t >= n_nodes {
+            return Err(PyValueError::new_err(format!(
+                "target {t} out of range for {n_nodes} nodes"
+            )));
+        }
+    }
+
     let result = py.detach(|| bfs_algo::bfs(n_nodes, &edges, source, target));
 
     let dict = PyDict::new(py);
@@ -117,6 +144,19 @@ pub fn dfs(
     source: usize,
     target: Option<usize>,
 ) -> PyResult<Py<PyDict>> {
+    if source >= n_nodes {
+        return Err(PyValueError::new_err(format!(
+            "source {source} out of range for {n_nodes} nodes"
+        )));
+    }
+    if let Some(t) = target {
+        if t >= n_nodes {
+            return Err(PyValueError::new_err(format!(
+                "target {t} out of range for {n_nodes} nodes"
+            )));
+        }
+    }
+
     let result = py.detach(|| bfs_algo::dfs(n_nodes, &edges, source, target));
 
     let dict = PyDict::new(py);

@@ -2,6 +2,20 @@
 
 What broke, what got fixed, and what's new.
 
+## [0.6.2] 2026-04-07
+
+### Fixed
+
+- **Rust:** Dijkstra, BFS, DFS, and Bellman-Ford now raise `ValueError` on out-of-bounds source/target instead of crashing the process.
+- **Rust:** Floyd-Warshall callback errors are now propagated to Python instead of being silently swallowed.
+- **Rust:** `PyList` construction in bindings uses proper error propagation instead of `unwrap()`.
+- **Rust:** Dijkstra and Kruskal use `total_cmp` for deterministic NaN handling in edge weights.
+- **Rust:** PageRank validates `damping`, `max_iter`, and `tol` parameters at the binding boundary.
+
+### Changed
+
+- **Rust:** Removed `hashbrown` and `ahash` dependencies from `Cargo.toml`.
+
 ## [0.6.1] - 2026-02-01
 
 ### Fixed

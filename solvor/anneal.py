@@ -101,7 +101,7 @@ def anneal[T](
     evaluate = Evaluator(objective_fn, minimize)
 
     if callable(cooling):
-        schedule = cooling
+        schedule: CoolingSchedule = cooling  # ty: ignore[invalid-assignment]
     else:
         schedule = exponential_cooling(cooling)
 

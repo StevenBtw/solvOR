@@ -541,7 +541,7 @@ class SATEncoder:
                         break
             return cp_sol
 
-        solution = decode_sat_solution(sat_result.solution)  # type: ignore[arg-type]
+        solution = decode_sat_solution(sat_result.solution)
 
         if sat_result.solutions is not None:
             cp_solutions = tuple(decode_sat_solution(s) for s in sat_result.solutions)

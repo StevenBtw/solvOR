@@ -67,7 +67,7 @@ def astar[S](
     max_cost: float | None = None,
 ) -> Result:
     """A* search with heuristic guidance, returns optimal path when weight=1."""
-    is_goal = goal if callable(goal) else lambda s: s == goal
+    is_goal: Callable[[S], bool] = goal if callable(goal) else lambda s: s == goal  # ty: ignore[invalid-assignment]
 
     g: dict[S, float] = {start: 0.0}
     parent: dict[S, S] = {}
