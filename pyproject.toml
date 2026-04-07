@@ -28,18 +28,18 @@ PyPI = "https://pypi.org/project/solvOR/"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.14.14",
+    "pytest>=9.0",
+    "pytest-cov>=7",
+    "ruff>=0.15",
     "pre-commit>=4.5.1",
-    "ty>=0.0.14",
-    "maturin>=1.7,<2.0",
-    "prek>=0.3.1"
+    "ty>=0.0.29",
+    "maturin>=1,<2.0",
+    "prek>=0.3"
 ]
 docs = [
     "mkdocs>=1.6",
-    "mkdocs-material>=9.5",
-    "mkdocstrings[python]>=1.0.2",
+    "mkdocs-material>=9",
+    "mkdocstrings[python]>=1.0",
     "mkdocs-git-revision-date-localized-plugin>=1.5.1",
 ]
 
