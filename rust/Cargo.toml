@@ -1,6 +1,6 @@
 [package]
 name = "solvor-rs"
-version = "0.6.0"
+version = "0.6.2"
 edition = "2024"
 license = "Apache-2.0"
 description = "Rust acceleration for solvOR optimization library"
