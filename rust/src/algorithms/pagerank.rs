@@ -55,7 +55,7 @@ pub fn pagerank(
     let mut new_scores = vec![0.0; n_nodes];
 
     let base = (1.0 - damping) / n_nodes as f64;
-    let mut converged = false;
+    let converged = false;
 
     for iteration in 0..max_iter {
         // Compute new scores

@@ -26,13 +26,12 @@ pub fn strongly_connected_components(
     let dict = PyDict::new(py);
 
     // Convert components to list of lists
-    let py_components = PyList::new(
-        py,
-        result
-            .components
-            .iter()
-            .map(|comp| PyList::new(py, comp.iter()).unwrap()),
-    )?;
+    let inner_lists = result
+        .components
+        .iter()
+        .map(|comp| PyList::new(py, comp.iter()))
+        .collect::<PyResult<Vec<_>>>()?;
+    let py_components = PyList::new(py, inner_lists)?;
     dict.set_item("components", py_components)?;
     dict.set_item("n_components", result.n_components)?;
     dict.set_item("status", Status::Optimal.as_i32())?;

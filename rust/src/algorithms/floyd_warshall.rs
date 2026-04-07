@@ -3,8 +3,10 @@
 //! Time complexity: O(n³)
 //! Space complexity: O(n²)
 
+use pyo3::PyResult;
+
 use crate::callback::ProgressCallback;
-use crate::types::{AlgorithmResult, Progress, Status};
+use crate::types::Progress;
 
 /// Edge representation: (from, to, weight)
 pub type Edge = (usize, usize, f64);
@@ -36,7 +38,7 @@ pub fn floyd_warshall(
     n_nodes: usize,
     edges: &[Edge],
     callback: &mut ProgressCallback,
-) -> FloydWarshallResult {
+) -> PyResult<FloydWarshallResult> {
     let n = n_nodes;
 
     // Initialize distance matrix with infinity
@@ -63,14 +65,14 @@ pub fn floyd_warshall(
     for k in 0..n {
         // Report progress every n iterations (once per k)
         let progress = Progress::new(k, 0.0).with_evaluations(iterations);
-        if callback.report(&progress).unwrap_or(false) {
+        if callback.report(&progress)? {
             // Early termination requested
-            return FloydWarshallResult {
+            return Ok(FloydWarshallResult {
                 distances: dist,
                 predecessors: pred,
                 has_negative_cycle: false,
                 iterations,
-            };
+            });
         }
 
         for i in 0..n {
@@ -93,12 +95,12 @@ pub fn floyd_warshall(
         }
     }
 
-    FloydWarshallResult {
+    Ok(FloydWarshallResult {
         distances: dist,
         predecessors: pred,
         has_negative_cycle,
         iterations,
-    }
+    })
 }
 
 /// Reconstruct path from i to j using predecessor matrix.
@@ -148,7 +150,7 @@ mod tests {
     #[test]
     fn test_simple_graph() {
         let edges = vec![(0, 1, 1.0), (1, 2, 2.0), (0, 2, 5.0)];
-        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none());
+        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none()).unwrap();
 
         assert!((result.distances[0][2] - 3.0).abs() < 1e-9);
         assert!(!result.has_negative_cycle);
@@ -157,7 +159,7 @@ mod tests {
     #[test]
     fn test_no_path() {
         let edges = vec![(0, 1, 1.0)];
-        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none());
+        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none()).unwrap();
 
         assert!(result.distances[1][0].is_infinite());
         assert!(result.distances[2][0].is_infinite());
@@ -166,7 +168,7 @@ mod tests {
     #[test]
     fn test_negative_cycle() {
         let edges = vec![(0, 1, 1.0), (1, 2, -1.0), (2, 0, -1.0)];
-        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none());
+        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none()).unwrap();
 
         assert!(result.has_negative_cycle);
     }
@@ -174,7 +176,7 @@ mod tests {
     #[test]
     fn test_path_reconstruction() {
         let edges = vec![(0, 1, 1.0), (1, 2, 2.0), (0, 2, 5.0)];
-        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none());
+        let result = floyd_warshall(3, &edges, &mut ProgressCallback::none()).unwrap();
 
         let path = reconstruct_path(&result.predecessors, &result.distances, 0, 2);
         assert_eq!(path, Some(vec![0, 1, 2]));

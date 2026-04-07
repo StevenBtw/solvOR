@@ -76,7 +76,7 @@ pub fn kruskal(n_nodes: usize, edges: &[(usize, usize, f64)]) -> KruskalResult {
 
     // Sort edges by weight
     let mut sorted_edges: Vec<(usize, usize, f64)> = edges.to_vec();
-    sorted_edges.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal));
+    sorted_edges.sort_by(|a, b| a.2.total_cmp(&b.2));
 
     let mut uf = UnionFind::new(n_nodes);
     let mut mst_edges = Vec::with_capacity(n_nodes - 1);

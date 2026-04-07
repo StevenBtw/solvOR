@@ -1,5 +1,6 @@
 //! PyO3 bindings for shortest path algorithms.
 
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 
@@ -28,6 +29,10 @@ pub fn floyd_warshall(
     on_progress: Option<Py<PyAny>>,
     progress_interval: usize,
 ) -> PyResult<Py<PyDict>> {
+    if n_nodes == 0 {
+        return Err(PyValueError::new_err("n_nodes must be positive"));
+    }
+
     // Convert edges
     let edges: Vec<fw::Edge> = edges;
 
@@ -35,41 +40,32 @@ pub fn floyd_warshall(
     let mut callback = ProgressCallback::new(on_progress, progress_interval.max(1));
 
     // Run algorithm (release GIL for computation)
-    let result = py.detach(|| fw::floyd_warshall(n_nodes, &edges, &mut callback));
+    let result = py.detach(|| fw::floyd_warshall(n_nodes, &edges, &mut callback))?;
 
     // Convert result to Python dict
     let dict = PyDict::new(py);
 
     // Convert distance matrix to nested list
-    let py_distances = PyList::new(
-        py,
-        result.distances.iter().map(|row| {
-            PyList::new(
-                py,
-                row.iter().map(|&d| {
-                    if d.is_infinite() {
-                        f64::INFINITY
-                    } else {
-                        d
-                    }
-                }),
-            )
-            .unwrap()
-        }),
-    )?;
+    let dist_rows = result
+        .distances
+        .iter()
+        .map(|row| PyList::new(py, row.iter().copied()))
+        .collect::<PyResult<Vec<_>>>()?;
+    let py_distances = PyList::new(py, dist_rows)?;
     dict.set_item("distances", py_distances)?;
 
     // Convert predecessor matrix
-    let py_predecessors = PyList::new(
-        py,
-        result.predecessors.iter().map(|row| {
+    let pred_rows = result
+        .predecessors
+        .iter()
+        .map(|row| {
             PyList::new(
                 py,
                 row.iter().map(|&p| p.map(|x| x as i64).unwrap_or(-1)),
             )
-            .unwrap()
-        }),
-    )?;
+        })
+        .collect::<PyResult<Vec<_>>>()?;
+    let py_predecessors = PyList::new(py, pred_rows)?;
     dict.set_item("predecessors", py_predecessors)?;
 
     dict.set_item("has_negative_cycle", result.has_negative_cycle)?;
@@ -103,6 +99,12 @@ pub fn bellman_ford(
     edges: Vec<(usize, usize, f64)>,
     source: usize,
 ) -> PyResult<Py<PyDict>> {
+    if source >= n_nodes {
+        return Err(PyValueError::new_err(format!(
+            "source {source} out of range for {n_nodes} nodes"
+        )));
+    }
+
     // Run algorithm (release GIL for computation)
     let result = py.detach(|| bf::bellman_ford(n_nodes, &edges, source));
 

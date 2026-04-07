@@ -14,11 +14,8 @@ impl Eq for State {}
 
 impl Ord for State {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Flip ordering for min-heap
-        other
-            .cost
-            .partial_cmp(&self.cost)
-            .unwrap_or(Ordering::Equal)
+        // Flip ordering for min-heap; total_cmp handles NaN deterministically
+        other.cost.total_cmp(&self.cost)
     }
 }
 
