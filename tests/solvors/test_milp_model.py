@@ -1,11 +1,14 @@
 """Tests for MilpModel (incremental MILP with warm re-solves) and solve_lexicographic."""
 
+import copy
 import math
+import pickle
 import random
 
 import pytest
 
 from solvor import MilpModel, solve_lexicographic, solve_milp
+from solvor.rust import rust_available
 from solvor.types import Status
 
 
@@ -199,3 +202,64 @@ class TestLexicographicStatus:
         model.add_rows(rows, rhs)
         result = solve_lexicographic(model, [c, [0.0] * n], minimize=False, max_nodes=20)
         assert result.status == Status.FEASIBLE
+
+
+def _bits(value):
+    """Floats as hex strings, recursively, so equality means bit for bit (-0.0 differs from 0.0)."""
+    if isinstance(value, float):
+        return value.hex()
+    if isinstance(value, (list, tuple)):
+        return [_bits(v) for v in value]
+    return value
+
+
+def _result_bits(r):
+    return [r.status, _bits(r.objective), r.iterations, r.evaluations, _bits(r.solution), _bits(r.solutions)]
+
+
+needs_rust = pytest.mark.skipif(not rust_available(), reason="Rust extension not built")
+
+BACKENDS = ["python", "rust"] if rust_available() else ["python"]
+
+
+class TestModelCopies:
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_solved_model_can_be_copied_and_pickled(self, backend):
+        """A copy takes the warm LP along and continues exactly like the original."""
+        rng = random.Random(9)
+        n = 20
+        rows = [{j: float(rng.randint(5, 40)) for j in range(n)} for _ in range(3)]
+        rhs = [sum(r.values()) * 0.4 for r in rows]
+        c = [float(rng.randint(10, 60)) for _ in range(n)]
+        model = MilpModel(n, binary=range(n), backend=backend)
+        model.add_rows(rows, rhs)
+        model.solve(c, minimize=False)
+        results = []
+        for m in (model, copy.deepcopy(model), pickle.loads(pickle.dumps(model))):
+            m.add_rows([{j: 1.0 for j in range(n - 1, -1, -3)}], [3.0])
+            results.append(_result_bits(m.solve(c, minimize=False)))
+        assert results[1] == results[0]
+        assert results[2] == results[0]
+
+
+@needs_rust
+class TestRustBackendModel:
+    def test_incremental_sequence_matches_python(self):
+        """Cuts, new objectives, a node limit and lexicographic stages: same results on both kernels."""
+        rng = random.Random(4)
+        n = 30
+        rows = [{j: float(rng.randint(5, 40)) for j in range(n)} for _ in range(3)]
+        rhs = [sum(r.values()) * 0.35 for r in rows]
+        c1 = [float(rng.randint(10, 60)) for _ in range(n)]
+        c2 = [float(rng.randint(-5, 30)) for _ in range(n)]
+        out = {}
+        for backend in ("python", "rust"):
+            model = MilpModel(n, binary=range(n), backend=backend)
+            model.add_rows(rows, rhs)
+            results = [model.solve(c1, minimize=False)]
+            model.add_rows([{j: 1.0 for j in range(n - 1, -1, -2)}], [4.0])  # descending keys reach add_row
+            results.append(model.solve(c1, minimize=False))
+            results.append(model.solve(c2, minimize=False, max_nodes=15))
+            results.append(solve_lexicographic(model, [c1, c2], minimize=False))
+            out[backend] = [_result_bits(r) for r in results]
+        assert out["python"] == out["rust"]

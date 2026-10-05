@@ -10,3 +10,4 @@ pub mod floyd_warshall;
 pub mod kruskal;
 pub mod pagerank;
 pub mod scc;
+pub mod simplex;

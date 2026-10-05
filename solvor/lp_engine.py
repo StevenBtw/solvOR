@@ -6,7 +6,9 @@ Internal module. Three layers:
     Standardized   maps x (lb <= x <= ub, rows with senses) onto columns
                    y >= lo with optional upper bounds and rows "<=" or "="
     BoundedSimplex the tableau: primal simplex (phase 1 and 2), dual simplex,
-                   in-place bound changes and row additions
+                   in-place bound changes and row additions; the Rust extension
+                   has a port with the same methods and bit-identical results
+                   (kernel_class picks one)
     WarmLP         keeps one BoundedSimplex alive across solves whose bounds,
                    rows or objective change, and falls back to a cold build
                    whenever a warm start cannot be trusted
@@ -21,11 +23,13 @@ deterministic and cycle-free.
 from array import array
 from collections.abc import Sequence
 from math import inf
+from typing import Literal
 
+from solvor.rust import get_backend, get_rust_module
 from solvor.types import Result, Status
 from solvor.utils.lp_input import LinearProblem
 
-__all__ = ["BoundedSimplex", "Standardized", "WarmLP", "solve_cold"]
+__all__ = ["BoundedSimplex", "Standardized", "WarmLP", "kernel_class", "solve_cold"]
 
 
 class Standardized:
@@ -171,7 +175,7 @@ class BoundedSimplex:
             self.T.append(row)
         self.T.append(array("d", zeros))
 
-    # ----- cold solve -------------------------------------------------------
+    # Cold solve
 
     def solve(self, cost: Sequence[float], max_iter: int) -> tuple[Status, int]:
         """Phase 1 (only if artificials exist), then phase 2 on `cost` (one entry per structural column)."""
@@ -267,7 +271,7 @@ class BoundedSimplex:
                 self._complement(left)
         return Status.MAX_ITER, max(max_iter, 0)
 
-    # ----- warm operations --------------------------------------------------
+    # Warm operations
 
     def make_dual_feasible(self) -> bool:
         """Move boxed nonbasic columns to the bound their reduced cost prefers.
@@ -380,7 +384,7 @@ class BoundedSimplex:
         self.m += 1
         self._set_basic(self.m - 1, w)
 
-    # ----- tableau primitives -----------------------------------------------
+    # Tableau primitives
 
     def _set_basic(self, r: int, q: int) -> None:
         self.basis[r] = q
@@ -460,6 +464,13 @@ class BoundedSimplex:
             self.span[a] = 0.0
 
 
+def kernel_class(backend: Literal["auto", "rust", "python"] | None = None) -> type[BoundedSimplex]:
+    """BoundedSimplex, or its Rust port when the Rust backend is selected (same results, bit for bit)."""
+    if get_backend(backend) == "rust":
+        return get_rust_module().BoundedSimplex
+    return BoundedSimplex
+
+
 def solve_cold(
     prob: LinearProblem,
     c: Sequence[float],
@@ -469,9 +480,10 @@ def solve_cold(
     minimize: bool,
     eps: float,
     max_iter: int,
+    backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
     """One-shot solve of a normalized LP with the given bounds (no state kept)."""
-    lp = WarmLP(prob, lb, ub, eps=eps, max_iter=max_iter)
+    lp = WarmLP(prob, lb, ub, eps=eps, max_iter=max_iter, backend=backend)
     return lp.solve(c, minimize=minimize)
 
 
@@ -490,7 +502,17 @@ class WarmLP:
 
     REBUILD_PIVOTS = 2000
 
-    def __init__(self, prob: LinearProblem, lb: Sequence[float], ub: Sequence[float], *, eps: float, max_iter: int):
+    def __init__(
+        self,
+        prob: LinearProblem,
+        lb: Sequence[float],
+        ub: Sequence[float],
+        *,
+        eps: float,
+        max_iter: int,
+        backend: Literal["auto", "rust", "python"] | None = None,
+    ):
+        self.kernel = kernel_class(backend)
         self.n = prob.n
         self.rows = list(prob.rows)
         self.b = list(prob.b)
@@ -549,7 +571,7 @@ class WarmLP:
         if self.std.impossible:
             self.lp = None
             return self._result(Status.INFEASIBLE, 0, c, minimize)
-        self.lp = BoundedSimplex(self.std.rows, self.std.rhs, self.std.is_eq, self.std.upper, self.eps)
+        self.lp = self.kernel(self.std.rows, self.std.rhs, self.std.is_eq, self.std.upper, self.eps)
         self.cost_y = self.std.map_cost(cost)
         status, iters = self.lp.solve(self.cost_y, self.max_iter)
         if status != Status.OPTIMAL:

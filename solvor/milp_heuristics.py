@@ -128,7 +128,9 @@ def round_binary(lp_solution, int_set, c, prob, cols, lower, upper, minimize, ep
     return tuple(sol)
 
 
-def lns_improve(solution, c, prob, lower, upper, int_set, minimize, eps, max_iter, iterations, destroy_frac, rng):
+def lns_improve(
+    solution, c, prob, lower, upper, int_set, minimize, eps, max_iter, iterations, destroy_frac, rng, backend=None
+):
     n = len(solution)
     int_list = list(int_set)
     k = max(1, int(len(int_list) * destroy_frac))
@@ -142,7 +144,7 @@ def lns_improve(solution, c, prob, lower, upper, int_set, minimize, eps, max_ite
 
     def repair(partial, _):
         sol, unfixed = partial
-        candidate = solve_sub_mip(sol, c, prob, lower, upper, int_set, unfixed, minimize, eps, max_iter)
+        candidate = solve_sub_mip(sol, c, prob, lower, upper, int_set, unfixed, minimize, eps, max_iter, backend)
         return candidate if candidate else sol
 
     result = _lns(
@@ -158,7 +160,9 @@ def lns_improve(solution, c, prob, lower, upper, int_set, minimize, eps, max_ite
     return result.solution, result.evaluations
 
 
-def solve_sub_mip(current_sol, c, prob, base_lower, base_upper, int_set, free_vars, minimize, eps, max_iter):
+def solve_sub_mip(
+    current_sol, c, prob, base_lower, base_upper, int_set, free_vars, minimize, eps, max_iter, backend=None
+):
     n = len(c)
     sign = 1 if minimize else -1
 
@@ -169,7 +173,7 @@ def solve_sub_mip(current_sol, c, prob, base_lower, base_upper, int_set, free_va
         else:
             lower[j] = upper[j] = current_sol[j]
 
-    result = solve_cold(prob, c, lower, upper, minimize=minimize, eps=eps, max_iter=max_iter)
+    result = solve_cold(prob, c, lower, upper, minimize=minimize, eps=eps, max_iter=max_iter, backend=backend)
     if result.status != Status.OPTIMAL:
         return None
 
@@ -195,7 +199,7 @@ def solve_sub_mip(current_sol, c, prob, base_lower, base_upper, int_set, free_va
         lo, hi = stack.pop()
         nodes += 1
 
-        res = solve_cold(prob, c, lo, hi, minimize=minimize, eps=eps, max_iter=max_iter)
+        res = solve_cold(prob, c, lo, hi, minimize=minimize, eps=eps, max_iter=max_iter, backend=backend)
         if res.status != Status.OPTIMAL:
             continue
         if best_sol is not None and sign * res.objective >= sign * best_obj - eps:

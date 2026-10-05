@@ -35,8 +35,13 @@ Parameters:
     minimize: True for min, False for max (default: True)
     senses: per row "<=", ">=" or "=" (default: all "<=")
     lb, ub: variable bounds (default: 0 and +inf; use float("-inf") / float("inf") for none)
+    backend: "auto", "rust", or "python" (default: "auto")
 
 This also does the grunt work inside MILP, solving LP relaxations at each node.
+
+Backend: the simplex tableau has an optional Rust backend (3-100x faster) that
+returns the same results, bit for bit. Use backend="python" for the pure Python
+implementation.
 
 Don't use this for: integer constraints (use MILP), non-linear objectives
 (use gradient or anneal), or problems with poor numerical scaling (simplex
@@ -44,6 +49,7 @@ can struggle with badly scaled coefficients).
 """
 
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from solvor.lp_engine import solve_cold
 from solvor.types import Result, Status  # noqa: F401  (Status stays importable from here, as in 0.6.2)
@@ -63,7 +69,9 @@ def solve_lp(
     senses: Sequence[str] | None = None,
     lb: Sequence[float] | None = None,
     ub: Sequence[float] | None = None,
+    backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
     """Solve linear program: minimize c @ x subject to A @ x (senses) b, lb <= x <= ub."""
     prob = normalize_lp(c, A, b, lb=lb, ub=ub, senses=senses)
-    return solve_cold(prob, [float(v) for v in c], prob.lb, prob.ub, minimize=minimize, eps=eps, max_iter=max_iter)
+    cost = [float(v) for v in c]
+    return solve_cold(prob, cost, prob.lb, prob.ub, minimize=minimize, eps=eps, max_iter=max_iter, backend=backend)

@@ -45,6 +45,7 @@ Every change in solver output is listed here, float-level ones included, so down
 - **Validation** runs once per call instead of in every branch-and-bound node.
 - **LP/MILP input:** an empty `A` is accepted (only bounds), rows with an infinite right-hand side are dropped when they can never bind and make the model infeasible when they can never hold.
 - **MILP branch and bound** re-solves each node with the dual simplex from its parent's basis and dives depth-first before taking the best queued node (7 branching benchmarks: 8.6 s to 2 s, 5 to 14 times fewer LP pivots).
+- **LP/MILP Rust kernel:** the simplex tableau behind `solve_lp`, `solve_milp` and `MilpModel` runs in Rust when the extension is installed (new `backend` keyword, `"auto"` by default). It performs the same float operations in the same order as the Python kernel, so results are bit-identical on either backend; branch and bound, presolve and heuristics stay in Python. 13 branching benchmarks run about 60 times faster in total, the root LP of a 540-variable packing model about 75 times faster.
 
 ## [0.6.2] 2026-04-07
 

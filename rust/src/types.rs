@@ -11,8 +11,6 @@ pub enum Status {
     Optimal = 1,
     Feasible = 2,
     Infeasible = 3,
-    // Mirrors Python's Status; no Rust algorithm reports it yet.
-    #[allow(dead_code)]
     Unbounded = 4,
     MaxIter = 5,
 }

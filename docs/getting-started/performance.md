@@ -51,6 +51,7 @@ The following algorithms have Rust implementations:
 | SCC | `strongly_connected_components_edges` | **5-10x** | Edge-list variant only |
 | Topological Sort | `topological_sort_edges` | **5-10x** | Edge-list variant only |
 | Kruskal MST | `kruskal` | **5-10x** | Minimum spanning tree |
+| Linear programming | `solve_lp`, `solve_milp`, `MilpModel` | **3-100x** | The simplex tableau runs in Rust; branch and bound stays in Python. Results are bit-identical to the Python backend (13 branching MILPs: about 60x in total) |
 
 ## Two API Styles
 

@@ -102,28 +102,31 @@ def _selection(seed):
 
 
 class TestMilpGolden:
-    def test_knapsacks(self):
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_knapsacks(self, backend):
         out = []
         for seed in range(3):
             c, rows, rhs = _knapsack(seed)
-            result = solve_milp(c, rows, rhs, binary=range(len(c)), minimize=False)
+            result = solve_milp(c, rows, rhs, binary=range(len(c)), minimize=False, backend=backend)
             out.append([result.status.name, result.objective, result.solution, result.iterations])
         assert _digest(out) == "97b64d5baa640b0a"
 
-    def test_lexicographic_selection(self):
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_lexicographic_selection(self, backend):
         out = []
         for seed in range(3):
             n, rows, objectives = _selection(seed)
-            model = MilpModel(n, binary=range(n))
+            model = MilpModel(n, binary=range(n), backend=backend)
             model.add_rows(rows, [1.0] * len(rows))
             result = solve_lexicographic(model, objectives, minimize=False)
             out.append([result.status.name, result.objective, result.solution])
         assert _digest(out) == "e4dfa41f0d59df24"
 
-    def test_lp_vertex(self):
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_lp_vertex(self, backend):
         rng = random.Random(5)
         n, m = 30, 20
         rows = [{j: float(rng.randint(1, 9)) for j in range(n) if rng.random() < 0.3} for _ in range(m)]
         c = [float(rng.randint(-9, 9)) for _ in range(n)]
-        result = solve_lp(c, rows, [float(rng.randint(10, 40)) for _ in range(m)], ub=[3.0] * n)
+        result = solve_lp(c, rows, [float(rng.randint(10, 40)) for _ in range(m)], ub=[3.0] * n, backend=backend)
         assert _digest([result.status.name, result.objective, result.solution, result.iterations]) == "41e2c4ef810d544c"

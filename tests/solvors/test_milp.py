@@ -1,10 +1,12 @@
 """Tests for the MILP (mixed-integer linear programming) solver."""
 
 import math
+import random
 
 import pytest
 
 from solvor.milp import solve_milp
+from solvor.rust import rust_available
 from solvor.simplex import solve_lp
 from solvor.types import Status
 
@@ -999,3 +1001,96 @@ class TestBoundRoundingNoise:
         milp = solve_milp([1, 1], [{0: 1, 1: 1}], [5], [1], lb=lb, ub=ub)
         assert lp.status == milp.status == Status.OPTIMAL
         assert milp.solution[1] == 0.0 and abs(milp.solution[0] - 0.3) < 1e-9
+
+
+def _bits(value):
+    """Floats as hex strings, recursively, so equality means bit for bit (-0.0 differs from 0.0)."""
+    if isinstance(value, float):
+        return value.hex()
+    if isinstance(value, (list, tuple)):
+        return [_bits(v) for v in value]
+    return value
+
+
+def _result_bits(r):
+    return [r.status, _bits(r.objective), r.iterations, r.evaluations, _bits(r.solution), _bits(r.solutions)]
+
+
+needs_rust = pytest.mark.skipif(not rust_available(), reason="Rust extension not built")
+
+
+def _random_milp(rng):
+    """Mixed integer program around a known feasible point, coefficients of mixed magnitude."""
+    n, m = rng.randint(2, 12), rng.randint(1, 8)
+    mag = rng.choice((0, 1, 2))
+
+    def coef():
+        return round(rng.uniform(-1, 1) * 10 ** rng.randint(-1, mag), 3)
+
+    rows = [{j: coef() for j in range(n) if rng.random() < 0.6} for _ in range(m)]
+    rows = [{j: a for j, a in r.items() if a != 0.0} or {0: 1.0} for r in rows]
+    senses = [rng.choice(("<=", "<=", ">=", "=")) for _ in range(m)]
+    x = [rng.randint(0, 3) for _ in range(n)]
+    b = []
+    for row, sense in zip(rows, senses):
+        activity = sum(a * x[j] for j, a in row.items())
+        if sense == "=":
+            b.append(round(activity, 6))
+        elif sense == "<=":
+            b.append(round(activity + rng.uniform(0, 5), 3))
+        else:
+            b.append(round(activity - rng.uniform(0, 5), 3))
+    integers = sorted(rng.sample(range(n), rng.randint(1, n)))
+    ub = [float(rng.randint(3, 6)) for _ in range(n)]
+    return [coef() for _ in range(n)], rows, b, integers, senses, ub, rng.random() < 0.5
+
+
+@needs_rust
+class TestRustBackendMatchesPython:
+    """solve_milp gives the same result, bit for bit, whichever LP kernel runs."""
+
+    @pytest.mark.parametrize("seed", range(3))
+    def test_random_milps(self, seed):
+        rng = random.Random(seed)
+        for _ in range(100):
+            c, rows, b, integers, senses, ub, minimize = _random_milp(rng)
+
+            def run(backend):
+                return solve_milp(
+                    c, rows, b, integers, senses=senses, ub=ub, minimize=minimize, max_nodes=2000, backend=backend
+                )
+
+            assert _result_bits(run("rust")) == _result_bits(run("python"))
+
+    def test_heuristics_and_multiple_solutions(self):
+        rng = random.Random(7)
+        n = 25
+        rows = [{j: float(rng.randint(5, 40)) for j in range(n)} for _ in range(3)]
+        rhs = [sum(r.values()) * 0.4 for r in rows]
+        c = [float(rng.randint(10, 60)) for _ in range(n)]
+        for kwargs in ({"lns_iterations": 5, "seed": 3}, {"solution_limit": 3}, {"max_nodes": 10}):
+
+            def run(backend):
+                return solve_milp(c, rows, rhs, binary=range(n), minimize=False, backend=backend, **kwargs)
+
+            assert _result_bits(run("rust")) == _result_bits(run("python"))
+
+    @pytest.mark.parametrize("max_iter", [10**30, -(10**30)])
+    def test_iteration_limit_beyond_64_bits(self, max_iter):
+        """max_iter is a Python int of any size; the Rust kernel saturates it."""
+
+        def run(solver, backend):
+            return solver([1, 1], [{0: 1.0, 1: 1.0}], [3.5], minimize=False, max_iter=max_iter, backend=backend)
+
+        assert _result_bits(run(solve_lp, "rust")) == _result_bits(run(solve_lp, "python"))
+        assert _result_bits(run(solve_milp, "rust")) == _result_bits(run(solve_milp, "python"))
+
+    def test_lp_relaxations(self):
+        rng = random.Random(11)
+        for _ in range(100):
+            c, rows, b, _, senses, ub, minimize = _random_milp(rng)
+
+            def run(backend):
+                return solve_lp(c, rows, b, senses=senses, ub=ub, minimize=minimize, backend=backend)
+
+            assert _result_bits(run("rust")) == _result_bits(run("python"))

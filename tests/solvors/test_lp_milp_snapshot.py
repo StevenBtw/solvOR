@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from solvor import solve_lp, solve_milp
+from solvor.rust import rust_available
 
 SNAPSHOT = json.loads((Path(__file__).parent / "data" / "lp_milp_snapshot_0_6_2.json").read_text())
 
@@ -23,12 +24,17 @@ def _same(result, expected):
     return status != "OPTIMAL" or abs(result.objective - objective) <= 1e-6 * (1 + abs(objective))
 
 
+BACKENDS = ["python", "rust"] if rust_available() else ["python"]
+
+
+@pytest.mark.parametrize("backend", BACKENDS)
 @pytest.mark.parametrize("chunk", range(10))
-def test_matches_0_6_2(chunk):
+def test_matches_0_6_2(chunk, backend):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for inst in SNAPSHOT[chunk::10]:
-            milp = solve_milp(inst["c"], inst["A"], inst["b"], inst["integers"], minimize=inst["minimize"])
-            lp = solve_lp(inst["c"], inst["A"], inst["b"], minimize=inst["minimize"])
+            c, A, b, minimize = inst["c"], inst["A"], inst["b"], inst["minimize"]
+            milp = solve_milp(c, A, b, inst["integers"], minimize=minimize, backend=backend)
+            lp = solve_lp(c, A, b, minimize=minimize, backend=backend)
             assert _same(milp, inst["milp"]), inst
             assert _same(lp, inst["lp"]), inst

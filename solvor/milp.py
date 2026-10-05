@@ -69,6 +69,11 @@ Parameters:
     seed: random seed for LNS reproducibility
     max_nodes: branch-and-bound node limit (default: 100000)
     gap_tol: optimality gap tolerance (default: 1e-6)
+    backend: "auto", "rust", or "python" (default: "auto")
+
+Backend: the LP relaxations run on an optional Rust simplex kernel (3-100x
+faster); branch and bound, presolve and heuristics stay in Python, and results
+are the same, bit for bit. Use backend="python" for the pure Python implementation.
 
 CP is more expressive for logical constraints. SAT handles pure boolean.
 For continuous-only problems, use simplex directly.
@@ -79,6 +84,7 @@ from dataclasses import replace
 from heapq import heappop, heappush
 from math import ceil, floor, inf, isnan
 from random import Random
+from typing import Literal
 
 from solvor.lp_engine import WarmLP
 from solvor.milp_heuristics import is_feasible, lns_improve, round_binary
@@ -100,7 +106,8 @@ class MilpModel:
     can only tighten, through single-variable rows). Rows are added with
     add_rows and pass through the same presolve as solve_milp. Each solve()
     takes its own objective. The LP tableau, and the last solution as a
-    starting incumbent, carry over from one solve to the next.
+    starting incumbent, carry over from one solve to the next. backend picks
+    the LP kernel, as in solve_milp; results are identical.
     """
 
     def __init__(
@@ -111,8 +118,10 @@ class MilpModel:
         binary: Sequence[int] | None = None,
         lb: Sequence[float] | None = None,
         ub: Sequence[float] | None = None,
+        backend: Literal["auto", "rust", "python"] | None = None,
     ):
         self.n = n_vars
+        self._backend = backend
         integers = list(integers)
         check_integers_valid(integers, n_vars)
         self._int_set = set(integers)
@@ -254,6 +263,7 @@ class MilpModel:
                 lns_iterations,
                 lns_destroy_frac,
                 rng,
+                self._backend,
             )
             total_iters += iters
             if improved is not None:
@@ -357,7 +367,7 @@ class MilpModel:
     def _warm_lp(self, prob: LinearProblem, eps: float, max_iter: int) -> WarmLP:
         key = (eps, max_iter)
         if self._lp is None or self._lp_key != key:
-            self._lp = WarmLP(prob, prob.lb, prob.ub, eps=eps, max_iter=max_iter)
+            self._lp = WarmLP(prob, prob.lb, prob.ub, eps=eps, max_iter=max_iter, backend=self._backend)
             self._lp_key = key
         return self._lp
 
@@ -383,9 +393,10 @@ def solve_milp(
     lns_iterations: int = 0,
     lns_destroy_frac: float = 0.3,
     seed: int | None = None,
+    backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
     prob = normalize_lp(c, A, b, lb=lb, ub=ub, senses=senses)
-    model = MilpModel(prob.n, integers=integers, binary=binary, lb=prob.lb, ub=prob.ub)
+    model = MilpModel(prob.n, integers=integers, binary=binary, lb=prob.lb, ub=prob.ub, backend=backend)
     model._add_normalized(prob.rows, prob.b, prob.senses)
     return model.solve(
         c,
