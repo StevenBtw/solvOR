@@ -1,0 +1,11 @@
+# Pinned so local builds, maturin and CI use the same compiler and clippy lint set.
+# Bump deliberately (and fix new lints in the same change) instead of tracking `stable`.
+# Keep this identical to the `dtolnay/rust-toolchain@<version>` refs in .github/workflows:
+# rustup treats "1.99" and "1.99.0" as different toolchains.
+# This pin is for development and CI only: the sdist does not ship this file, so
+# `rust-version` in rust/Cargo.toml (the minimum, 1.88) is what sdist builds enforce;
+# CI checks that minimum separately.
+[toolchain]
+channel = "1.99.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

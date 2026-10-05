@@ -8,7 +8,7 @@ function wrapping, progress reporting, and solution manipulation.
     from solvor.utils import random_permutation, pairwise_swap_neighbors
 """
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from os import environ
 from random import Random
 from time import perf_counter
@@ -16,6 +16,7 @@ from time import perf_counter
 from solvor.types import Progress, ProgressCallback
 
 __all__ = [
+    "canonical_order",
     "debug",
     "assignment_cost",
     "is_feasible",
@@ -35,6 +36,19 @@ def debug(*args, **kwargs) -> None:
     """Print only when DEBUG=1. Same signature as print()."""
     if _DEBUG:
         print(*args, **kwargs)
+
+
+def canonical_order[T](items: Iterable[T]) -> list[T]:
+    """Distinct items in a reproducible order: sorted if they are mutually comparable, else first-seen order.
+
+    Graph algorithms call this on their inputs so results do not depend on set
+    iteration order, which for str nodes changes with PYTHONHASHSEED.
+    """
+    unique = list(dict.fromkeys(items))
+    try:
+        return sorted(unique)
+    except TypeError:
+        return unique
 
 
 def assignment_cost(matrix: list[list[float]], assignment: list[int]) -> float:

@@ -16,7 +16,11 @@ use crate::types::Status;
 ///     Dict with 'mst_edges', 'total_weight', 'iterations', 'is_connected'
 #[pyfunction]
 #[pyo3(signature = (n_nodes, edges))]
-pub fn kruskal(py: Python<'_>, n_nodes: usize, edges: Vec<(usize, usize, f64)>) -> PyResult<Py<PyDict>> {
+pub fn kruskal(
+    py: Python<'_>,
+    n_nodes: usize,
+    edges: Vec<(usize, usize, f64)>,
+) -> PyResult<Py<PyDict>> {
     // Run algorithm (release GIL for computation)
     let result = py.detach(|| k::kruskal(n_nodes, &edges));
 

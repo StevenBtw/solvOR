@@ -3,6 +3,7 @@
 import pytest
 
 from solvor.pagerank import pagerank, pagerank_edges
+from solvor.rust import rust_available
 from solvor.types import Status
 
 
@@ -212,3 +213,102 @@ class TestPageRankEdgesRust:
         edges = [(i, (i + 1) % n) for i in range(n)]
         result = pagerank_edges(n, edges, backend="rust")
         assert abs(sum(result.solution.values()) - 1.0) < 0.01
+
+
+class TestPageRankBackendsAgree:
+    """pagerank() routes through pagerank_edges(); both backends must agree."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_random_graphs(self):
+        import random
+
+        rng = random.Random(3)
+        for _ in range(100):
+            n = rng.randint(1, 400)
+            edges = [(rng.randrange(n), rng.randrange(n)) for _ in range(rng.randint(0, 5 * n))]
+            for damping in (0.85, 0.5):
+                py = pagerank_edges(n, edges, damping=damping, backend="python")
+                rs = pagerank_edges(n, edges, damping=damping, backend="rust")
+                # Bit-identical, not just close: downstream caches key on these values
+                assert py.solution == rs.solution
+                assert py.iterations == rs.iterations
+                assert py.objective == rs.objective
+                assert py.status == rs.status
+
+    def test_callback_default_backend_matches_python(self):
+        graph = {"a": ["b", "c"], "b": ["c"], "c": ["a"], "d": ["c"]}
+        auto = pagerank(graph.keys(), lambda v: graph[v])
+        python = pagerank(graph.keys(), lambda v: graph[v], backend="python")
+        assert auto.solution == python.solution
+        assert auto.iterations == python.iterations
+
+
+class TestPageRankCallbackMapping:
+    def test_callback_api_matches_edge_api(self):
+        graph = {"a": ["b", "c"], "b": ["c"], "c": ["a"], "d": ["c"]}
+        result = pagerank(graph.keys(), lambda v: graph[v], backend="python")
+        edges = [(0, 1), (0, 2), (1, 2), (2, 0), (3, 2)]
+        expected = pagerank_edges(4, edges, backend="python")
+        assert [result.solution[v] for v in "abcd"] == [expected.solution[i] for i in range(4)]
+
+    def test_out_of_range_edges_are_ignored(self):
+        with_bad = pagerank_edges(3, [(0, 1), (1, 2), (2, 0), (5, 1), (1, -1)], backend="python")
+        clean = pagerank_edges(3, [(0, 1), (1, 2), (2, 0)], backend="python")
+        assert with_bad.solution == clean.solution
+
+
+class TestPageRankValidation:
+    @pytest.mark.parametrize("backend", ["python", "auto"])
+    def test_rejects_bad_damping(self, backend):
+        with pytest.raises(ValueError, match="damping"):
+            pagerank(["a"], lambda v: [], damping=1.0, backend=backend)
+
+    @pytest.mark.parametrize("backend", ["python", "auto"])
+    def test_rejects_zero_max_iter(self, backend):
+        with pytest.raises(ValueError, match="max_iter must be positive"):
+            pagerank(["a"], lambda v: [], max_iter=0, backend=backend)
+
+    def test_rejects_non_positive_tol(self):
+        with pytest.raises(ValueError, match="tol must be positive"):
+            pagerank_edges(1, [], tol=0.0, backend="python")
+
+
+_BACKENDS = ["python", "rust"] if rust_available() else ["python"]
+
+
+class TestPageRankInvalidInputParity:
+    """Invalid input raises the same exception type and message on every backend."""
+
+    @pytest.mark.parametrize("backend", _BACKENDS)
+    @pytest.mark.parametrize(
+        ("kwargs", "message"),
+        [
+            ({"damping": 1.0}, "damping 1.0 must be in [0, 1)"),
+            ({"damping": -0.5}, "damping -0.5 must be in [0, 1)"),
+            ({"max_iter": 0}, "max_iter must be positive"),
+            ({"max_iter": -1}, "max_iter must be positive"),
+            ({"tol": 0.0}, "tol must be positive"),
+        ],
+    )
+    def test_bad_parameters(self, backend, kwargs, message):
+        with pytest.raises(ValueError) as excinfo:
+            pagerank_edges(3, [(0, 1)], backend=backend, **kwargs)
+        assert str(excinfo.value) == message
+
+    @pytest.mark.parametrize("backend", _BACKENDS)
+    def test_negative_node_count(self, backend):
+        with pytest.raises(ValueError) as excinfo:
+            pagerank_edges(-1, [], backend=backend)
+        assert str(excinfo.value) == "n_nodes must be non-negative"
+
+    @pytest.mark.parametrize("backend", _BACKENDS)
+    def test_negative_and_out_of_range_endpoints_are_ignored(self, backend):
+        dirty = pagerank_edges(3, [(0, 1), (1, 2), (2, 0), (5, 1), (1, -1), (-2, 0)], backend=backend)
+        clean = pagerank_edges(3, [(0, 1), (1, 2), (2, 0)], backend="python")
+        assert dirty.solution == clean.solution

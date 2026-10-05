@@ -33,7 +33,10 @@ fn _solvor_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(bindings::pagerank, m)?)?;
 
     // Components
-    m.add_function(wrap_pyfunction!(bindings::strongly_connected_components, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        bindings::strongly_connected_components,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(bindings::topological_sort, m)?)?;
 
     // Module metadata

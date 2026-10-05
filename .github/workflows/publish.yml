@@ -18,9 +18,9 @@ jobs:
         if: github.event_name == 'release'
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
-          PKG=$(grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
+          PKG=$(grep -m1 '^version = ' rust/Cargo.toml | cut -d'"' -f2)
           if [ "$TAG" != "$PKG" ]; then
-            echo "::error::Tag v$TAG does not match pyproject.toml version $PKG"
+            echo "::error::Tag v$TAG does not match rust/Cargo.toml version $PKG"
             exit 1
           fi
           echo "Version verified: $PKG"

@@ -11,6 +11,8 @@ pub enum Status {
     Optimal = 1,
     Feasible = 2,
     Infeasible = 3,
+    // Mirrors Python's Status; no Rust algorithm reports it yet.
+    #[allow(dead_code)]
     Unbounded = 4,
     MaxIter = 5,
 }
@@ -40,11 +42,6 @@ impl Progress {
         }
     }
 
-    pub fn with_best(mut self, best: f64) -> Self {
-        self.best = Some(best);
-        self
-    }
-
     pub fn with_evaluations(mut self, evaluations: usize) -> Self {
         self.evaluations = evaluations;
         self
@@ -60,4 +57,3 @@ impl Progress {
         Ok(dict)
     }
 }
-

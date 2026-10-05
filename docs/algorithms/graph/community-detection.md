@@ -43,7 +43,7 @@ Repeat until no improvement. Modularity measures the fraction of edges within co
 
 - **Resolution parameter:** Start with default (1.0). Increase for finer-grained communities, decrease for larger ones.
 - **Undirected graphs:** Louvain treats the graph as undirected. For directed community detection, consider other methods.
-- **Determinism:** Results may vary slightly between runs due to node ordering. For reproducible results, sort nodes first.
+- **Determinism:** Results do not depend on input order when nodes are mutually comparable (ints, strs, tuples of those): nodes and neighbors are processed in sorted order, so sets give the same communities under any `PYTHONHASHSEED`. Mixed, non-comparable node types are processed in the order given.
 
 ## See Also
 

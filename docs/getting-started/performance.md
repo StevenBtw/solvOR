@@ -47,7 +47,7 @@ The following algorithms have Rust implementations:
 | Dijkstra | `dijkstra_edges` | **5-10x** | Edge-list variant only |
 | BFS | `bfs_edges` | **3-5x** | Edge-list variant only |
 | DFS | `dfs_edges` | **3-5x** | Edge-list variant only |
-| PageRank | `pagerank_edges` | **10-15x** | Edge-list variant only |
+| PageRank | `pagerank_edges`, `pagerank` | **10-40x** | The callback API maps nodes to integers and uses the same backend (9,091-node code graph: 345 ms to 8 ms) |
 | SCC | `strongly_connected_components_edges` | **5-10x** | Edge-list variant only |
 | Topological Sort | `topological_sort_edges` | **5-10x** | Edge-list variant only |
 | Kruskal MST | `kruskal` | **5-10x** | Minimum spanning tree |
@@ -145,6 +145,8 @@ uv run maturin develop --release
 ```
 
 The `maturin develop` command compiles the Rust code and installs it as a Python extension.
+
+The repository pins its compiler in `rust-toolchain.toml` (currently Rust 1.99.0); rustup installs it automatically on the first build.
 
 ## Pure Python Fallback
 

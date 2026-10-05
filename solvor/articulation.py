@@ -66,46 +66,55 @@ def articulation_points[S](
     discovery: dict[S, int] = {}
     low: dict[S, int] = {}
     parent: dict[S, S | None] = {}
+    children: dict[S, int] = {}
     ap: set[S] = set()
-    time = [0]
+    time = 0
     iterations = 0
 
-    def dfs(v: S) -> None:
-        nonlocal iterations
+    # Iterative DFS: an explicit stack of (node, neighbor iterator) frames, so the
+    # depth is not bounded by Python's recursion limit
+    for root in node_list:
+        if root in discovery:
+            continue
+        parent[root] = None
         iterations += 1
+        discovery[root] = low[root] = time
+        time += 1
+        children[root] = 0
+        stack = [(root, iter(neighbors(root)))]
 
-        children = 0
-        discovery[v] = time[0]
-        low[v] = time[0]
-        time[0] += 1
+        while stack:
+            v, it = stack[-1]
+            for w in it:
+                if w not in node_set:
+                    continue
 
-        for w in neighbors(v):
-            if w not in node_set:
-                continue
+                if w not in discovery:
+                    children[v] += 1
+                    parent[w] = v
+                    iterations += 1
+                    discovery[w] = low[w] = time
+                    time += 1
+                    children[w] = 0
+                    stack.append((w, iter(neighbors(w))))
+                    break
 
-            if w not in discovery:
-                children += 1
-                parent[w] = v
-                dfs(w)
-                low[v] = min(low[v], low[w])
+                if w != parent[v]:
+                    low[v] = min(low[v], discovery[w])
+            else:
+                stack.pop()
+                if stack:
+                    u = stack[-1][0]
+                    low[u] = min(low[u], low[v])
 
-                # v is an articulation point if:
-                # 1. v is root and has 2+ children, OR
-                # 2. v is not root and low[w] >= discovery[v]
-                if parent[v] is None:
-                    if children >= 2:
-                        ap.add(v)
-                elif low[w] >= discovery[v]:
-                    ap.add(v)
-
-            elif w != parent[v]:
-                low[v] = min(low[v], discovery[w])
-
-    # Handle disconnected components
-    for v in node_list:
-        if v not in discovery:
-            parent[v] = None
-            dfs(v)
+                    # u is an articulation point if:
+                    # 1. u is root and has 2+ children, OR
+                    # 2. u is not root and low[v] >= discovery[u]
+                    if parent[u] is None:
+                        if children[u] >= 2:
+                            ap.add(u)
+                    elif low[v] >= discovery[u]:
+                        ap.add(u)
 
     return Result(ap, len(ap), iterations, n)
 
@@ -130,39 +139,45 @@ def bridges[S](
     low: dict[S, int] = {}
     parent: dict[S, S | None] = {}
     bridge_list: list[tuple[S, S]] = []
-    time = [0]
+    time = 0
     iterations = 0
 
-    def dfs(v: S) -> None:
-        nonlocal iterations
+    # Iterative DFS, same frames as in articulation_points
+    for root in node_list:
+        if root in discovery:
+            continue
+        parent[root] = None
         iterations += 1
+        discovery[root] = low[root] = time
+        time += 1
+        stack = [(root, iter(neighbors(root)))]
 
-        discovery[v] = time[0]
-        low[v] = time[0]
-        time[0] += 1
+        while stack:
+            v, it = stack[-1]
+            for w in it:
+                if w not in node_set:
+                    continue
 
-        for w in neighbors(v):
-            if w not in node_set:
-                continue
+                if w not in discovery:
+                    parent[w] = v
+                    iterations += 1
+                    discovery[w] = low[w] = time
+                    time += 1
+                    stack.append((w, iter(neighbors(w))))
+                    break
 
-            if w not in discovery:
-                parent[w] = v
-                dfs(w)
-                low[v] = min(low[v], low[w])
+                if w != parent[v]:
+                    low[v] = min(low[v], discovery[w])
+            else:
+                stack.pop()
+                if stack:
+                    u = stack[-1][0]
+                    low[u] = min(low[u], low[v])
 
-                # Edge (v, w) is a bridge if low[w] > discovery[v]
-                if low[w] > discovery[v]:
-                    # Canonical ordering for consistent results
-                    edge = (v, w) if v < w else (w, v)  # type: ignore[operator]  # ty: ignore[unsupported-operator]
-                    bridge_list.append(edge)
-
-            elif w != parent[v]:
-                low[v] = min(low[v], discovery[w])
-
-    # Handle disconnected components
-    for v in node_list:
-        if v not in discovery:
-            parent[v] = None
-            dfs(v)
+                    # Edge (u, v) is a bridge if low[v] > discovery[u]
+                    if low[v] > discovery[u]:
+                        # Canonical ordering for consistent results
+                        edge = (u, v) if u < v else (v, u)  # type: ignore[operator]  # ty: ignore[unsupported-operator]
+                        bridge_list.append(edge)
 
     return Result(bridge_list, len(bridge_list), iterations, n)

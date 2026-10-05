@@ -1,6 +1,6 @@
 # solve_milp
 
-Mixed-Integer Linear Programming. Like `solve_lp` but some variables must be integers. Uses branch-and-bound: solves LP relaxations, branches on fractional values, prunes impossible subtrees.
+Mixed-Integer Linear Programming. Like `solve_lp` but some variables must be integers. Uses branch-and-bound: solves LP relaxations, branches on fractional values, prunes impossible subtrees. Child nodes are re-solved with the dual simplex from their parent's basis; the search dives depth-first in the rounding direction and falls back to the best queued bound when a dive ends.
 
 ## When to Use
 
@@ -14,10 +14,14 @@ Mixed-Integer Linear Programming. Like `solve_lp` but some variables must be int
 ```python
 def solve_milp(
     c: Sequence[float],
-    A: Sequence[Sequence[float]],
+    A: Sequence[Sequence[float] | Mapping[int, float]],
     b: Sequence[float],
-    integers: Sequence[int],
+    integers: Sequence[int] = (),
     *,
+    binary: Sequence[int] | None = None,
+    senses: Sequence[str] | None = None,
+    lb: Sequence[float] | None = None,
+    ub: Sequence[float] | None = None,
     minimize: bool = True,
     eps: float = 1e-6,
     max_iter: int = 10_000,
@@ -33,9 +37,12 @@ def solve_milp(
 | Parameter | Description |
 |-----------|-------------|
 | `c` | Objective coefficients |
-| `A` | Constraint matrix (Ax ≤ b) |
+| `A` | Constraint rows: dense lists, or sparse `{column: coefficient}` dicts |
 | `b` | Constraint right-hand sides |
-| `integers` | Indices of variables that must be integers (required) |
+| `integers` | Indices of integer variables (default none) |
+| `binary` | Indices of 0/1 variables: integer with bounds [0, 1] |
+| `senses` | Per row `"<="`, `">="` or `"="` (default all `"<="`) |
+| `lb`, `ub` | Variable bounds (default `0` and `inf`; use `float("-inf")` for a free variable) |
 | `minimize` | If False, maximize instead |
 | `eps` | Numerical tolerance for integrality |
 | `max_iter` | Maximum LP iterations per node |
@@ -73,13 +80,38 @@ if result.solutions:
 
 ## Binary Variables
 
-For 0/1 decisions, specify the variable as integer and add bounds:
+Pass `binary=` instead of adding `x_j <= 1` rows. Rows like that still work: presolve turns any single-variable row into a bound.
 
 ```python
-# Binary variable x (0 or 1)
-# Add constraint: x <= 1
-result = solve_milp(c, A + [[1, 0]], b + [1], integers=[0])
+# Pick at most one of each conflicting pair, maximize value
+rows = [{0: 1, 1: 1}, {1: 1, 2: 1}]
+result = solve_milp([3, 2, 3], rows, [1, 1], binary=range(3), minimize=False)
 ```
+
+## Presolve
+
+Before branching, `solve_milp` turns single-variable rows into bounds, rounds integer variables' bounds, and tightens rows whose variables and coefficients are all integers: the row is divided by the gcd of its coefficients and the right-hand side is rounded (down for `<=`, up for `>=`). A lexicographic "lock" row such as `-c1·x <= -best1 + 0.5` therefore becomes `-c1·x <= -best1`, which keeps every integer solution but gives a much tighter LP relaxation (on one 270-variable model: 1,391 nodes before, 3 after).
+
+## Incremental Models
+
+`MilpModel` keeps the LP between solves, so adding rows (lazy cuts, objective locks) or changing the objective re-solves warm with the dual simplex instead of starting over.
+
+```python
+from solvor import MilpModel, solve_lexicographic
+
+model = MilpModel(n_vars=3, binary=range(3))
+model.add_rows([{0: 1, 1: 1}, {1: 1, 2: 1}], [1, 1])
+first = model.solve([3, 2, 3], minimize=False)    # picks x0 and x2
+model.add_rows([{0: 1, 2: 1}], [1])               # lazy cut: not both
+second = model.solve([3, 2, 3], minimize=False)   # warm re-solve
+
+# Several objectives in priority order: best for c1, then best for c2 among those, ...
+result = solve_lexicographic(model, [c1, c2, c3], minimize=False)
+```
+
+`solve_lexicographic` returns the last stage's result. It is `OPTIMAL` only if every stage was solved to optimality: when an earlier stage stops at a limit (`FEASIBLE`), the value it locks may not be the best, so the result is `FEASIBLE` too.
+
+Each solve also starts from the previous solution as an incumbent when it is still feasible. Results depend only on the rows, bounds and objective you passed and the order of the calls: the same sequence of calls gives exactly the same result.
 
 ## Complexity
 
@@ -89,7 +121,7 @@ result = solve_milp(c, A + [[1, 0]], b + [1], integers=[0])
 ## Tips
 
 1. **Start with LP relaxation.** Solve as LP first. If the solution is already integer, you're done. The LP objective is a bound on the optimal integer objective.
-2. **Tight formulations.** Adding redundant constraints that tighten the LP relaxation speeds up MILP solving.
+2. **Tight formulations.** Presolve already tightens all-integer rows; for rows with continuous variables, prefer the tightest valid coefficients yourself.
 3. **Warm starting.** Pass a known feasible solution via `warm_start` to prune early.
 4. **Gap tolerance.** For large problems, set `gap_tol=0.01` to accept solutions within 1% of optimal.
 

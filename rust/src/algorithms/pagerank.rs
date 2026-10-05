@@ -8,6 +8,8 @@ pub struct PageRankResult {
     pub iterations: usize,
     /// Whether the algorithm converged.
     pub converged: bool,
+    /// Largest absolute score change in the last iteration.
+    pub residual: f64,
 }
 
 /// Compute PageRank scores.
@@ -35,6 +37,7 @@ pub fn pagerank(
             scores: vec![],
             iterations: 0,
             converged: true,
+            residual: 0.0,
         };
     }
 
@@ -56,38 +59,39 @@ pub fn pagerank(
 
     let base = (1.0 - damping) / n_nodes as f64;
     let converged = false;
+    let mut residual = 0.0;
+
+    // Same arithmetic as the Python backend, operation for operation, so both
+    // backends return bit-identical scores: multiply by 1/out_degree, sum with
+    // CPython's compensated sum, add terms in the same order.
+    let inv_out: Vec<f64> = outgoing_count
+        .iter()
+        .map(|&d| if d > 0 { 1.0 / d as f64 } else { 0.0 })
+        .collect();
+    let dangling: Vec<usize> = (0..n_nodes).filter(|&u| outgoing_count[u] == 0).collect();
+    let mut share = vec![0.0; n_nodes];
 
     for iteration in 0..max_iter {
-        // Compute new scores
-        for i in 0..n_nodes {
-            let mut sum = 0.0;
-            for &j in &incoming[i] {
-                if outgoing_count[j] > 0 {
-                    sum += scores[j] / outgoing_count[j] as f64;
-                }
-            }
-            new_scores[i] = base + damping * sum;
+        for (s, (&score, &inv)) in share.iter_mut().zip(scores.iter().zip(inv_out.iter())) {
+            *s = score * inv;
         }
 
-        // Handle dangling nodes (no outgoing edges)
-        let dangling_sum: f64 = scores
-            .iter()
-            .enumerate()
-            .filter(|&(i, _)| outgoing_count[i] == 0)
-            .map(|(_, &s)| s)
-            .sum();
-
+        // Dangling nodes (no outgoing edges) spread their rank over all nodes
+        let dangling_sum = python_sum(dangling.iter().map(|&u| scores[u]));
         let dangling_contrib = damping * dangling_sum / n_nodes as f64;
-        for score in &mut new_scores {
-            *score += dangling_contrib;
+
+        for (i, new_score) in new_scores.iter_mut().enumerate() {
+            let rank_sum = python_sum(incoming[i].iter().map(|&u| share[u]));
+            *new_score = base + damping * rank_sum + dangling_contrib;
         }
 
-        // Check convergence
-        let diff: f64 = scores
+        // Converged when no score moved by more than tol (max-norm, same as the Python backend)
+        let diff = scores
             .iter()
             .zip(new_scores.iter())
             .map(|(a, b)| (a - b).abs())
-            .sum();
+            .fold(0.0_f64, f64::max);
+        residual = diff;
 
         std::mem::swap(&mut scores, &mut new_scores);
 
@@ -96,6 +100,7 @@ pub fn pagerank(
                 scores,
                 iterations: iteration + 1,
                 converged: true,
+                residual,
             };
         }
     }
@@ -104,7 +109,29 @@ pub fn pagerank(
         scores,
         iterations: max_iter,
         converged,
+        residual,
     }
+}
+
+/// Float sum exactly as CPython's built-in `sum()` computes it (3.12+): Neumaier's
+/// compensated summation, compensation added once at the end if finite and nonzero.
+/// (Same algorithm in CPython 3.12, 3.13, 3.14 and main; 3.14 only moved it into `cs_add`.)
+fn python_sum(values: impl Iterator<Item = f64>) -> f64 {
+    let mut total = 0.0_f64;
+    let mut compensation = 0.0_f64;
+    for x in values {
+        let t = total + x;
+        if total.abs() >= x.abs() {
+            compensation += (total - t) + x;
+        } else {
+            compensation += (x - t) + total;
+        }
+        total = t;
+    }
+    if compensation != 0.0 && compensation.is_finite() {
+        total += compensation;
+    }
+    total
 }
 
 #[cfg(test)]

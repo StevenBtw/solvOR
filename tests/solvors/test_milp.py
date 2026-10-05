@@ -1,6 +1,11 @@
 """Tests for the MILP (mixed-integer linear programming) solver."""
 
+import math
+
+import pytest
+
 from solvor.milp import solve_milp
+from solvor.simplex import solve_lp
 from solvor.types import Status
 
 
@@ -733,3 +738,264 @@ class TestEdgeCaseCoverage:
         assert result.ok
         # Optimal is x_0=1, x_1=2, objective=3
         assert result.objective >= 3 - 1e-6
+
+
+class TestSparseBoundsApi:
+    def test_binary_and_sparse_rows(self):
+        # set packing: pick at most one of each pair, maximize
+        rows = [{0: 1, 1: 1}, {1: 1, 2: 1}, {2: 1, 3: 1}]
+        result = solve_milp([3, 2, 2, 3], rows, [1, 1, 1], binary=range(4), minimize=False)
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 6.0
+        assert result.solution == (1.0, 0.0, 0.0, 1.0)
+
+    def test_binary_equals_identity_rows(self):
+        c = [5, 4, 3, 7]
+        rows = [[2, 3, 1, 4], [1, 1, 1, 1]]
+        with_rows = solve_milp(
+            c,
+            rows + [[1 if j == k else 0 for j in range(4)] for k in range(4)],
+            [6, 2] + [1] * 4,
+            list(range(4)),
+            minimize=False,
+        )
+        with_binary = solve_milp(c, rows, [6, 2], binary=range(4), minimize=False)
+        assert with_rows.objective == with_binary.objective
+
+    def test_general_integer_bounds(self):
+        # maximize x + y with x in [0, 5], y in [-2, 2], x + 2y <= 6.5, both integer
+        result = solve_milp([1, 1], [[1, 2]], [6.5], [0, 1], minimize=False, lb=[0, -2], ub=[5, 2])
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 5.0  # (5, 0) and (4, 1) tie; either is correct
+        x, y = result.solution
+        assert x + 2 * y <= 6.5 and 0 <= x <= 5 and -2 <= y <= 2
+        assert x == round(x) and y == round(y)
+
+    def test_greater_equal_and_equal_rows(self):
+        # minimize x + y with x + y >= 3.5 and x - y = 1, integers
+        result = solve_milp([1, 1], [[1, 1], [1, -1]], [3.5, 1], [0, 1], senses=[">=", "="])
+        assert result.status == Status.OPTIMAL
+        assert result.solution == (3.0, 2.0)
+
+    def test_fixed_variable(self):
+        result = solve_milp([1, 1], [[1, 1]], [10], [0, 1], minimize=False, lb=[3, 0], ub=[3, 4])
+        assert result.solution == (3.0, 4.0)
+
+    def test_integer_variable_without_lower_bound(self):
+        # minimize x, x integer and free, -x <= 3.5 (x >= -3.5): x = -3
+        result = solve_milp([1], [[-1]], [3.5], [0], lb=[-math.inf])
+        assert result.solution == (-3.0,)
+
+    def test_inverted_bounds_are_infeasible(self):
+        result = solve_milp([1], [[1]], [5], [0], lb=[3], ub=[2])
+        assert result.status == Status.INFEASIBLE
+
+    def test_integers_argument_is_optional(self):
+        result = solve_milp([1, 1], [{0: 1, 1: 1}], [1.5], binary=[0], minimize=False)
+        assert result.status == Status.OPTIMAL
+        assert abs(result.objective - 1.5) < 1e-9
+        assert result.solution[0] in (0.0, 1.0)
+
+    def test_binary_overlapping_integers_and_wide_ub(self):
+        # binary clamps the user's ub=3 to 1; listing x0 in both integers and binary is fine
+        result = solve_milp([1, 1], [[1, 1]], [5], [0], binary=[0, 1], minimize=False, ub=[3, 3])
+        assert result.status == Status.OPTIMAL
+        assert result.solution == (1.0, 1.0)
+
+    def test_binary_index_validated(self):
+        with pytest.raises(ValueError, match="Invalid index in binary"):
+            solve_milp([1], [[1]], [1], binary=[3])
+
+
+class TestPresolve:
+    def test_singleton_rows_become_bounds(self):
+        # -x <= -2.5 and x <= 7.9 on an integer x: x in [3, 7]
+        result = solve_milp([1], [[-1], [1]], [-2.5, 7.9], [0])
+        assert result.solution == (3.0,)
+        assert solve_milp([1], [[-1], [1]], [-2.5, 7.9], [0], minimize=False).solution == (7.0,)
+
+    def test_empty_row_infeasible(self):
+        result = solve_milp([1], [[0]], [-1], [0])
+        assert result.status == Status.INFEASIBLE
+
+    def test_empty_row_feasible_is_dropped(self):
+        result = solve_milp([1], [[0], [1]], [1, 4], [0], minimize=False)
+        assert result.objective == 4.0
+
+
+class TestHeuristicScaling:
+    def test_rounding_heuristic_on_a_large_odd_cycle(self):
+        """Fractional root (all 0.5); the heuristic alone must find a maximum independent set quickly.
+
+        0.6.2 re-checked every row after every move (O(rows x columns) per move): n=101 took
+        0.24 s and the cost grows roughly cubically. Moves now touch only their own rows.
+        """
+        import time
+
+        n = 301
+        rows = [{i: 1.0, (i + 1) % n: 1.0} for i in range(n)]
+        start = time.perf_counter()
+        result = solve_milp([1.0] * n, rows, [1.0] * n, binary=range(n), minimize=False, max_nodes=1)
+        assert time.perf_counter() - start < 5.0
+        assert result.objective == (n - 1) / 2
+
+
+class TestIntegerRowPresolve:
+    def test_rhs_rounding_solves_at_the_root(self):
+        """2x + 2y <= 3 over binaries is x + y <= 1; the LP relaxation then needs no branching."""
+        result = solve_milp([1, 1], [{0: 2, 1: 2}], [3], binary=range(2), minimize=False)
+        assert result.objective == 1.0
+        assert result.iterations == 1
+
+    def test_lock_row_with_half_slack(self):
+        """Lexicographic lock rows like -c1.x <= -opt + 0.5 tighten to -c1.x <= -opt."""
+        n = 6
+        rows = [{0: 1, 1: 1}, {2: 1, 3: 1}, {4: 1, 5: 1}, {0: -1, 2: -1, 4: -1}]
+        rhs = [1, 1, 1, -3 + 0.5]
+        result = solve_milp([0, 1, 0, 1, 0, 1], rows, rhs, binary=range(n), minimize=False)
+        assert result.objective == 0.0
+        assert result.solution[0] == result.solution[2] == result.solution[4] == 1.0
+
+    def test_equality_without_integer_solution(self):
+        # 2x + 4y = 3 has no integer solution
+        result = solve_milp([1, 1], [[2, 4]], [3], [0, 1], senses=["="], ub=[10, 10])
+        assert result.status == Status.INFEASIBLE
+
+    def test_rows_with_continuous_variables_are_not_rounded(self):
+        # x integer, y continuous: x + y <= 1.5 must keep its 0.5
+        result = solve_milp([1, 1], [[1, 1]], [1.5], [0], minimize=False)
+        assert abs(result.objective - 1.5) < 1e-9
+
+    def test_fractional_coefficients_are_not_rounded(self):
+        # 1.5x + y <= 2.9 keeps (1, 1); rounding the rhs to 2 would wrongly cut it off
+        result = solve_milp([3, 2], [[1.5, 1]], [2.9], [0, 1], minimize=False)
+        assert result.objective == 5.0
+
+
+class TestIntegerSnapping:
+    """Integer variables in results are exact integers; LP pivot noise must not leak into outputs."""
+
+    def test_integer_variables_are_exact_and_objective_recomputed(self):
+        import random
+
+        rng = random.Random(0)
+        n, m = 60, 90
+        rows = [{j: 1.0 for j in rng.sample(range(n), rng.randint(2, 5))} for _ in range(m)]
+        c = [float(rng.randint(1, 9)) for _ in range(n)]
+        result = solve_milp(c, rows, [1.0] * m, binary=range(n), senses=[">="] * m)
+        assert result.status == Status.OPTIMAL
+        assert all(v in (0.0, 1.0) for v in result.solution)
+        assert result.objective == sum(cj * xj for cj, xj in zip(c, result.solution))
+
+    def test_continuous_variables_are_not_snapped(self):
+        result = solve_milp([1, 1], [[1, 1]], [1.5], [0], minimize=False)
+        assert result.solution[0] in (0.0, 1.0)
+        assert abs(result.solution[0] + result.solution[1] - 1.5) < 1e-9
+
+
+class TestWarmBranchAndBound:
+    """Child nodes differ from their parent by one bound; the dual simplex re-solves them in a few pivots."""
+
+    def _knapsack(self):
+        import random
+
+        rng = random.Random(0)
+        n = 35
+        rows = [{j: float(rng.randint(5, 40)) for j in range(n)} for _ in range(4)]
+        rhs = [sum(row.values()) * 0.35 for row in rows]
+        c = [float(rng.randint(10, 60)) for _ in range(n)]
+        return c, rows, rhs
+
+    def test_node_reoptimization_is_cheap(self):
+        c, rows, rhs = self._knapsack()
+        result = solve_milp(c, rows, rhs, binary=range(len(c)), minimize=False)
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 611.0
+        # result.evaluations counts LP pivots over all nodes: about 21,000 when every node starts cold
+        assert result.evaluations < 5_000
+
+    def test_dives_into_the_rounding_direction(self):
+        """Depth-first plunging finds an incumbent quickly; with heuristics off it still solves to optimality."""
+        c, rows, rhs = self._knapsack()
+        result = solve_milp(c, rows, rhs, binary=range(len(c)), minimize=False, heuristics=False)
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 611.0
+
+    def test_branching_on_free_integer_variables(self):
+        """Free variables are split into two columns; branching on them rebuilds the LP (cold path)."""
+        inf = float("inf")
+        # maximize x + y, x + y <= 3.5, x - y <= 0.5, both integer and free
+        result = solve_milp(
+            [1, 1], [[1, 1], [1, -1]], [3.5, 0.5], [0, 1], minimize=False, lb=[-inf, -inf], ub=[inf, inf]
+        )
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 3.0
+        x, y = result.solution
+        assert x + y <= 3.5 and x - y <= 0.5
+
+
+class TestPresolveAndRootEdgeCases:
+    @pytest.mark.parametrize("big", [1e7, 1e9])
+    def test_infeasible_with_a_large_unrelated_row(self, big):
+        result = solve_milp(
+            [1, 1, 0, 0], [[1, 1, 0, 0], [0, 0, 1, 1]], [3, big], [0, 1], senses=[">=", "<="], ub=[1, 1, 10, 10]
+        )
+        assert result.status == Status.INFEASIBLE
+
+    def test_infeasible_node_with_a_large_unrelated_row(self):
+        """Branch x <= 1 is infeasible; it must not come back OPTIMAL at x = 1.5 and loop."""
+        # minimize x, x - 0.5 w = 1.5, w in [0, 1], x integer, plus an unrelated z <= 1e7
+        result = solve_milp([1, 0, 0], [[1, -0.5, 0], [0, 0, 1]], [1.5, 1e7], [0], senses=["=", "<="], ub=[10, 1, 1e8])
+        assert result.status == Status.OPTIMAL
+        assert result.objective == 2.0
+        assert result.iterations <= 5
+
+    def test_infinite_rhs_is_dropped(self):
+        result = solve_milp([-1, -1], [[1, 1], [1, 0], [0, 1]], [math.inf, 3, 4], [0, 1])
+        assert result.status == Status.OPTIMAL
+        assert result.objective == -7.0
+
+    def test_impossible_infinite_rhs_is_infeasible(self):
+        assert solve_milp([1], [[1]], [-math.inf], [0]).status == Status.INFEASIBLE
+        assert solve_milp([1], [[1]], [math.inf], [0], senses=[">="]).status == Status.INFEASIBLE
+
+    def test_iteration_limit_at_the_root_is_not_optimal(self):
+        # 6-variable cyclic cover, every row needs an artificial; one LP iteration cannot finish phase 1
+        rows = [{i: 1.0, (i + 1) % 6: 1.0} for i in range(6)]
+        result = solve_milp([1.0] * 6, rows, [1.0] * 6, binary=range(6), senses=[">="] * 6, max_iter=1)
+        assert result.status == Status.MAX_ITER
+
+    def test_nearly_integral_coefficients_are_not_tightened(self):
+        # (1 + 5e-10) x - y <= 0.5 with x fixed at 10000: smallest integer y is 10000
+        result = solve_milp([0, 1], [[1 + 5e-10, -1]], [0.5], [0, 1], lb=[10000, 0], ub=[10000, math.inf])
+        assert result.solution[1] == 10000.0
+
+
+class TestWarmReoptimizationIsOptimal:
+    def test_tiny_dual_pivot_does_not_return_a_suboptimal_node(self, monkeypatch):
+        """A node re-solved warm used to stop at a dual-infeasible basis and close with a worse point."""
+        rows = [
+            {0: -2.871, 1: -0.26, 5: -312.387},
+            {1: 0.064, 2: -72.382, 5: 0.016},
+            {0: -10.735, 1: 0.076, 6: -0.07},
+            {1: 0.091, 2: 192.573, 4: 4.398, 5: -0.23, 6: 0.535},
+        ]
+        c = [243.016, 0.155, 0.399, -67.917, -12.706, -11.949, -11.91]
+        args = (c, rows, [-535.902, -72.174, -288.437, 193.686], [1, 2, 6])
+        kwargs = {"senses": [">=", "=", ">=", "="], "ub": [5, 5, 5, 5, 4, 6, 3]}
+        warm = solve_milp(*args, **kwargs)
+        monkeypatch.setattr("solvor.lp_engine.WarmLP.REBUILD_PIVOTS", 0)  # every node cold
+        cold = solve_milp(*args, **kwargs)
+        assert warm.status == cold.status == Status.OPTIMAL
+        assert abs(warm.objective - cold.objective) < 1e-6
+        assert abs(warm.objective - (-374.49)) < 0.01  # HiGHS
+
+
+class TestBoundRoundingNoise:
+    def test_tiny_inversion_on_a_continuous_variable_is_feasible(self):
+        """lb = 0.1 + 0.2 is 4e-17 above ub = 0.3: solve_lp accepts it, so must solve_milp."""
+        lb, ub = [0.1 + 0.2, 0.0], [0.3, 4.0]
+        lp = solve_lp([1, 1], [{0: 1, 1: 1}], [5], lb=lb, ub=ub)
+        milp = solve_milp([1, 1], [{0: 1, 1: 1}], [5], [1], lb=lb, ub=ub)
+        assert lp.status == milp.status == Status.OPTIMAL
+        assert milp.solution[1] == 0.0 and abs(milp.solution[0] - 0.3) < 1e-9

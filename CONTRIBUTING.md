@@ -791,7 +791,8 @@ The project uses GitHub Actions (`.github/workflows/`):
 
 **publish.yml** - Runs on GitHub releases:
 
-- Builds and publishes to PyPI using `uv build` and `uv publish`
+- Builds abi3 wheels for Linux, macOS and Windows plus an sdist with `PyO3/maturin-action`, then publishes to PyPI.
+- The version lives in one place, `rust/Cargo.toml`. `pyproject.toml` declares it dynamic and `solvor.__version__` reads the installed metadata. A release bumps `rust/Cargo.toml`, moves the CHANGELOG `[Unreleased]` entries under the new version, and tags `v<version>`; the workflow refuses a tag that does not match `rust/Cargo.toml`.
 
 ## Type Checking
 
@@ -861,8 +862,11 @@ Add entries under `[Unreleased]` in the appropriate category:
 - `Changed` - changes in existing functionality
 - `Fixed` - bug fixes
 - `Removed` - removed features
+- `Result changes` - any change in what a solver returns for the same input
 
 Maintainers will move unreleased entries to a versioned section during releases.
+
+**Result changes.** Downstream projects cache results derived from solver outputs, so any change in what a solver returns for the same input (a different tied optimum, a different community order, a float that moves in the last bit) goes under `### Result changes`, even when it is an improvement. `tests/solvors/test_golden_results.py` pins outputs bit for bit and fails on any such change: update the digest only together with the CHANGELOG entry. Patch releases should leave every digest unchanged.
 
 ## Philosophy
 

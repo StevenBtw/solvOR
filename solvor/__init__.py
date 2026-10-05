@@ -1,9 +1,10 @@
 """Solvor - Pure Python Optimization Solvers."""
 
-__version__ = "0.6.1"
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _dist_version
 
 # Register Rust adapters (must be after algorithm imports)
-import solvor.rust.adapters  # noqa: F401, E402
+import solvor.rust.adapters  # noqa: F401
 from solvor.a_star import astar, astar_grid
 from solvor.anneal import anneal, exponential_cooling, linear_cooling, logarithmic_cooling
 from solvor.articulation import articulation_points, bridges
@@ -29,7 +30,7 @@ from solvor.job_shop import solve_job_shop
 from solvor.kcore import kcore, kcore_decomposition
 from solvor.knapsack import solve_knapsack
 from solvor.lns import alns, lns
-from solvor.milp import solve_milp
+from solvor.milp import MilpModel, solve_lexicographic, solve_milp
 from solvor.mst import kruskal, prim
 from solvor.nelder_mead import nelder_mead
 from solvor.network_simplex import network_simplex
@@ -50,10 +51,18 @@ from solvor.types import Progress, ProgressCallback, Result, Status
 from solvor.utils import FenwickTree, UnionFind
 from solvor.vrp import Customer, Vehicle, VRPState, solve_vrptw
 
+try:
+    # Single source of truth: rust/Cargo.toml -> maturin -> installed metadata
+    __version__ = _dist_version("solvor")
+except PackageNotFoundError:  # imported from a source tree that was never installed
+    __version__ = "0.0.0+unknown"
+
 __all__ = [
     "solve_lp",
     "solve_lp_interior",
     "solve_milp",
+    "MilpModel",
+    "solve_lexicographic",
     "tabu_search",
     "solve_tsp",
     "anneal",

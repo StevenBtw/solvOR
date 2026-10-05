@@ -46,8 +46,8 @@ pub fn floyd_warshall(
     let mut pred: Vec<Vec<Option<usize>>> = vec![vec![None; n]; n];
 
     // Distance to self is 0
-    for i in 0..n {
-        dist[i][i] = 0.0;
+    for (i, row) in dist.iter_mut().enumerate() {
+        row[i] = 0.0;
     }
 
     // Add edges
@@ -88,11 +88,8 @@ pub fn floyd_warshall(
     }
 
     // Check for negative cycles (negative values on diagonal)
-    for i in 0..n {
-        if dist[i][i] < 0.0 {
-            has_negative_cycle = true;
-            break;
-        }
+    if dist.iter().enumerate().any(|(i, row)| row[i] < 0.0) {
+        has_negative_cycle = true;
     }
 
     Ok(FloydWarshallResult {
@@ -104,6 +101,9 @@ pub fn floyd_warshall(
 }
 
 /// Reconstruct path from i to j using predecessor matrix.
+///
+/// Only the tests use it today: the Python adapter returns distances only.
+#[cfg(test)]
 pub fn reconstruct_path(
     pred: &[Vec<Option<usize>>],
     dist: &[Vec<f64>],
@@ -125,13 +125,9 @@ pub fn reconstruct_path(
     let mut current = to;
 
     while current != from {
-        match pred[from][current] {
-            Some(p) => {
-                path.push(p);
-                current = p;
-            }
-            None => return None, // No path
-        }
+        let p = pred[from][current]?;
+        path.push(p);
+        current = p;
 
         // Safety check for cycles in reconstruction
         if path.len() > pred.len() {

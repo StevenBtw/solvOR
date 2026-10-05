@@ -176,3 +176,78 @@ class TestLouvainStress:
         # All nodes accounted for
         total_nodes = sum(len(c) for c in result.solution)
         assert total_nodes == 10
+
+
+class TestLouvainAggregation:
+    """Phase 2: communities become nodes and local moving repeats on the coarser graph."""
+
+    def test_long_path_reaches_high_modularity(self):
+        n = 1000
+        result = louvain(range(n), lambda v: [w for w in (v - 1, v + 1) if 0 <= w < n])
+        # Local moving alone stops at 500 pairs (modularity ~0.50)
+        assert result.objective > 0.9
+        assert len(result.solution) < 100
+        assert all(_is_contiguous(c) for c in result.solution)
+
+    def test_two_cliques_joined_by_one_edge(self):
+        graph: dict[int, list[int]] = {v: [] for v in range(20)}
+        for block in (range(10), range(10, 20)):
+            for a in block:
+                graph[a].extend(b for b in block if b != a)
+        graph[9].append(10)
+        graph[10].append(9)
+        result = louvain(graph.keys(), lambda v: graph[v])
+        assert sorted(map(sorted, result.solution)) == [list(range(10)), list(range(10, 20))]
+
+    def test_ring_of_cliques(self):
+        """Classic benchmark: 8 cliques of 5 nodes in a ring; each clique is one community."""
+        k, size = 8, 5
+        graph: dict[int, set[int]] = {v: set() for v in range(k * size)}
+        for c in range(k):
+            members = range(c * size, (c + 1) * size)
+            for a in members:
+                graph[a].update(b for b in members if b != a)
+            a, b = c * size, ((c + 1) % k) * size + 1
+            graph[a].add(b)
+            graph[b].add(a)
+        result = louvain(graph.keys(), lambda v: graph[v])
+        assert sorted(map(sorted, result.solution)) == [list(range(c * size, (c + 1) * size)) for c in range(k)]
+
+    def test_modularity_matches_partition(self):
+        """result.objective is the modularity of the returned partition on the original graph."""
+        import random
+
+        rng = random.Random(5)
+        graph: dict[int, set[int]] = {v: set() for v in range(200)}
+        for _ in range(600):
+            a, b = rng.randrange(200), rng.randrange(200)
+            if a != b:
+                graph[a].add(b)
+                graph[b].add(a)
+        result = louvain(graph.keys(), lambda v: graph[v])
+        m = sum(len(s) for s in graph.values()) / 2
+        label = {v: i for i, comm in enumerate(result.solution) for v in comm}
+        q = 0.0
+        for comm in result.solution:
+            inside = sum(1 for v in comm for w in graph[v] if label[w] == label[v]) / 2
+            degree = sum(len(graph[v]) for v in comm)
+            q += inside / m - (degree / (2 * m)) ** 2
+        assert abs(result.objective - q) < 1e-12
+
+
+class TestLouvainInputs:
+    def test_duplicate_nodes_count_once(self):
+        graph = {1: [2], 2: [1, 3], 3: [2]}
+        once = louvain([1, 2, 3], lambda v: graph[v])
+        twice = louvain([1, 1, 2, 3, 3], lambda v: graph[v])
+        assert once.solution == twice.solution
+        assert once.objective == twice.objective
+
+    def test_incomparable_nodes_do_not_raise(self):
+        graph = {1: ["a"], "a": [1], 2: ["b"], "b": [2]}
+        result = louvain([1, "a", 2, "b"], lambda v: graph[v])
+        assert sorted(map(len, result.solution)) == [2, 2]
+
+
+def _is_contiguous(community: set[int]) -> bool:
+    return max(community) - min(community) + 1 == len(community)
