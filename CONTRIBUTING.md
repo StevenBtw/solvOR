@@ -866,7 +866,7 @@ Add entries under `[Unreleased]` in the appropriate category:
 
 Maintainers will move unreleased entries to a versioned section during releases.
 
-**Result changes.** Downstream projects cache results derived from solver outputs, so any change in what a solver returns for the same input (a different tied optimum, a different community order, a float that moves in the last bit) goes under `### Result changes`, even when it is an improvement. `tests/solvors/test_golden_results.py` pins outputs bit for bit and fails on any such change: update the digest only together with the CHANGELOG entry. Patch releases should leave every digest unchanged.
+**Result changes.** Downstream projects cache results derived from solver outputs, so any change in what a solver returns for the same input (a different tied optimum, a different community order, a float that moves in the last bit) goes under `### Result changes`, even when it is an improvement. `tests/solvors/test_golden_results.py` pins the outputs of a fixed set of inputs bit for bit and fails when one of them changes: update the digest only together with the CHANGELOG entry. It covers only those inputs and fields, so a passing run does not prove that nothing else changed; judge every change to solver code yourself. Patch releases should leave every digest unchanged.
 
 ## Philosophy
 
