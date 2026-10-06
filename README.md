@@ -486,7 +486,7 @@ Result(
 **Have your cake and eat it too.** solvOR gives you both:
 
 - **Readable Python** - Every algorithm is implemented in clear, documented Python you can study and modify
-- **Rust Performance** - Optional drop-in Rust backends with 5-60x speedup for compute-heavy algorithms
+- **Rust Performance** - Optional drop-in Rust backends with 3-100x speedup for compute-heavy algorithms
 
 ```python
 from solvor import floyd_warshall
