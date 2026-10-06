@@ -79,7 +79,7 @@ result = bfs((0, 0), (5, 5), get_neighbors)
 result = pagerank(nodes, lambda n: adjacency[n])
 ```
 
-These functions are **pure Python** and prioritize flexibility and readability.
+These functions prioritize flexibility and readability. `dijkstra` and `bfs` are pure Python; `pagerank` maps the nodes to integers and runs on the Rust backend when it is installed.
 
 ### Edge-list (`*_edges`) - Fast
 

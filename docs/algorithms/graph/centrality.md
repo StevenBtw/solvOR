@@ -23,7 +23,7 @@ for page, score in sorted(result.solution.items(), key=lambda x: -x[1]):
 # home has highest rank (many pages link to it)
 ```
 
-**How it works:** Iteratively updates each node's score as a weighted sum of scores from nodes linking to it, plus a damping factor allowing random jumps. Converges when no score changes by more than `tol` between iterations. Equivalent to finding the dominant eigenvector of the transition matrix.
+**How it works:** Iteratively updates each node's score as a weighted sum of scores from nodes linking to it, plus a damping factor allowing random jumps. Converges when the largest score change between iterations is less than `tol`. Equivalent to finding the dominant eigenvector of the transition matrix.
 
 **Parameters:**
 

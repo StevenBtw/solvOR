@@ -58,11 +58,13 @@ print(result.objective)  # 12.0
 Rows default to `Ax ≤ b`. Pass `senses` for other directions and `lb`/`ub` for variable bounds; bounds cost nothing extra (no rows are added for them).
 
 ```python
-# x + y >= 4 and x - y == 1, x in [-5, 5], y >= 0
-result = solve_lp(c, [[1, 1], [1, -1]], [4, 1], senses=[">=", "="], lb=[-5, 0], ub=[5, float("inf")])
+# Minimize x + 2y with x + y >= 4 and x - y == 1, x in [-5, 5], y >= 0
+result = solve_lp([1, 2], [[1, 1], [1, -1]], [4, 1], senses=[">=", "="], lb=[-5, 0], ub=[5, float("inf")])
+print(result.solution)  # (2.5, 1.5)
 
-# Sparse rows: only the nonzero coefficients
-result = solve_lp(c, [{0: 1, 3: 2}, {1: 1}], [10, 4])
+# Sparse rows: only the nonzero coefficients (x0 + 2*x3 <= 10, x1 <= 4)
+result = solve_lp([-1, -1, 0, -1], [{0: 1, 3: 2}, {1: 1}], [10, 4])
+print(result.objective)  # -14.0
 ```
 
 ## How It Works
@@ -93,7 +95,7 @@ Each vertex corresponds to a *basic feasible solution*, setting n variables to z
 
 **Bounds:** A variable at its upper bound is replaced by `upper - x`, so every non-basic variable sits at zero and the ratio test only gains two cases: a basic variable can leave at its upper bound, and the entering variable can jump to its own upper bound without a pivot (a bound flip).
 
-**Scaling:** a row or column whose nonzero coefficients differ by a factor of 256 or more is multiplied by a power of two that brings them nearer 1, and the solution is mapped back. Powers of two scale without rounding. Other rows and columns are left as they are.
+**Scaling:** a row or column whose nonzero coefficients differ by a factor of 256 or more is multiplied by a power of two that brings them nearer 1, and the solution is mapped back. Powers of two scale without rounding. Other rows and columns are left as they are. In a scaled model, a column whose reduced cost is within `eps` still enters when its step would improve the objective by more than `eps * (1 + |objective|)`, because next to a large coefficient a tiny reduced cost can hide a long step.
 
 For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikipedia.org/wiki/Simplex_algorithm) or the classic textbook by Chvátal.
 
