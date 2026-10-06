@@ -58,7 +58,7 @@ def solve_milp(
 | `heuristics` | Rounding and local search for an early incumbent (default True) |
 | `lns_iterations` | Large neighborhood search passes that improve the incumbent, 0 = off (default 0) |
 | `lns_destroy_frac` | Fraction of the variables unfixed in each LNS pass (default 0.3) |
-| `seed` | Random seed for LNS, so runs repeat exactly |
+| `seed` | Random seed for LNS. With `lns_iterations > 0` and `seed=None` every run draws a fresh seed, so pass one when runs must repeat |
 | `backend` | LP kernel: `"auto"` (default, Rust when installed), `"rust"` or `"python"`; both give identical results, bit for bit |
 
 ## Example
@@ -108,7 +108,7 @@ Models whose coefficients differ by many orders of magnitude, such as big-M rows
 
 - A row or column whose nonzero coefficients differ by a factor of 256 or more is scaled by a power of two, which brings them nearer 1 without rounding. Other rows and columns keep the factor 1.
 - The LP relaxations use their own tolerance (1e-9); `eps` stays the integrality tolerance.
-- In a model with such a row or column, a reduced cost within that tolerance no longer ends the LP when its column can still move far enough to gain more than `1e-9 * (1 + |objective|)`: next to a large coefficient, a slack costs almost nothing per unit but can move very far.
+- In a model with such a row or column, a reduced cost within that tolerance no longer ends the LP when a finite step of its column would still gain more than `1e-9 * (1 + |objective|)`: next to a large coefficient, a slack costs almost nothing per unit but can move very far.
 - In a model with such a row or column, a node whose warm-started LP looks infeasible is solved again from scratch before it is pruned: a tableau that has drifted can report a false infeasibility.
 - An integer solution is accepted only after it is snapped to exact integers and every row is checked: a row holds when it is off by at most `eps * max(1, |activity|, |rhs|)`. Without the check, `x0 = 1e-6` would count as integral and the snap to 0 would move a `1e6 * x0` term by 1.
 - If a node's LP solution is visibly inaccurate (outside its bounds, or integral but still violating a row), nothing that depends on it is proven: the result is `FEASIBLE` (or `INFEASIBLE`) with an explanation in `result.error`, never `OPTIMAL`.
@@ -134,7 +134,7 @@ result = solve_lexicographic(model, [c1, c2, c3], minimize=False)
 
 `solve_lexicographic` returns the last stage's result. It is `OPTIMAL` only if every stage was solved to optimality: when an earlier stage stops at a limit (`FEASIBLE`), the value it locks may not be the best, so the result is `FEASIBLE` too.
 
-Each solve also starts from the previous solution as an incumbent when it is still feasible. Results depend only on the rows, bounds and objective you passed and the order of the calls: the same sequence of calls gives exactly the same result.
+Each solve also starts from the previous solution as an incumbent when it is still feasible. Results depend only on the rows, bounds and objective you passed and the order of the calls: the same sequence of calls gives exactly the same result (with `lns_iterations > 0`, only when you also pass a `seed`).
 
 ## Complexity
 

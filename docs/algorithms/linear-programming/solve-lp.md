@@ -95,7 +95,7 @@ Each vertex corresponds to a *basic feasible solution*, setting n variables to z
 
 **Bounds:** A variable at its upper bound is replaced by `upper - x`, so every non-basic variable sits at zero and the ratio test only gains two cases: a basic variable can leave at its upper bound, and the entering variable can jump to its own upper bound without a pivot (a bound flip).
 
-**Scaling:** a row or column whose nonzero coefficients differ by a factor of 256 or more is multiplied by a power of two that brings them nearer 1, and the solution is mapped back. Powers of two scale without rounding. Other rows and columns are left as they are. In a scaled model, a column whose reduced cost is within `eps` still enters when its step would improve the objective by more than `eps * (1 + |objective|)`, because next to a large coefficient a tiny reduced cost can hide a long step.
+**Scaling:** a row or column whose nonzero coefficients differ by a factor of 256 or more is multiplied by a power of two that brings them nearer 1, and the solution is mapped back. Powers of two scale without rounding. Other rows and columns are left as they are. In a scaled model, a column whose reduced cost is within `eps` still enters when a finite feasible step would improve the objective by more than `eps * (1 + |objective|)`, because next to a large coefficient a tiny reduced cost can hide a long step.
 
 For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikipedia.org/wiki/Simplex_algorithm) or the classic textbook by Chvátal.
 
