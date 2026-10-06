@@ -64,8 +64,11 @@ jobs:
           LD_LIBRARY_PATH: ${{ env.pythonLocation }}/lib
       - name: MSRV (rust-version in rust/Cargo.toml; sdist builds use the user's toolchain)
         run: |
-          rustup toolchain install 1.88.0 --profile minimal
-          cargo +1.88.0 check --manifest-path rust/Cargo.toml
+          msrv=$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' rust/Cargo.toml)
+          rustup toolchain install "$msrv" --profile minimal
+          cargo +"$msrv" build --manifest-path rust/Cargo.toml
+        env:
+          LD_LIBRARY_PATH: ${{ env.pythonLocation }}/lib
 
   test-solvers:
     runs-on: ubuntu-latest
