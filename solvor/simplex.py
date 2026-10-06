@@ -54,8 +54,7 @@ from typing import Literal
 
 from solvor.lp_engine import solve_cold
 from solvor.types import Result, Status  # noqa: F401  (Status stays importable from here, as in 0.6.2)
-from solvor.utils.lp_input import normalize_lp
-from solvor.utils.validate import check_non_negative
+from solvor.utils.lp_input import check_eps, normalize_lp
 
 __all__ = ["solve_lp"]
 
@@ -74,7 +73,7 @@ def solve_lp(
     backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
     """Solve linear program: minimize c @ x subject to A @ x (senses) b, lb <= x <= ub."""
-    check_non_negative(eps, name="eps")
+    check_eps(eps)
     prob = normalize_lp(c, A, b, lb=lb, ub=ub, senses=senses)
     cost = [float(v) for v in c]
     return solve_cold(prob, cost, prob.lb, prob.ub, minimize=minimize, eps=eps, max_iter=max_iter, backend=backend)

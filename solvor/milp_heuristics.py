@@ -86,8 +86,11 @@ def round_binary(lp_solution, int_set, c, prob, cols, lower, upper, minimize, ep
     improved = True
     while improved:
         improved = False
+        # Minimizing turns variables off and maximizing turns them on; either only pays when c[j] > 0
         flip_candidates = [
-            (sign * c[j], j) for j in int_set if (minimize and sol[j] > 0.5) or (not minimize and sol[j] < 0.5)
+            (sign * c[j], j)
+            for j in int_set
+            if c[j] > 0 and ((minimize and sol[j] > 0.5) or (not minimize and sol[j] < 0.5))
         ]
         flip_candidates.sort()
 

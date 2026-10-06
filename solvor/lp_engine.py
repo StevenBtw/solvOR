@@ -185,6 +185,7 @@ class BoundedSimplex:
         self.n, self.m, self.width, self.eps = n, m, width, eps
         self.art_start, self.art_end = n + m, width
         self.pivots = 0
+        self.check_gains = False  # set by WarmLP for badly scaled models, see _gain_column
         # Phase 1 is feasible when every artificial is zero up to a tolerance taken from its own row
         self.art_tol = [1e-9 * (1.0 + abs(r)) for r, needs in zip(rhs, needs_art) if needs]
         self.phase1_done = width == n + m
@@ -286,27 +287,12 @@ class BoundedSimplex:
                 if obj[j] < -eps and not is_basic[j] and span[j] > eps:
                     enter = j
                     break
+            if enter < 0 and self.check_gains:
+                enter = self._gain_column()
             if enter < 0:
                 return Status.OPTIMAL, iteration
 
-            # Bounded ratio test: a basic column hits 0 or its span, or the entering column
-            # reaches its own other bound first (bound flip). Ties go to the smallest basis index.
-            best, leave, to_upper = span[enter], -1, False
-            for i in range(m):
-                a = T[i][enter]
-                if a > eps:
-                    t, up = T[i][w] / a, False
-                else:
-                    span_basic = span[basis[i]]
-                    if a < -eps and span_basic < inf:
-                        t, up = (span_basic - T[i][w]) / -a, True
-                    else:
-                        continue
-                if t < 0.0:
-                    t = 0.0
-                if t < best - eps or (leave >= 0 and abs(t - best) <= eps and basis[i] < basis[leave]):
-                    best, leave, to_upper = t, i, up
-
+            best, leave, to_upper = self._ratio(enter)
             if leave < 0:
                 if best == inf:
                     return Status.UNBOUNDED, iteration
@@ -318,6 +304,41 @@ class BoundedSimplex:
             if to_upper:
                 self._complement(left)
         return Status.MAX_ITER, max(max_iter, 0)
+
+    def _ratio(self, enter: int) -> tuple[float, int, bool]:
+        # Bounded ratio test: a basic column hits 0 or its span, or the entering column
+        # reaches its own other bound first (bound flip). Ties go to the smallest basis index.
+        T, w, eps, span, basis = self.T, self.width, self.eps, self.span, self.basis
+        best, leave, to_upper = span[enter], -1, False
+        for i in range(self.m):
+            a = T[i][enter]
+            if a > eps:
+                t, up = T[i][w] / a, False
+            else:
+                span_basic = span[basis[i]]
+                if a < -eps and span_basic < inf:
+                    t, up = (span_basic - T[i][w]) / -a, True
+                else:
+                    continue
+            if t < 0.0:
+                t = 0.0
+            if t < best - eps or (leave >= 0 and abs(t - best) <= eps and basis[i] < basis[leave]):
+                best, leave, to_upper = t, i, up
+        return best, leave, to_upper
+
+    # A reduced cost within eps can hide a large gain when its column can move far: in a badly scaled model the
+    # slack of a row with a large coefficient costs 1e-10 per unit and moves 1e5 units. The first column whose
+    # finite step gains more than eps * (1 + |objective|) enters; each such pivot lowers the objective, so it
+    # cannot cycle, and a column with no limit is left alone, so noise never claims UNBOUNDED.
+    def _gain_column(self) -> int:
+        obj, w, eps = self.T[self.m], self.width, self.eps
+        tol = eps * (1.0 + abs(obj[w]))
+        for j in range(w):
+            if obj[j] < 0.0 and not self.is_basic[j] and self.span[j] > eps:
+                best = self._ratio(j)[0]
+                if best < inf and -obj[j] * best > tol:
+                    return j
+        return -1
 
     # Warm operations
 
@@ -586,6 +607,7 @@ class WarmLP:
                 self.lp = None  # can never hold: the cold rebuild reports INFEASIBLE
                 return
             self.lp.add_row(coefs, r, eq)
+            self.lp.check_gains = self.std.badly_scaled  # a scaled cut makes the model badly scaled
 
     def set_bounds(self, lb: Sequence[float], ub: Sequence[float]) -> None:
         for j in range(self.n):
@@ -621,6 +643,7 @@ class WarmLP:
             self.lp = None
             return self._result(Status.INFEASIBLE, 0, c, minimize)
         self.lp = self.kernel(self.std.rows, self.std.rhs, self.std.is_eq, self.std.upper, self.eps)
+        self.lp.check_gains = self.std.badly_scaled  # well-scaled models keep the plain eps test
         self.cost_y = self.std.map_cost(cost)
         status, iters = self.lp.solve(self.cost_y, self.max_iter)
         if status != Status.OPTIMAL:

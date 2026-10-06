@@ -13,11 +13,21 @@ share. Validation happens here, once per public call.
 """
 
 from collections.abc import Mapping, Sequence
-from math import inf, isnan
+from math import inf, isinf, isnan
 from typing import NamedTuple
 from warnings import warn
 
-__all__ = ["LinearProblem", "SENSES", "normalize_bounds", "normalize_lp", "normalize_rows"]
+from solvor.utils.validate import check_non_negative
+
+__all__ = [
+    "LinearProblem",
+    "SENSES",
+    "check_eps",
+    "normalize_bounds",
+    "normalize_costs",
+    "normalize_lp",
+    "normalize_rows",
+]
 
 SENSES = ("<=", ">=", "=")
 
@@ -57,11 +67,28 @@ def normalize_lp(
     for every row; lb defaults to 0.0 and ub to +inf for every variable.
     """
     n = len(c)
-    if any(isnan(float(v)) for v in c):
-        raise ValueError("c contains NaN")
+    normalize_costs(c)
     rows, rhs, sense_list = normalize_rows(n, A, b, senses, stacklevel=4)
     lower, upper = normalize_bounds(n, lb, ub)
     return LinearProblem(n, rows, rhs, sense_list, lower, upper)
+
+
+def check_eps(eps: float) -> None:
+    """NaN makes every tolerance test false and inf accepts every point, so eps must be finite and non-negative."""
+    if isnan(eps) or isinf(eps):
+        raise ValueError(f"eps must be finite, got {eps}")
+    check_non_negative(eps, name="eps")
+
+
+def normalize_costs(c: Sequence[float]) -> list[float]:
+    """Objective coefficients as floats. A NaN or infinite cost has no meaningful optimum, so it is rejected."""
+    cost = [float(v) for v in c]
+    for v in cost:
+        if isnan(v):
+            raise ValueError("c contains NaN")
+        if isinf(v):
+            raise ValueError(f"c contains {v}")
+    return cost
 
 
 def normalize_rows(
@@ -100,6 +127,8 @@ def normalize_rows(
         for fv in sparse.values():
             if isnan(fv):
                 raise ValueError(f"A row {i} contains NaN")
+            if isinf(fv):
+                raise ValueError(f"A row {i} contains {fv}")
             if abs(fv) > max_abs:
                 max_abs = abs(fv)
         rows.append(sparse)

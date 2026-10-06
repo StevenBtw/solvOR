@@ -91,7 +91,9 @@ def _tighten_integer_row(
         return row, float(floor(rhs + eps))
     if sense == ">=":
         return row, float(ceil(rhs - eps))
-    if not _is_integral(rhs, eps):
+    if abs(rhs) >= 1e15:
+        return row, rhs  # too large to judge integrality: leave the row to the LP rather than call it impossible
+    if not isclose(rhs, round(rhs), rel_tol=0.0, abs_tol=eps):
         return None
     return row, float(round(rhs))
 
@@ -99,7 +101,3 @@ def _tighten_integer_row(
 def _is_exact_integer(value: float) -> bool:
     """Coefficients must be exactly integral: a near-integer one, tightened as if exact, cuts off valid points."""
     return isfinite(value) and abs(value) < 2**53 and value == round(value)
-
-
-def _is_integral(value: float, tol: float = 1e-9) -> bool:
-    return abs(value) < 1e15 and isclose(value, round(value), rel_tol=0.0, abs_tol=tol)

@@ -82,7 +82,7 @@ For continuous-only problems, use simplex directly.
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from heapq import heappop, heappush
-from math import ceil, floor, inf, isnan
+from math import ceil, floor, inf
 from random import Random
 from typing import Literal
 
@@ -91,8 +91,14 @@ from solvor.milp_heuristics import is_feasible, lns_improve, round_binary
 from solvor.milp_presolve import presolve_row, round_integer_bounds
 from solvor.types import Result, Status
 from solvor.utils import check_integers_valid
-from solvor.utils.lp_input import LinearProblem, normalize_bounds, normalize_lp, normalize_rows
-from solvor.utils.validate import check_non_negative
+from solvor.utils.lp_input import (
+    LinearProblem,
+    check_eps,
+    normalize_bounds,
+    normalize_costs,
+    normalize_lp,
+    normalize_rows,
+)
 
 __all__ = ["MilpModel", "solve_lexicographic", "solve_milp"]
 
@@ -195,10 +201,8 @@ class MilpModel:
         n = self.n
         if len(c) != n:
             raise ValueError(f"Length mismatch: expected {n} elements in c, got {len(c)}")
-        check_non_negative(eps, name="eps")
-        cost = [float(v) for v in c]
-        if any(isnan(v) for v in cost):
-            raise ValueError("c contains NaN")
+        check_eps(eps)
+        cost = normalize_costs(c)
         no_solution = inf if minimize else -inf
         if self._infeasible:
             return Result(None, no_solution, 0, 0, Status.INFEASIBLE)
@@ -242,7 +246,10 @@ class MilpModel:
             sol = _accepted(root_point, int_list, prob, eps)
             if sol is not None:
                 self._last = sol
-                return Result(sol, sum(cost[j] * sol[j] for j in range(n)), 1, total_iters)
+                if sol not in all_solutions:
+                    all_solutions.append(sol)
+                solutions = tuple(all_solutions) if solution_limit > 1 else None
+                return Result(sol, sum(cost[j] * sol[j] for j in range(n)), 1, total_iters, solutions=solutions)
 
         # Rounding heuristics flip integer variables between 0 and 1
         looks_binary = all(-eps <= root.solution[j] <= 1 + eps for j in int_list)
@@ -381,7 +388,9 @@ class MilpModel:
             next_node = (child_bound, dive[0], dive[1], None)
 
         if best_solution is None:
-            return _final(None, no_solution, nodes_explored, total_iters, Status.INFEASIBLE, unreliable)
+            # Queued nodes mean the node limit stopped the search: nothing is proven
+            status = Status.MAX_ITER if tree else Status.INFEASIBLE
+            return _final(None, no_solution, nodes_explored, total_iters, status, unreliable)
 
         self._last = best_solution
         status = Status.OPTIMAL if not tree else Status.FEASIBLE

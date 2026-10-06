@@ -53,6 +53,7 @@ mutually comparable: nodes are processed in sorted order. For incoming edges
 """
 
 from collections.abc import Callable, Iterable
+from math import inf
 from typing import Literal
 
 from solvor.rust import with_rust_backend
@@ -138,5 +139,5 @@ def check_pagerank_params(n_nodes: int, damping: float, max_iter: int, tol: floa
         raise ValueError(f"damping {damping} must be in [0, 1)")
     if max_iter <= 0:
         raise ValueError("max_iter must be positive")
-    if tol <= 0.0:
-        raise ValueError("tol must be positive")
+    if not 0.0 < tol < inf:  # NaN never converges and inf converges at once
+        raise ValueError("tol must be positive and finite")
