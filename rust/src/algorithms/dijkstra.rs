@@ -93,18 +93,18 @@ pub fn dijkstra(
         iterations += 1;
 
         // Early termination if target reached
-        if let Some(t) = target {
-            if node == t {
-                let path = reconstruct_path(&predecessors, source, t);
-                return DijkstraResult {
-                    distances,
-                    predecessors,
-                    iterations,
-                    target_reached: true,
-                    path,
-                    target_distance: cost,
-                };
-            }
+        if let Some(t) = target
+            && node == t
+        {
+            let path = reconstruct_path(&predecessors, source, t);
+            return DijkstraResult {
+                distances,
+                predecessors,
+                iterations,
+                target_reached: true,
+                path,
+                target_distance: cost,
+            };
         }
 
         // Skip if we found a better path already
@@ -133,7 +133,11 @@ pub fn dijkstra(
     // Build result
     let (target_reached, path, target_distance) = if let Some(t) = target {
         if distances[t].is_finite() {
-            (true, reconstruct_path(&predecessors, source, t), distances[t])
+            (
+                true,
+                reconstruct_path(&predecessors, source, t),
+                distances[t],
+            )
         } else {
             (false, vec![], f64::INFINITY)
         }

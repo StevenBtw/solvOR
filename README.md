@@ -486,7 +486,7 @@ Result(
 **Have your cake and eat it too.** solvOR gives you both:
 
 - **Readable Python** - Every algorithm is implemented in clear, documented Python you can study and modify
-- **Rust Performance** - Optional drop-in Rust backends with 5-60x speedup for compute-heavy algorithms
+- **Rust Performance** - Optional drop-in Rust backends with 3-100x speedup for compute-heavy algorithms
 
 ```python
 from solvor import floyd_warshall
@@ -498,7 +498,7 @@ result = floyd_warshall(n_nodes, edges)
 result = floyd_warshall(n_nodes, edges, backend="python")
 ```
 
-Pre-built wheels include Rust extensions for Linux, macOS, and Windows. If Rust isn't available, solvOR falls back to Python automatically.
+Pre-built wheels include Rust extensions for Linux, macOS, and Windows: one abi3 wheel per platform that works on CPython 3.12 and newer. If Rust isn't available, solvOR falls back to Python automatically.
 
 See the [Performance docs](https://solvOR.ai/getting-started/performance/) for which algorithms have Rust backends and benchmarks.
 

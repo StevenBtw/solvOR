@@ -58,12 +58,7 @@ pub fn floyd_warshall(
     let pred_rows = result
         .predecessors
         .iter()
-        .map(|row| {
-            PyList::new(
-                py,
-                row.iter().map(|&p| p.map(|x| x as i64).unwrap_or(-1)),
-            )
-        })
+        .map(|row| PyList::new(py, row.iter().map(|&p| p.map(|x| x as i64).unwrap_or(-1))))
         .collect::<PyResult<Vec<_>>>()?;
     let py_predecessors = PyList::new(py, pred_rows)?;
     dict.set_item("predecessors", py_predecessors)?;
@@ -114,13 +109,10 @@ pub fn bellman_ford(
     // Convert distances to list
     let py_distances = PyList::new(
         py,
-        result.distances.iter().map(|&d| {
-            if d.is_infinite() {
-                f64::INFINITY
-            } else {
-                d
-            }
-        }),
+        result
+            .distances
+            .iter()
+            .map(|&d| if d.is_infinite() { f64::INFINITY } else { d }),
     )?;
     dict.set_item("distances", py_distances)?;
 

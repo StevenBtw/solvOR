@@ -59,16 +59,16 @@ pub fn bfs(
         visited_order.push(node);
 
         // Check if target reached
-        if let Some(t) = target {
-            if node == t {
-                let path = reconstruct_path(&predecessors, source, t);
-                return SearchResult {
-                    path,
-                    target_reached: true,
-                    visited_order,
-                    iterations,
-                };
-            }
+        if let Some(t) = target
+            && node == t
+        {
+            let path = reconstruct_path(&predecessors, source, t);
+            return SearchResult {
+                path,
+                target_reached: true,
+                visited_order,
+                iterations,
+            };
         }
 
         // Explore neighbors
@@ -125,16 +125,16 @@ pub fn dfs(
         visited_order.push(node);
 
         // Check if target reached
-        if let Some(t) = target {
-            if node == t {
-                let path = reconstruct_path(&predecessors, source, t);
-                return SearchResult {
-                    path,
-                    target_reached: true,
-                    visited_order,
-                    iterations,
-                };
-            }
+        if let Some(t) = target
+            && node == t
+        {
+            let path = reconstruct_path(&predecessors, source, t);
+            return SearchResult {
+                path,
+                target_reached: true,
+                visited_order,
+                iterations,
+            };
         }
 
         // Explore neighbors (reverse order for consistent traversal)

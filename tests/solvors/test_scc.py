@@ -323,3 +323,57 @@ class TestSCCEdgesRust:
         result = strongly_connected_components_edges(n, edges, backend="rust")
         assert result.objective == 1
         assert len(result.solution[0]) == n
+
+
+class TestDeepGraphs:
+    """DFS depth far beyond Python's default recursion limit (1000)."""
+
+    def test_long_chain(self):
+        n = 12_000
+        result = strongly_connected_components(range(n), lambda v: [v + 1] if v + 1 < n else [])
+        assert result.solution == [[v] for v in reversed(range(n))]
+
+    def test_long_cycle(self):
+        n = 12_000
+        result = strongly_connected_components(range(n), lambda v: [(v + 1) % n])
+        assert len(result.solution) == 1
+        assert sorted(result.solution[0]) == list(range(n))
+
+
+class TestSCCEdgesBackendsAgree:
+    """The Rust SCC must return exactly what the Python one returns, component order included."""
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self):
+        from solvor.rust import rust_available
+
+        if not rust_available():
+            pytest.skip("Rust backend not available")
+
+    def test_random_graphs_identical(self):
+        import random
+
+        rng = random.Random(0)
+        for _ in range(300):
+            n = rng.randrange(0, 60)
+            m = rng.randrange(0, 3 * n + 1) if n else 0
+            edges = [(rng.randrange(n), rng.randrange(n)) for _ in range(m)]
+            rust = strongly_connected_components_edges(n, edges, backend="rust")
+            python = strongly_connected_components_edges(n, edges, backend="python")
+            assert rust.solution == python.solution
+            assert rust.objective == python.objective
+
+    def test_deep_chain_does_not_crash_the_process(self):
+        """The recursive version overflowed the native stack (Windows 0xC00000FD, Linux SIGSEGV)."""
+        import subprocess
+        import sys
+
+        script = (
+            "from solvor import strongly_connected_components_edges as scc\n"
+            "n = 1_000_000\n"
+            "r = scc(n, [(i, i + 1) for i in range(n - 1)], backend='rust')\n"
+            "print(len(r.solution))\n"
+        )
+        proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, timeout=300)
+        assert proc.returncode == 0, f"process died with exit code {proc.returncode:#x}"
+        assert proc.stdout.strip() == "1000000"

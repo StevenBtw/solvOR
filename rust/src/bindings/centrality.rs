@@ -17,13 +17,13 @@ use crate::types::Status;
 ///     tol: Convergence tolerance (default 1e-6)
 ///
 /// Returns:
-///     Dict with 'scores', 'iterations', 'converged'
+///     Dict with 'scores', 'iterations', 'converged', 'residual', 'status'
 #[pyfunction]
 #[pyo3(signature = (n_nodes, edges, damping=0.85, max_iter=100, tol=1e-6))]
 pub fn pagerank(
     py: Python<'_>,
     n_nodes: usize,
-    edges: Vec<(usize, usize)>,
+    edges: Vec<(i64, i64)>,
     damping: f64,
     max_iter: usize,
     tol: f64,
@@ -36,10 +36,16 @@ pub fn pagerank(
     if max_iter == 0 {
         return Err(PyValueError::new_err("max_iter must be positive"));
     }
-    if tol <= 0.0 {
-        return Err(PyValueError::new_err("tol must be positive"));
+    if !(tol > 0.0 && tol.is_finite()) {
+        return Err(PyValueError::new_err("tol must be positive and finite"));
     }
 
+    // Negative endpoints are ignored, like endpoints >= n_nodes (and like the Python backend)
+    let edges: Vec<(usize, usize)> = edges
+        .into_iter()
+        .filter(|&(u, v)| u >= 0 && v >= 0)
+        .map(|(u, v)| (u as usize, v as usize))
+        .collect();
     let result = py.detach(|| pr::pagerank(n_nodes, &edges, damping, max_iter, tol));
 
     let dict = PyDict::new(py);
@@ -49,6 +55,7 @@ pub fn pagerank(
 
     dict.set_item("iterations", result.iterations)?;
     dict.set_item("converged", result.converged)?;
+    dict.set_item("residual", result.residual)?;
 
     let status = if result.converged {
         Status::Optimal

@@ -21,10 +21,11 @@ groupings, modules, or clusters in network data.
     # result.solution = [{"alice", "bob", "carol"}, {"dave", "eve", "frank"}]
 
 How it works: Louvain algorithm optimizes modularity in two phases. Phase 1:
-each node moves to the community that gives the largest modularity gain.
-Phase 2: build a new graph where communities become nodes. Repeat until no
-improvement. Modularity measures the fraction of edges within communities
-minus the expected fraction if edges were random.
+each node moves to the community that gives the largest modularity gain, until
+no move improves it. Phase 2: build a new graph where communities become nodes
+(edge weights summed, internal edges kept as self-loops). Repeat both phases
+on the new graph until no node moves. Modularity measures the fraction of edges
+within communities minus the expected fraction if edges were random.
 
 Use this for:
 
@@ -40,13 +41,16 @@ Parameters:
     resolution: modularity resolution parameter (default 1.0, higher = smaller communities)
 
 Works with any hashable node type. Treats graph as undirected (edges in both
-directions are counted once).
+directions are counted once). Results are deterministic when nodes are mutually
+comparable (ints, strs, tuples of those): nodes and neighbors are processed in
+sorted order, so set inputs give the same communities under any PYTHONHASHSEED.
+Otherwise nodes are processed in the order given.
 """
 
-from collections import defaultdict
 from collections.abc import Callable, Iterable
 
 from solvor.types import Result
+from solvor.utils.helpers import canonical_order
 
 __all__ = ["louvain"]
 
@@ -62,7 +66,7 @@ def louvain[S](
     Returns a list of sets, each containing nodes in the same community.
     Optimizes modularity to find densely connected groups.
     """
-    node_list = list(nodes)
+    node_list = canonical_order(nodes)
     n = len(node_list)
 
     if n == 0:
@@ -71,90 +75,135 @@ def louvain[S](
     if n == 1:
         return Result([{node_list[0]}], 0.0, 0, 1)
 
-    # Build adjacency with edge weights (count = 1 for each edge)
-    node_set = set(node_list)
-    adj: dict[S, dict[S, float]] = {v: {} for v in node_list}
-    degree: dict[S, float] = {v: 0.0 for v in node_list}
+    # Level-0 graph on integer ids, weight 1 per undirected edge
+    index = {v: i for i, v in enumerate(node_list)}
+    adj: list[dict[int, float]] = [{} for _ in range(n)]
+    for i, v in enumerate(node_list):
+        # Sort ids, not neighbor values: values that are not nodes may not be comparable
+        for j in sorted({index[w] for w in neighbors(v) if w in index}):
+            if j != i and j not in adj[i]:
+                adj[i][j] = 1.0
+                adj[j][i] = 1.0
 
-    for v in node_list:
-        for w in neighbors(v):
-            if w in node_set and w != v:
-                # Undirected: count each edge once in total weight
-                if w not in adj[v]:
-                    adj[v][w] = 1.0
-                    adj[w][v] = 1.0
-                    degree[v] += 1.0
-                    degree[w] += 1.0
-
-    total_weight = sum(degree.values()) / 2.0
+    total_weight = sum(len(nbrs) for nbrs in adj) / 2.0
 
     if total_weight == 0:
         # No edges - each node is its own community
         return Result([{v} for v in node_list], 0.0, 0, n)
 
-    # Initialize: each node in its own community
-    node_to_comm: dict[S, int] = {v: i for i, v in enumerate(node_list)}
-    comm_nodes: dict[int, set[S]] = {i: {v} for i, v in enumerate(node_list)}
-    comm_degree: dict[int, float] = {i: degree[v] for i, v in enumerate(node_list)}
-
+    level_adj, level_loops = adj, [0.0] * n
+    membership = list(range(n))  # original node -> node of the current level
     iterations = 0
+
+    while True:
+        degree = [sum(nbrs.values()) + 2.0 * loop for nbrs, loop in zip(level_adj, level_loops)]
+        comm, passes, moved = _local_moving(level_adj, degree, 2.0 * total_weight, resolution)
+        iterations += passes
+        if not moved:
+            break
+        next_adj, next_loops, to_next = _aggregate(level_adj, level_loops, comm)
+        membership = [to_next[c] for c in membership]
+        if len(next_adj) == len(level_adj):
+            break
+        level_adj, level_loops = next_adj, next_loops
+
+    groups: dict[int, set[S]] = {}
+    for v, c in zip(node_list, membership):
+        groups.setdefault(c, set()).add(v)
+    communities = list(groups.values())
+
+    # Modularity on the original graph, one pass over the edges
+    within: dict[int, float] = {}
+    comm_degree: dict[int, float] = {}
+    for i, nbrs in enumerate(adj):
+        ci = membership[i]
+        comm_degree[ci] = comm_degree.get(ci, 0.0) + len(nbrs)
+        for j in nbrs:
+            if membership[j] == ci:
+                within[ci] = within.get(ci, 0.0) + 0.5  # each internal edge is seen from both ends
+    modularity = 0.0
+    for c in groups:
+        share = comm_degree[c] / (2 * total_weight)  # squared as share * share: ** 2 goes through libm pow
+        modularity += within.get(c, 0.0) / total_weight - resolution * share * share
+
+    return Result(communities, modularity, iterations, n)
+
+
+def _local_moving(
+    adj: list[dict[int, float]], degree: list[float], two_m: float, resolution: float
+) -> tuple[list[int], int, bool]:
+    """Phase 1 on one level: move nodes between communities until no move increases modularity.
+
+    Returns (community of each node, passes over all nodes, whether any node moved).
+    """
+    n = len(adj)
+    comm = list(range(n))
+    comm_degree = list(degree)
+    passes = 0
+    moved = False
     improved = True
 
     while improved:
         improved = False
-        iterations += 1
+        passes += 1
 
-        for v in node_list:
-            current_comm = node_to_comm[v]
-            v_degree = degree[v]
+        for v in range(n):
+            current = comm[v]
+            k_v = degree[v]
 
-            # Calculate edges to each neighboring community
-            comm_edges: defaultdict[int, float] = defaultdict(float)
+            # Edge weight from v to each neighboring community
+            edges_to: dict[int, float] = {}
             for w, weight in adj[v].items():
-                comm_edges[node_to_comm[w]] += weight
+                c = comm[w]
+                edges_to[c] = edges_to.get(c, 0.0) + weight
 
-            # Remove v from current community temporarily
-            comm_nodes[current_comm].remove(v)
-            comm_degree[current_comm] -= v_degree
-            edges_to_current = comm_edges.get(current_comm, 0.0)
-
-            # Find best community
-            best_comm = current_comm
-            best_gain = 0.0
-
-            for comm, edges_to_comm in comm_edges.items():
-                # Modularity gain from moving v to comm
-                sigma_c = comm_degree[comm]
-                gain = edges_to_comm - resolution * v_degree * sigma_c / (2 * total_weight)
-
+            # Remove v from its community, then find the best one to join
+            comm_degree[current] -= k_v
+            best, best_gain = current, 0.0
+            for c, e in edges_to.items():
+                gain = e - resolution * k_v * comm_degree[c] / two_m
                 if gain > best_gain:
-                    best_gain = gain
-                    best_comm = comm
+                    best, best_gain = c, gain
 
-            # Also consider staying in current (now empty or not) community
-            if current_comm != best_comm:
-                sigma_curr = comm_degree[current_comm]
-                stay_gain = edges_to_current - resolution * v_degree * sigma_curr / (2 * total_weight)
+            # Staying put wins ties
+            if best != current:
+                stay_gain = edges_to.get(current, 0.0) - resolution * k_v * comm_degree[current] / two_m
                 if stay_gain >= best_gain:
-                    best_comm = current_comm
-                    best_gain = stay_gain
+                    best = current
 
-            # Move v to best community
-            node_to_comm[v] = best_comm
-            comm_nodes[best_comm].add(v)
-            comm_degree[best_comm] += v_degree
-
-            if best_comm != current_comm:
+            comm[v] = best
+            comm_degree[best] += k_v
+            if best != current:
                 improved = True
+                moved = True
 
-    # Collect non-empty communities
-    communities = [c for c in comm_nodes.values() if c]
+    return comm, passes, moved
 
-    # Calculate final modularity
-    modularity = 0.0
-    for comm in communities:
-        edges_within = sum(adj[v].get(w, 0.0) for v in comm for w in comm if v < w)  # ty: ignore[unsupported-operator]
-        comm_deg = sum(degree[v] for v in comm)
-        modularity += edges_within / total_weight - resolution * (comm_deg / (2 * total_weight)) ** 2
 
-    return Result(communities, modularity, iterations, n)
+def _aggregate(
+    adj: list[dict[int, float]], loops: list[float], comm: list[int]
+) -> tuple[list[dict[int, float]], list[float], list[int]]:
+    """Phase 2: one node per community, numbered in order of first appearance.
+
+    Edge weights between communities are summed; edges inside a community
+    become its self-loop weight. Returns (adjacency, self-loops, node -> new node).
+    """
+    new_id: dict[int, int] = {}
+    for c in comm:
+        if c not in new_id:
+            new_id[c] = len(new_id)
+
+    k = len(new_id)
+    new_adj: list[dict[int, float]] = [{} for _ in range(k)]
+    new_loops = [0.0] * k
+    for v, nbrs in enumerate(adj):
+        cv = new_id[comm[v]]
+        new_loops[cv] += loops[v]
+        for w, weight in nbrs.items():
+            cw = new_id[comm[w]]
+            if cv == cw:
+                new_loops[cv] += weight / 2.0  # each internal edge is seen from both ends
+            else:
+                new_adj[cv][cw] = new_adj[cv].get(cw, 0.0) + weight
+
+    return new_adj, new_loops, [new_id[c] for c in comm]

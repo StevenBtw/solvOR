@@ -10,15 +10,39 @@ optimization: diet problems, scheduling, set covering, facility location.
     result = solve_milp(c, A, b, integers=[0, 2])
     result = solve_milp(c, A, b, integers=[0, 1], minimize=False)  # maximize
 
+    # sparse rows, 0/1 variables, other senses
+    result = solve_milp(c, [{0: 1, 1: 1}, {1: 1, 2: 1}], [1, 1], binary=range(3), minimize=False)
+    result = solve_milp(c, rows, b, integers=[0], senses=[">=", "<="], lb=[-5, 0], ub=[5, 10])
+
     # warm start from previous solution (prunes search tree)
     result = solve_milp(c, A, b, integers=[0, 2], warm_start=previous.solution)
 
     # find multiple solutions (result.solutions contains all found)
     result = solve_milp(c, A, b, integers=[0, 2], solution_limit=5)
 
-How it works: branch and bound using simplex as subroutine. Solves LP relaxations
-(ignoring integer constraints), branches on fractional values, prunes subtrees
-that can't beat current best. Best-first search prioritizes promising branches.
+    # incremental: add rows (lazy cuts, objective locks) and re-solve warm
+    model = MilpModel(n_vars=3, binary=range(3))
+    model.add_rows([{0: 1, 1: 1}, {1: 1, 2: 1}], [1, 1])
+    first = model.solve([3, 2, 3], minimize=False)
+    model.add_rows([{0: 1, 2: 1}], [1])        # a cut
+    second = model.solve([3, 2, 3], minimize=False)
+
+    # lexicographic objectives: best for c1, then best for c2 among those, ...
+    result = solve_lexicographic(model, [c1, c2, c3], minimize=False)
+
+How it works: presolve turns single-variable rows into bounds and tightens
+rows whose variables and coefficients are all integers (divide by the gcd,
+round the right-hand side). Branch and bound then solves LP relaxations with
+a bounded simplex that is kept alive between nodes: a child differs from its
+parent by one bound, so the dual simplex re-solves it in a few pivots. After
+branching it dives into one child (the rounding direction) and queues the
+other; when a dive ends it continues from the queued node with the best bound.
+MilpModel keeps the same LP between solve() calls, so added rows and new
+objectives also re-solve warm.
+
+Determinism: results depend only on the inputs and, for MilpModel, on the
+sequence of calls. No wall-clock limits, no randomness unless lns_iterations
+is set (then pass seed), integer variables are visited in index order.
 
 Use this for:
 
@@ -30,9 +54,12 @@ Use this for:
 Parameters:
 
     c: objective coefficients (minimize c @ x)
-    A: constraint matrix (A @ x <= b)
-    b: constraint bounds
-    integers: indices of integer-constrained variables
+    A: constraint rows, dense lists or sparse {column: coefficient} dicts
+    b: right-hand sides
+    integers: indices of integer-constrained variables (default: none)
+    binary: indices of 0/1 variables (integer with bounds [0, 1])
+    senses: per row "<=", ">=" or "=" (default: all "<=")
+    lb, ub: variable bounds (default: 0 and +inf)
     minimize: True for min, False for max (default: True)
     warm_start: initial solution to prune search tree
     solution_limit: find multiple solutions (default: 1)
@@ -42,40 +69,351 @@ Parameters:
     seed: random seed for LNS reproducibility
     max_nodes: branch-and-bound node limit (default: 100000)
     gap_tol: optimality gap tolerance (default: 1e-6)
+    backend: "auto", "rust", or "python" (default: "auto")
+
+Backend: the LP relaxations run on an optional Rust simplex kernel (3-100x
+faster); branch and bound, presolve and heuristics stay in Python, and results
+are the same, bit for bit. Use backend="python" for the pure Python implementation.
 
 CP is more expressive for logical constraints. SAT handles pure boolean.
 For continuous-only problems, use simplex directly.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from heapq import heappop, heappush
-from math import ceil, floor
+from math import ceil, floor, inf
 from random import Random
-from typing import NamedTuple
+from typing import Literal
 
-from solvor.lns import lns as _lns
-from solvor.simplex import Status as LPStatus
-from solvor.simplex import solve_lp
+from solvor.lp_engine import WarmLP
+from solvor.milp_heuristics import is_feasible, lns_improve, round_binary
+from solvor.milp_presolve import presolve_row, round_integer_bounds
 from solvor.types import Result, Status
-from solvor.utils import check_integers_valid, check_matrix_dims, warn_large_coefficients
+from solvor.utils import check_integers_valid
+from solvor.utils.lp_input import (
+    LinearProblem,
+    check_eps,
+    normalize_bounds,
+    normalize_costs,
+    normalize_lp,
+    normalize_rows,
+)
 
-__all__ = ["solve_milp"]
+__all__ = ["MilpModel", "solve_lexicographic", "solve_milp"]
+
+# Presolve runs as rows arrive, before solve() knows its eps; same value as solve_milp's default eps
+PRESOLVE_TOL = 1e-6
+# LP relaxations get their own, tighter tolerance; eps is the integrality and feasibility tolerance
+LP_EPS = 1e-9
 
 
-# I deliberately picked NamedTuple over dataclass for performance
-class Node(NamedTuple):
-    bound: float
-    lower: tuple[float, ...]
-    upper: tuple[float, ...]
-    depth: int
+class MilpModel:
+    """A MILP that grows by rows and is re-solved warm.
+
+    Variables, their integrality and bounds are fixed at construction (bounds
+    can only tighten, through single-variable rows). Rows are added with
+    add_rows and pass through the same presolve as solve_milp. Each solve()
+    takes its own objective. The LP tableau, and the last solution as a
+    starting incumbent, carry over from one solve to the next. backend picks
+    the LP kernel, as in solve_milp; results are identical.
+    """
+
+    def __init__(
+        self,
+        n_vars: int,
+        *,
+        integers: Sequence[int] = (),
+        binary: Sequence[int] | None = None,
+        lb: Sequence[float] | None = None,
+        ub: Sequence[float] | None = None,
+        backend: Literal["auto", "rust", "python"] | None = None,
+    ):
+        self.n = n_vars
+        self._backend = backend
+        integers = list(integers)
+        check_integers_valid(integers, n_vars)
+        self._int_set = set(integers)
+        self._lower, self._upper = normalize_bounds(n_vars, lb, ub)
+        if binary is not None:
+            binary = list(binary)
+            check_integers_valid(binary, n_vars, name="binary")
+            for j in binary:
+                self._int_set.add(j)
+                self._lower[j] = max(self._lower[j], 0.0)
+                self._upper[j] = min(self._upper[j], 1.0)
+        self._infeasible = not round_integer_bounds(
+            sorted(self._int_set), self._lower, self._upper, PRESOLVE_TOL
+        ) or any(self._lower[j] > self._upper[j] + PRESOLVE_TOL for j in range(n_vars))
+        self._rows: list[dict[int, float]] = []
+        self._b: list[float] = []
+        self._senses: list[str] = []
+        self._lp: WarmLP | None = None
+        self._lp_max_iter: int | None = None
+        self._last: tuple[float, ...] | None = None
+
+    @property
+    def n_rows(self) -> int:
+        """Rows kept after presolve (single-variable rows become bounds and are not counted)."""
+        return len(self._rows)
+
+    def add_rows(
+        self,
+        A: Sequence[Sequence[float] | Mapping[int, float]],
+        b: Sequence[float],
+        senses: Sequence[str] | None = None,
+    ) -> None:
+        """Add constraint rows (dense or sparse, as in solve_milp)."""
+        rows, rhs, sense_list = normalize_rows(self.n, A, b, senses, stacklevel=3)
+        self._add_normalized(rows, rhs, sense_list)
+
+    def _add_normalized(self, rows: list[dict[int, float]], rhs: list[float], senses: list[str]) -> None:
+        for row, bi, sense in zip(rows, rhs, senses):
+            feasible, kept = presolve_row(row, bi, sense, self._int_set, self._lower, self._upper, PRESOLVE_TOL)
+            if not feasible:
+                self._infeasible = True
+            if kept is None:
+                continue
+            coefs, r = kept
+            self._rows.append(coefs)
+            self._b.append(r)
+            self._senses.append(sense)
+            if self._lp is not None:
+                self._lp.add_row(coefs, r, sense)
+
+    def solve(
+        self,
+        c: Sequence[float],
+        *,
+        minimize: bool = True,
+        eps: float = 1e-6,
+        max_iter: int = 10_000,
+        max_nodes: int = 100_000,
+        gap_tol: float = 1e-6,
+        warm_start: Sequence[float] | None = None,
+        solution_limit: int = 1,
+        heuristics: bool = True,
+        lns_iterations: int = 0,
+        lns_destroy_frac: float = 0.3,
+        seed: int | None = None,
+    ) -> Result:
+        """Optimize c over the current rows and bounds. Same keywords as solve_milp."""
+        n = self.n
+        if len(c) != n:
+            raise ValueError(f"Length mismatch: expected {n} elements in c, got {len(c)}")
+        check_eps(eps)
+        cost = normalize_costs(c)
+        no_solution = inf if minimize else -inf
+        if self._infeasible:
+            return Result(None, no_solution, 0, 0, Status.INFEASIBLE)
+
+        prob = LinearProblem(n, self._rows, self._b, self._senses, self._lower, self._upper)
+        int_set = self._int_set
+        int_list = sorted(int_set)
+        lower, upper = tuple(self._lower), tuple(self._upper)
+        lp = self._warm_lp(prob, max_iter)
+        lp.set_bounds(lower, upper)
+
+        root = lp.solve(cost, minimize=minimize)
+        total_iters = root.iterations
+
+        if root.status == Status.INFEASIBLE:
+            return Result(None, no_solution, 0, total_iters, Status.INFEASIBLE)
+
+        if root.status == Status.UNBOUNDED:
+            return Result(None, -no_solution, 0, total_iters, Status.UNBOUNDED)
+
+        if root.status != Status.OPTIMAL:  # iteration limit: no trustworthy LP bound or point
+            return Result(None, no_solution, 0, total_iters, root.status)
+
+        best_solution, best_obj = None, no_solution
+        sign = 1 if minimize else -1
+        all_solutions: list[tuple[float, ...]] = []
+
+        # Incumbent from warm_start, else from the previous solve, if feasible now
+        for candidate in (warm_start, self._last):
+            if best_solution is None and candidate is not None:
+                ws = tuple(float(v) for v in candidate)
+                if len(ws) == n and is_feasible(ws, prob, lower, upper, int_set, eps):
+                    best_solution = _accepted(ws, int_list, prob, eps)
+                    if best_solution is not None:
+                        best_obj = sum(cost[j] * best_solution[j] for j in range(n))
+                        all_solutions.append(best_solution)
+
+        root_point = _clamp(root.solution, int_list, lower, upper)
+        root_inaccurate = _outside_bounds(root.solution, int_list, lower, upper, eps)
+        if not root_inaccurate and _most_fractional(root_point, int_list, eps) is None:
+            sol = _accepted(root_point, int_list, prob, eps)
+            if sol is not None:
+                self._last = sol
+                if sol not in all_solutions:
+                    all_solutions.append(sol)
+                solutions = tuple(all_solutions) if solution_limit > 1 else None
+                return Result(sol, sum(cost[j] * sol[j] for j in range(n)), 1, total_iters, solutions=solutions)
+
+        # Rounding heuristics flip integer variables between 0 and 1
+        looks_binary = all(-eps <= root.solution[j] <= 1 + eps for j in int_list)
+
+        if heuristics and looks_binary and best_solution is None:
+            cols = prob.columns()
+            rounded = round_binary(root.solution, int_list, cost, prob, cols, lower, upper, minimize, eps)
+            if rounded is not None:
+                best_solution = _accepted(rounded, int_list, prob, eps)
+                if best_solution is not None:
+                    best_obj = sum(cost[j] * best_solution[j] for j in range(n))
+                    all_solutions.append(best_solution)
+
+        # LNS improvement for binary problems
+        if heuristics and looks_binary and lns_iterations > 0 and best_solution is not None:
+            rng = Random(seed)
+            improved, iters = lns_improve(
+                best_solution,
+                cost,
+                prob,
+                lower,
+                upper,
+                int_set,
+                minimize,
+                eps,
+                max_iter,
+                lns_iterations,
+                lns_destroy_frac,
+                rng,
+                self._backend,
+            )
+            total_iters += iters
+            if improved is not None:
+                improved = _accepted(improved, int_list, prob, eps)
+            if improved is not None:
+                improved_obj = sum(cost[j] * improved[j] for j in range(n))
+                if (minimize and improved_obj < best_obj) or (not minimize and improved_obj > best_obj):
+                    best_solution, best_obj = improved, improved_obj
+                    if improved not in all_solutions:
+                        all_solutions.append(improved)
+
+        # Branch and bound. Heap entries: (bound, counter, lower, upper); next_node is the dive child.
+        tree: list[tuple[float, int, tuple[float, ...], tuple[float, ...]]] = []
+        counter = 0
+        nodes_explored = 0
+        unreliable = 0  # nodes whose LP point was visibly inaccurate: nothing that depends on them is proven
+        next_node: tuple[float, tuple[float, ...], tuple[float, ...], Result | None] | None = (
+            sign * root.objective,
+            lower,
+            upper,
+            root,
+        )
+
+        while True:
+            if next_node is None:
+                while tree:
+                    bound, _, nl, nu = heappop(tree)
+                    if best_solution is None or bound < sign * best_obj - eps:
+                        next_node = (bound, nl, nu, None)
+                        break
+                if next_node is None:
+                    break
+            if nodes_explored >= max_nodes:
+                heappush(tree, (next_node[0], counter, next_node[1], next_node[2]))
+                next_node = None
+                break
+
+            node_bound, nl, nu, res = next_node
+            next_node = None
+            if res is None:
+                lp.set_bounds(nl, nu)
+                res = lp.solve(cost, minimize=minimize)
+                total_iters += res.iterations
+            nodes_explored += 1
+
+            if res.status != Status.OPTIMAL:
+                continue
+            if best_solution is not None and sign * res.objective >= sign * best_obj - eps:
+                continue
+
+            if _outside_bounds(res.solution, int_list, nl, nu, eps):
+                unreliable += 1
+            # Clamped: an LP value just past its bound would otherwise branch into the same node again
+            point = _clamp(res.solution, int_list, nl, nu)
+            frac_var = _most_fractional(point, int_list, eps)
+            sol = None
+            if frac_var is None:
+                sol = _accepted(point, int_list, prob, eps)
+                if sol is None:  # integral within eps, but snapping breaks a row: branch on the largest fraction
+                    frac_var = _largest_fraction(point, int_list)
+                    if frac_var is None:  # exactly integral and still violating a row: drop the node
+                        unreliable += 1
+                        continue
+
+            if sol is not None:
+                # Found an integer-feasible solution
+                sol_obj = sum(cost[j] * sol[j] for j in range(n))
+
+                if solution_limit > 1 and sol not in all_solutions:
+                    all_solutions.append(sol)
+                    if len(all_solutions) >= solution_limit:
+                        self._last = best_solution or sol
+                        objective = best_obj if best_solution else sol_obj
+                        solutions = tuple(all_solutions)
+                        return _final(
+                            best_solution or sol,
+                            objective,
+                            nodes_explored,
+                            total_iters,
+                            Status.FEASIBLE,
+                            unreliable,
+                            solutions,
+                        )
+
+                if sign * sol_obj < sign * best_obj:
+                    best_solution, best_obj = sol, sol_obj
+                    global_bound = min(tree[0][0], node_bound) if tree else node_bound
+                    gap = _compute_gap(best_obj, global_bound / sign if global_bound != 0 else 0)
+                    if gap < gap_tol and solution_limit == 1:
+                        self._last = best_solution
+                        return _final(best_solution, best_obj, nodes_explored, total_iters, Status.OPTIMAL, unreliable)
+                continue
+
+            # Branch on the fractional variable: dive into the rounding direction, queue the other child
+            val = point[frac_var]
+            child_bound = sign * res.objective
+            down_upper = list(nu)
+            down_upper[frac_var] = floor(val)
+            up_lower = list(nl)
+            up_lower[frac_var] = ceil(val)
+            down = (nl, tuple(down_upper))
+            up = (tuple(up_lower), nu)
+            dive, other = (up, down) if val - floor(val) >= 0.5 else (down, up)
+            heappush(tree, (child_bound, counter, other[0], other[1]))
+            counter += 1
+            next_node = (child_bound, dive[0], dive[1], None)
+
+        if best_solution is None:
+            # Queued nodes mean the node limit stopped the search: nothing is proven
+            status = Status.MAX_ITER if tree else Status.INFEASIBLE
+            return _final(None, no_solution, nodes_explored, total_iters, status, unreliable)
+
+        self._last = best_solution
+        status = Status.OPTIMAL if not tree else Status.FEASIBLE
+        solutions = tuple(all_solutions) if solution_limit > 1 and all_solutions else None
+        return _final(best_solution, best_obj, nodes_explored, total_iters, status, unreliable, solutions)
+
+    def _warm_lp(self, prob: LinearProblem, max_iter: int) -> WarmLP:
+        if self._lp is None or self._lp_max_iter != max_iter:
+            self._lp = WarmLP(prob, prob.lb, prob.ub, eps=LP_EPS, max_iter=max_iter, backend=self._backend)
+            self._lp_max_iter = max_iter
+        return self._lp
 
 
 def solve_milp(
     c: Sequence[float],
-    A: Sequence[Sequence[float]],
+    A: Sequence[Sequence[float] | Mapping[int, float]],
     b: Sequence[float],
-    integers: Sequence[int],
+    integers: Sequence[int] = (),
     *,
+    binary: Sequence[int] | None = None,
+    senses: Sequence[str] | None = None,
+    lb: Sequence[float] | None = None,
+    ub: Sequence[float] | None = None,
     minimize: bool = True,
     eps: float = 1e-6,
     max_iter: int = 10_000,
@@ -87,220 +425,127 @@ def solve_milp(
     lns_iterations: int = 0,
     lns_destroy_frac: float = 0.3,
     seed: int | None = None,
+    backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
-    n = len(c)
-    check_matrix_dims(c, A, b)
-    check_integers_valid(integers, n)
-    warn_large_coefficients(A)
-
-    int_set = set(integers)
-    total_iters = 0
-
-    lower = [0.0] * n
-    upper = [float("inf")] * n
-
-    root_result = _solve_node(c, A, b, lower, upper, minimize, eps, max_iter)
-    total_iters += root_result.iterations
-
-    if root_result.status == LPStatus.INFEASIBLE:
-        return Result(None, float("inf") if minimize else float("-inf"), 0, total_iters, Status.INFEASIBLE)
-
-    if root_result.status == LPStatus.UNBOUNDED:
-        return Result(None, float("-inf") if minimize else float("inf"), 0, total_iters, Status.UNBOUNDED)
-
-    best_solution, best_obj = None, float("inf") if minimize else float("-inf")
-    sign = 1 if minimize else -1
-    all_solutions: list[tuple[float, ...]] = []
-
-    # Use warm start as initial incumbent if provided and feasible
-    if warm_start is not None:
-        ws = tuple(warm_start)
-        if len(ws) == n and _is_feasible(ws, A, b, int_set, eps):
-            best_obj = sum(c[j] * ws[j] for j in range(n))
-            best_solution = ws
-            all_solutions.append(ws)
-
-    frac_var = _most_fractional(root_result.solution, int_set, eps)
-
-    if frac_var is None:
-        return Result(root_result.solution, root_result.objective, 1, total_iters)
-
-    # Check if LP relaxation suggests binary (values in [0,1])
-    looks_binary = all(-eps <= root_result.solution[j] <= 1 + eps for j in int_set)
-
-    # Only tighten bounds if explicit x_j <= 1 constraints exist
-    if looks_binary and _detect_binary(A, b, int_set, n, eps):
-        for j in int_set:
-            lower[j] = max(lower[j], 0.0)
-            upper[j] = min(upper[j], 1.0)
-
-    # Run heuristics if LP looks binary (even without explicit constraints)
-    if heuristics and looks_binary and best_solution is None:
-        rounded = _round_binary(root_result.solution, int_set, c, A, b, minimize, eps)
-        if rounded is not None:
-            best_obj = sum(c[j] * rounded[j] for j in range(n))
-            best_solution = rounded
-            all_solutions.append(rounded)
-
-    # LNS improvement for binary problems
-    if heuristics and looks_binary and lns_iterations > 0 and best_solution is not None:
-        rng = Random(seed)
-        improved, iters = _lns_improve(
-            best_solution, c, A, b, int_set, minimize, eps, max_iter, lns_iterations, lns_destroy_frac, rng
-        )
-        total_iters += iters
-        if improved is not None:
-            improved_obj = sum(c[j] * improved[j] for j in range(n))
-            if (minimize and improved_obj < best_obj) or (not minimize and improved_obj > best_obj):
-                best_solution, best_obj = improved, improved_obj
-                if improved not in all_solutions:
-                    all_solutions.append(improved)
-
-    tree: list[tuple[float, int, Node]] = []
-    counter = 0
-    root_bound = sign * root_result.objective
-    heappush(tree, (root_bound, counter, Node(root_bound, tuple(lower), tuple(upper), 0)))
-    counter += 1
-    nodes_explored = 0
-
-    while tree and nodes_explored < max_nodes:
-        node_bound, _, node = heappop(tree)
-
-        # Prune if can't improve
-        if best_solution is not None and node_bound >= sign * best_obj - eps:
-            continue
-
-        result = _solve_node(c, A, b, node.lower, node.upper, minimize, eps, max_iter)
-        total_iters += result.iterations
-        nodes_explored += 1
-
-        if result.status != LPStatus.OPTIMAL:
-            continue
-
-        if best_solution is not None and sign * result.objective >= sign * best_obj - eps:
-            continue
-
-        frac_var = _most_fractional(result.solution, int_set, eps)
-
-        if frac_var is None:
-            # Found an integer-feasible solution
-            sol = tuple(result.solution)
-            sol_obj = result.objective
-
-            # Collect solution if within limit
-            if solution_limit > 1 and sol not in all_solutions:
-                all_solutions.append(sol)
-                if len(all_solutions) >= solution_limit:
-                    return Result(
-                        best_solution or sol,
-                        best_obj if best_solution else sol_obj,
-                        nodes_explored,
-                        total_iters,
-                        Status.FEASIBLE,
-                        solutions=tuple(all_solutions),
-                    )
-
-            if sign * sol_obj < sign * best_obj:
-                best_solution, best_obj = sol, sol_obj
-                gap = _compute_gap(best_obj, node_bound / sign if node_bound != 0 else 0)
-                if gap < gap_tol and solution_limit == 1:
-                    return Result(best_solution, best_obj, nodes_explored, total_iters)
-
-            continue
-
-        val = result.solution[frac_var]
-        child_bound = sign * result.objective
-
-        lower_left, upper_left = list(node.lower), list(node.upper)
-        upper_left[frac_var] = floor(val)
-        heappush(tree, (child_bound, counter, Node(child_bound, tuple(lower_left), tuple(upper_left), node.depth + 1)))
-        counter += 1
-
-        lower_right, upper_right = list(node.lower), list(node.upper)
-        lower_right[frac_var] = ceil(val)
-        heappush(
-            tree, (child_bound, counter, Node(child_bound, tuple(lower_right), tuple(upper_right), node.depth + 1))
-        )
-        counter += 1
-
-    if best_solution is None:
-        return Result(None, float("inf") if minimize else float("-inf"), nodes_explored, total_iters, Status.INFEASIBLE)
-
-    status = Status.OPTIMAL if not tree else Status.FEASIBLE
-    if solution_limit > 1 and all_solutions:
-        return Result(best_solution, best_obj, nodes_explored, total_iters, status, solutions=tuple(all_solutions))
-    return Result(best_solution, best_obj, nodes_explored, total_iters, status)
+    prob = normalize_lp(c, A, b, lb=lb, ub=ub, senses=senses)
+    model = MilpModel(prob.n, integers=integers, binary=binary, lb=prob.lb, ub=prob.ub, backend=backend)
+    model._add_normalized(prob.rows, prob.b, prob.senses)
+    return model.solve(
+        c,
+        minimize=minimize,
+        eps=eps,
+        max_iter=max_iter,
+        max_nodes=max_nodes,
+        gap_tol=gap_tol,
+        warm_start=warm_start,
+        solution_limit=solution_limit,
+        heuristics=heuristics,
+        lns_iterations=lns_iterations,
+        lns_destroy_frac=lns_destroy_frac,
+        seed=seed,
+    )
 
 
-def _solve_node(c, A, b, lower, upper, minimize, eps, max_iter):
-    # Substitute fixed variables to reduce problem size
-    n = len(c)
-    fixed = {}
-    free_vars = []
+def solve_lexicographic(
+    model: MilpModel,
+    objectives: Sequence[Sequence[float]],
+    *,
+    minimize: bool = True,
+    tol: float = 0.0,
+    **solve_kwargs,
+) -> Result:
+    """Optimize objectives in priority order on `model`.
 
-    for j in range(n):
-        lo, hi = lower[j], upper[j]
-        if hi < lo - eps:
-            return Result(None, float("inf") if minimize else float("-inf"), 0, 0, LPStatus.INFEASIBLE)
-        if hi - lo < eps:
-            fixed[j] = lo
-        else:
-            free_vars.append(j)
-
-    if not free_vars:
-        obj = sum(c[j] * fixed[j] for j in fixed)
-        sol = [fixed.get(j, 0.0) for j in range(n)]
-        for i, row in enumerate(A):
-            lhs = sum(row[j] * sol[j] for j in range(n))
-            if lhs > b[i] + eps:
-                return Result(None, float("inf") if minimize else float("-inf"), 0, 0, LPStatus.INFEASIBLE)
-        return Result(tuple(sol), obj, 0, 0, LPStatus.OPTIMAL)
-
-    # Build reduced problem
-    n_free = len(free_vars)
-    A_red, b_red = [], []
-
-    for i, row in enumerate(A):
-        fixed_contrib = sum(row[j] * fixed[j] for j in fixed)
-        new_rhs = b[i] - fixed_contrib
-        A_red.append([row[j] for j in free_vars])
-        b_red.append(new_rhs)
-
-    # Only add non-trivial bounds
-    for j_new, j_old in enumerate(free_vars):
-        lo, hi = lower[j_old], upper[j_old]
-        if lo > eps:
-            row = [0.0] * n_free
-            row[j_new] = -1.0
-            A_red.append(row)
-            b_red.append(-lo)
-        if hi < float("inf"):
-            row = [0.0] * n_free
-            row[j_new] = 1.0
-            A_red.append(row)
-            b_red.append(hi)
-
-    c_red = [c[j] for j in free_vars]
-    fixed_obj = sum(c[j] * fixed[j] for j in fixed)
-
-    result = solve_lp(c_red, A_red, b_red, minimize=minimize, eps=eps, max_iter=max_iter)
-
-    if result.status != LPStatus.OPTIMAL:
-        return result
-
-    # Reconstruct full solution
-    full_sol = [0.0] * n
-    for j in fixed:
-        full_sol[j] = fixed[j]
-    for j_new, j_old in enumerate(free_vars):
-        full_sol[j_old] = result.solution[j_new]
-
-    return Result(tuple(full_sol), result.objective + fixed_obj, result.iterations, result.iterations, result.status)
+    After each objective but the last, a row keeps its value: c . x >= best - tol
+    when maximizing, c . x <= best + tol when minimizing. Rows stay in the model.
+    Returns the last stage's result, or the first stage that is not
+    OPTIMAL or FEASIBLE. The result is OPTIMAL only if every stage was: a stage
+    that stopped early (FEASIBLE) may have fixed a worse value for the later ones.
+    """
+    if len(objectives) == 0:  # not `not objectives`: numpy arrays have no truth value
+        raise ValueError("solve_lexicographic needs at least one objective")
+    proven = True
+    for k, c in enumerate(objectives):
+        result = model.solve(c, minimize=minimize, **solve_kwargs)
+        if result.status not in (Status.OPTIMAL, Status.FEASIBLE):
+            return result
+        proven = proven and result.status == Status.OPTIMAL
+        if k < len(objectives) - 1:
+            row = {j: float(v) for j, v in enumerate(c) if v != 0}
+            if minimize:
+                model.add_rows([row], [result.objective + tol], ["<="])
+            else:
+                model.add_rows([row], [result.objective - tol], [">="])
+    if not proven and result.status == Status.OPTIMAL:
+        return replace(result, status=Status.FEASIBLE)
+    return result
 
 
-def _most_fractional(solution, int_set, eps):
+# Every row holds up to eps * max(1, |activity|, |rhs|) (SCIP's rule)
+def _rows_hold(x, prob, eps):
+    for row, bi, sense in zip(prob.rows, prob.b, prob.senses):
+        activity = sum(a * x[j] for j, a in row.items())
+        tol = eps * max(1.0, abs(activity), abs(bi))
+        if (sense != ">=" and activity > bi + tol) or (sense != "<=" and activity < bi - tol):
+            return False
+    return True
+
+
+# Snapped point, or None if a row fails: a 1e-6 snap through a 1e6 coefficient moves the row by 1
+def _accepted(x, int_list, prob, eps):
+    sol = _snap(x, int_list)
+    return sol if _rows_hold(sol, prob, eps) else None
+
+
+def _clamp(solution, int_list, lower, upper):
+    point = list(solution)
+    for j in int_list:
+        point[j] = min(max(point[j], lower[j]), upper[j])
+    return point
+
+
+def _outside_bounds(solution, int_list, lower, upper, eps):
+    for j in int_list:
+        if solution[j] < lower[j] - eps * max(1.0, abs(lower[j])):
+            return True
+        if solution[j] > upper[j] + eps * max(1.0, abs(upper[j])):
+            return True
+    return False
+
+
+def _largest_fraction(solution, int_list):
     best_var, best_frac = None, 0.0
-    for j in int_set:
+    for j in int_list:
+        frac = abs(solution[j] - round(solution[j]))
+        if frac > best_frac:
+            best_var, best_frac = j, frac
+    return best_var
+
+
+# An unreliable node may hide better or feasible points, so nothing is proven: no OPTIMAL, and the error says why
+def _final(solution, objective, nodes, iters, status, unreliable, solutions=None):
+    if not unreliable:
+        return Result(solution, objective, nodes, iters, status, solutions=solutions)
+    error = (
+        f"{unreliable} branch-and-bound node(s) had an inaccurate LP solution (outside its bounds, or integral "
+        "but violating a row): numerical trouble, often from coefficients of very different magnitude"
+    )
+    if status == Status.OPTIMAL:
+        status = Status.FEASIBLE
+    return Result(solution, objective, nodes, iters, status, error=error, solutions=solutions)
+
+
+def _snap(solution: Sequence[float], int_list: list[int]) -> tuple[float, ...]:
+    """Integer variables exactly integral: removes pivot-path noise like 0.9999999999999998 from results."""
+    out = list(solution)
+    for j in int_list:
+        out[j] = float(round(out[j]))
+    return tuple(out)
+
+
+def _most_fractional(solution, int_list, eps):
+    best_var, best_frac = None, 0.0
+    for j in int_list:
         val = solution[j]
         frac = abs(val - round(val))
         if frac > eps and frac > best_frac:
@@ -312,208 +557,3 @@ def _compute_gap(best_obj, bound):
     if abs(best_obj) < 1e-10:
         return abs(best_obj - bound)
     return abs(best_obj - bound) / abs(best_obj)
-
-
-def _detect_binary(A, b, int_set, n, eps):
-    """Check if integer variables have explicit x_j <= 1 constraints."""
-    bounded = set()
-    for i, row in enumerate(A):
-        if abs(b[i] - 1.0) > eps:
-            continue
-        # Check if row is a single-variable upper bound: x_j <= 1
-        nz = [(j, row[j]) for j in range(n) if abs(row[j]) > eps]
-        if len(nz) == 1:
-            j, coef = nz[0]
-            if j in int_set and abs(coef - 1.0) < eps:
-                bounded.add(j)
-    return len(bounded) == len(int_set) and len(int_set) > 0
-
-
-def _is_feasible(x, A, b, int_set, eps):
-    n = len(x)
-    if any(x[j] < -eps for j in range(n)):
-        return False
-    for j in int_set:
-        if abs(x[j] - round(x[j])) > eps:
-            return False
-    for i, row in enumerate(A):
-        lhs = sum(row[j] * x[j] for j in range(n))
-        if lhs > b[i] + eps:
-            return False
-    return True
-
-
-def _round_binary(lp_solution, int_set, c, A, b, minimize, eps):
-    # Greedy rounding with local search improvement
-    n = len(lp_solution)
-    sol = list(lp_solution)
-    sign = 1 if minimize else -1
-
-    # Round fractional vars, preferring low-impact first
-    candidates = [
-        (sign * c[j], lp_solution[j], j) for j in int_set if abs(lp_solution[j] - round(lp_solution[j])) > eps
-    ]
-    candidates.sort()
-
-    for _, val, j in candidates:
-        rounded = round(val)
-        sol[j] = float(rounded)
-
-        feasible = True
-        for i, row in enumerate(A):
-            if sum(row[k] * sol[k] for k in range(n)) > b[i] + eps:
-                feasible = False
-                break
-
-        if not feasible:
-            sol[j] = 1.0 - rounded
-            feasible = True
-            for i, row in enumerate(A):
-                if sum(row[k] * sol[k] for k in range(n)) > b[i] + eps:
-                    feasible = False
-                    break
-            if not feasible:
-                return None
-
-    if not _is_feasible(sol, A, b, int_set, eps):
-        return None
-
-    # Phase 1: flip improvement
-    improved = True
-    while improved:
-        improved = False
-        flip_candidates = [
-            (sign * c[j], j) for j in int_set if (minimize and sol[j] > 0.5) or (not minimize and sol[j] < 0.5)
-        ]
-        flip_candidates.sort()
-
-        for _, j in flip_candidates:
-            old_val = sol[j]
-            sol[j] = 1.0 - old_val
-            if _is_feasible(sol, A, b, int_set, eps):
-                improved = True
-            else:
-                sol[j] = old_val
-
-    # Phase 2: swap improvement
-    improved = True
-    while improved:
-        improved = False
-        zeros = [j for j in int_set if sol[j] < 0.5]
-        ones = [j for j in int_set if sol[j] > 0.5]
-
-        best_gain, best_swap = 0, None
-        for j_on in zeros:
-            gain_on = -sign * c[j_on]
-            for j_off in ones:
-                net_gain = gain_on + sign * c[j_off]
-                if net_gain > best_gain:
-                    sol[j_on], sol[j_off] = 1.0, 0.0
-                    if _is_feasible(sol, A, b, int_set, eps):
-                        best_gain, best_swap = net_gain, (j_on, j_off)
-                    sol[j_on], sol[j_off] = 0.0, 1.0
-
-        if best_swap:
-            j_on, j_off = best_swap
-            sol[j_on], sol[j_off] = 1.0, 0.0
-            improved = True
-
-    return tuple(sol)
-
-
-def _lns_improve(solution, c, A, b, int_set, minimize, eps, max_iter, iterations, destroy_frac, rng):
-    n = len(solution)
-    int_list = list(int_set)
-    k = max(1, int(len(int_list) * destroy_frac))
-
-    def objective_fn(sol):
-        return sum(c[j] * sol[j] for j in range(n))
-
-    def destroy(sol, rng):
-        unfixed = set(rng.sample(int_list, min(k, len(int_list))))
-        return (sol, unfixed)
-
-    def repair(partial, _):
-        sol, unfixed = partial
-        candidate = _solve_sub_mip(sol, c, A, b, int_set, unfixed, minimize, eps, max_iter)
-        return candidate if candidate else sol
-
-    result = _lns(
-        solution,
-        objective_fn,
-        destroy,
-        repair,
-        minimize=minimize,
-        max_iter=iterations,
-        max_no_improve=iterations,
-        seed=rng.randint(0, 2**31),
-    )
-    return result.solution, result.evaluations
-
-
-def _solve_sub_mip(current_sol, c, A, b, int_set, free_vars, minimize, eps, max_iter):
-    n = len(c)
-    sign = 1 if minimize else -1
-
-    lower = [0.0] * n
-    upper = [float("inf")] * n
-    for j in int_set:
-        if j in free_vars:
-            lower[j], upper[j] = 0.0, 1.0
-        else:
-            lower[j] = upper[j] = current_sol[j]
-
-    result = _solve_node(c, A, b, lower, upper, minimize, eps, max_iter)
-    if result.status != LPStatus.OPTIMAL:
-        return None
-
-    sol = list(result.solution)
-    frac_vars = [j for j in free_vars if abs(sol[j] - round(sol[j])) > eps]
-    if not frac_vars:
-        return tuple(sol)
-
-    # Small B&B for sub-problem
-    best_sol, best_obj = None, float("inf") if minimize else float("-inf")
-
-    rounded = list(sol)
-    for j in free_vars:
-        rounded[j] = round(rounded[j])
-    if _is_feasible(rounded, A, b, int_set, eps):
-        best_sol = tuple(rounded)
-        best_obj = sum(c[j] * rounded[j] for j in range(n))
-
-    stack = [(list(lower), list(upper))]
-    nodes = 0
-
-    while stack and nodes < 100:
-        lo, hi = stack.pop()
-        nodes += 1
-
-        res = _solve_node(c, A, b, lo, hi, minimize, eps, max_iter)
-        if res.status != LPStatus.OPTIMAL:
-            continue
-        if best_sol is not None and sign * res.objective >= sign * best_obj - eps:
-            continue
-
-        branch_var, best_frac = None, 0
-        for j in free_vars:
-            frac = abs(res.solution[j] - round(res.solution[j]))
-            if frac > eps and frac > best_frac:
-                branch_var, best_frac = j, frac
-
-        if branch_var is None:
-            obj = res.objective
-            if sign * obj < sign * best_obj:
-                best_sol, best_obj = tuple(res.solution), obj
-            continue
-
-        val = res.solution[branch_var]
-        lo_down, hi_down = list(lo), list(hi)
-        hi_down[branch_var] = floor(val)
-        stack.append((lo_down, hi_down))
-
-        lo_up, hi_up = list(lo), list(hi)
-        lo_up[branch_var] = ceil(val)
-        stack.append((lo_up, hi_up))
-
-    return best_sol

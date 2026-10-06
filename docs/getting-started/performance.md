@@ -7,7 +7,7 @@ solvOR gives you both readable Python implementations and optional Rust backends
 **Have your cake and eat it too:**
 
 - **Readable Python** - Every algorithm is implemented in clear, documented Python you can study, debug, and modify
-- **Rust Performance** - Optional drop-in Rust backends with 5-60x speedup for compute-heavy algorithms
+- **Rust Performance** - Optional drop-in Rust backends with 3-100x speedup for compute-heavy algorithms
 
 The Rust extensions are pre-built for Linux, macOS, and Windows. If Rust isn't available, solvOR falls back to Python automatically.
 
@@ -47,10 +47,11 @@ The following algorithms have Rust implementations:
 | Dijkstra | `dijkstra_edges` | **5-10x** | Edge-list variant only |
 | BFS | `bfs_edges` | **3-5x** | Edge-list variant only |
 | DFS | `dfs_edges` | **3-5x** | Edge-list variant only |
-| PageRank | `pagerank_edges` | **10-15x** | Edge-list variant only |
+| PageRank | `pagerank_edges`, `pagerank` | **10-40x** | The callback API maps nodes to integers and uses the same backend (9,091-node code graph: 345 ms to 12 ms) |
 | SCC | `strongly_connected_components_edges` | **5-10x** | Edge-list variant only |
 | Topological Sort | `topological_sort_edges` | **5-10x** | Edge-list variant only |
 | Kruskal MST | `kruskal` | **5-10x** | Minimum spanning tree |
+| Linear programming | `solve_lp`, `solve_milp`, `MilpModel` | **3-100x** | The simplex tableau runs in Rust; branch and bound stays in Python. Results are bit-identical to the Python backend (13 branching MILPs: about 60x in total) |
 
 ## Two API Styles
 
@@ -78,7 +79,7 @@ result = bfs((0, 0), (5, 5), get_neighbors)
 result = pagerank(nodes, lambda n: adjacency[n])
 ```
 
-These functions are **pure Python** and prioritize flexibility and readability.
+These functions prioritize flexibility and readability. `dijkstra` and `bfs` are pure Python; `pagerank` maps the nodes to integers and runs on the Rust backend when it is installed.
 
 ### Edge-list (`*_edges`) - Fast
 
@@ -145,6 +146,8 @@ uv run maturin develop --release
 ```
 
 The `maturin develop` command compiles the Rust code and installs it as a Python extension.
+
+The repository pins its compiler in `rust-toolchain.toml` (currently Rust 1.99.0); rustup installs it automatically on the first build.
 
 ## Pure Python Fallback
 

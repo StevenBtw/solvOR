@@ -1,7 +1,7 @@
 //! solvOR Rust acceleration module.
 //!
-//! Provides high-performance implementations of graph algorithms
-//! that can be used as drop-in replacements for the Python versions.
+//! Provides high-performance implementations of graph algorithms and the
+//! LP simplex kernel that can be used as drop-in replacements for the Python versions.
 
 use pyo3::prelude::*;
 
@@ -13,8 +13,8 @@ mod types;
 /// solvOR Rust acceleration module.
 ///
 /// This module provides optimized Rust implementations of solvOR's
-/// graph algorithms. Functions have the same signatures as their
-/// Python counterparts for seamless integration.
+/// graph algorithms and the LP simplex kernel. Functions and classes have the
+/// same signatures as their Python counterparts for seamless integration.
 #[pymodule]
 fn _solvor_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Shortest paths
@@ -33,8 +33,14 @@ fn _solvor_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(bindings::pagerank, m)?)?;
 
     // Components
-    m.add_function(wrap_pyfunction!(bindings::strongly_connected_components, m)?)?;
+    m.add_function(wrap_pyfunction!(
+        bindings::strongly_connected_components,
+        m
+    )?)?;
     m.add_function(wrap_pyfunction!(bindings::topological_sort, m)?)?;
+
+    // Linear programming kernel (solvor.lp_engine.BoundedSimplex)
+    m.add_class::<bindings::PyBoundedSimplex>()?;
 
     // Module metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

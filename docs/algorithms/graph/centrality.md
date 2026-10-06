@@ -23,13 +23,14 @@ for page, score in sorted(result.solution.items(), key=lambda x: -x[1]):
 # home has highest rank (many pages link to it)
 ```
 
-**How it works:** Iteratively updates each node's score as a weighted sum of scores from nodes linking to it, plus a damping factor allowing random jumps. Converges when scores stop changing. Equivalent to finding the dominant eigenvector of the transition matrix.
+**How it works:** Iteratively updates each node's score as a weighted sum of scores from nodes linking to it, plus a damping factor allowing random jumps. Converges when the largest score change between iterations is less than `tol`. Equivalent to finding the dominant eigenvector of the transition matrix.
 
 **Parameters:**
 
 - `damping`: Probability of following links vs random jump (default 0.85)
 - `max_iter`: Maximum iterations (default 100)
 - `tol`: Convergence tolerance (default 1e-6)
+- `backend`: `"auto"` (default, Rust when installed), `"rust"` or `"python"`. The callback API maps nodes to integers and runs the same core as `pagerank_edges`; both backends return the same scores, bit for bit. Nodes are processed in sorted order when they are mutually comparable (ints, strs, tuples), so results do not depend on `PYTHONHASHSEED`.
 
 **Complexity:** O(E × iterations) where E = edges
 

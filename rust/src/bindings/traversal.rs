@@ -32,12 +32,12 @@ pub fn dijkstra(
             "source {source} out of range for {n_nodes} nodes"
         )));
     }
-    if let Some(t) = target {
-        if t >= n_nodes {
-            return Err(PyValueError::new_err(format!(
-                "target {t} out of range for {n_nodes} nodes"
-            )));
-        }
+    if let Some(t) = target
+        && t >= n_nodes
+    {
+        return Err(PyValueError::new_err(format!(
+            "target {t} out of range for {n_nodes} nodes"
+        )));
     }
 
     let result = py.detach(|| dij::dijkstra(n_nodes, &edges, source, target));
@@ -47,13 +47,10 @@ pub fn dijkstra(
     // Convert distances
     let py_distances = PyList::new(
         py,
-        result.distances.iter().map(|&d| {
-            if d.is_infinite() {
-                f64::INFINITY
-            } else {
-                d
-            }
-        }),
+        result
+            .distances
+            .iter()
+            .map(|&d| if d.is_infinite() { f64::INFINITY } else { d }),
     )?;
     dict.set_item("distances", py_distances)?;
 
@@ -103,12 +100,12 @@ pub fn bfs(
             "source {source} out of range for {n_nodes} nodes"
         )));
     }
-    if let Some(t) = target {
-        if t >= n_nodes {
-            return Err(PyValueError::new_err(format!(
-                "target {t} out of range for {n_nodes} nodes"
-            )));
-        }
+    if let Some(t) = target
+        && t >= n_nodes
+    {
+        return Err(PyValueError::new_err(format!(
+            "target {t} out of range for {n_nodes} nodes"
+        )));
     }
 
     let result = py.detach(|| bfs_algo::bfs(n_nodes, &edges, source, target));
@@ -149,12 +146,12 @@ pub fn dfs(
             "source {source} out of range for {n_nodes} nodes"
         )));
     }
-    if let Some(t) = target {
-        if t >= n_nodes {
-            return Err(PyValueError::new_err(format!(
-                "target {t} out of range for {n_nodes} nodes"
-            )));
-        }
+    if let Some(t) = target
+        && t >= n_nodes
+    {
+        return Err(PyValueError::new_err(format!(
+            "target {t} out of range for {n_nodes} nodes"
+        )));
     }
 
     let result = py.detach(|| bfs_algo::dfs(n_nodes, &edges, source, target));

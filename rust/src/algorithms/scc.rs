@@ -30,77 +30,73 @@ fn build_adjacency(n_nodes: usize, edges: &[(usize, usize)]) -> Vec<Vec<usize>> 
 }
 
 /// Compute strongly connected components using Tarjan's algorithm.
+///
+/// Iterative DFS with an explicit frame stack, so graph depth is not limited
+/// by the native stack. Components come out in the same order as the
+/// recursive formulation (reverse topological order).
 pub fn strongly_connected_components(n_nodes: usize, edges: &[(usize, usize)]) -> SCCResult {
     let adj = build_adjacency(n_nodes, edges);
 
     let mut index_counter = 0usize;
-    let mut indices = vec![None; n_nodes];
+    let mut indices: Vec<Option<usize>> = vec![None; n_nodes];
     let mut lowlinks = vec![0usize; n_nodes];
     let mut on_stack = vec![false; n_nodes];
-    let mut stack = Vec::new();
-    let mut components = Vec::new();
+    let mut stack: Vec<usize> = Vec::new();
+    let mut components: Vec<Vec<usize>> = Vec::new();
+    // DFS frames: (node, position of the next neighbor to visit in adj[node])
+    let mut frames: Vec<(usize, usize)> = Vec::new();
 
-    fn strongconnect(
-        v: usize,
-        adj: &[Vec<usize>],
-        index_counter: &mut usize,
-        indices: &mut [Option<usize>],
-        lowlinks: &mut [usize],
-        on_stack: &mut [bool],
-        stack: &mut Vec<usize>,
-        components: &mut Vec<Vec<usize>>,
-    ) {
-        indices[v] = Some(*index_counter);
-        lowlinks[v] = *index_counter;
-        *index_counter += 1;
-        stack.push(v);
-        on_stack[v] = true;
-
-        for &w in &adj[v] {
-            if indices[w].is_none() {
-                strongconnect(
-                    w,
-                    adj,
-                    index_counter,
-                    indices,
-                    lowlinks,
-                    on_stack,
-                    stack,
-                    components,
-                );
-                lowlinks[v] = lowlinks[v].min(lowlinks[w]);
-            } else if on_stack[w] {
-                lowlinks[v] = lowlinks[v].min(indices[w].unwrap());
-            }
+    for root in 0..n_nodes {
+        if indices[root].is_some() {
+            continue;
         }
+        indices[root] = Some(index_counter);
+        lowlinks[root] = index_counter;
+        index_counter += 1;
+        stack.push(root);
+        on_stack[root] = true;
+        frames.push((root, 0));
 
-        // If v is a root node, pop the stack and generate an SCC
-        if lowlinks[v] == indices[v].unwrap() {
-            let mut component = Vec::new();
-            loop {
-                let w = stack.pop().unwrap();
-                on_stack[w] = false;
-                component.push(w);
-                if w == v {
-                    break;
+        while let Some(frame) = frames.last_mut() {
+            let v = frame.0;
+            if frame.1 < adj[v].len() {
+                let w = adj[v][frame.1];
+                frame.1 += 1;
+                match indices[w] {
+                    None => {
+                        indices[w] = Some(index_counter);
+                        lowlinks[w] = index_counter;
+                        index_counter += 1;
+                        stack.push(w);
+                        on_stack[w] = true;
+                        frames.push((w, 0));
+                    }
+                    Some(index_w) if on_stack[w] => {
+                        lowlinks[v] = lowlinks[v].min(index_w);
+                    }
+                    Some(_) => {}
                 }
+                continue;
             }
-            components.push(component);
-        }
-    }
 
-    for v in 0..n_nodes {
-        if indices[v].is_none() {
-            strongconnect(
-                v,
-                &adj,
-                &mut index_counter,
-                &mut indices,
-                &mut lowlinks,
-                &mut on_stack,
-                &mut stack,
-                &mut components,
-            );
+            // All neighbors of v are done: propagate its lowlink to the parent.
+            frames.pop();
+            if let Some(&(parent, _)) = frames.last() {
+                lowlinks[parent] = lowlinks[parent].min(lowlinks[v]);
+            }
+
+            // If v is a root node, pop the stack and generate an SCC
+            if indices[v] == Some(lowlinks[v]) {
+                let mut component = Vec::new();
+                while let Some(w) = stack.pop() {
+                    on_stack[w] = false;
+                    component.push(w);
+                    if w == v {
+                        break;
+                    }
+                }
+                components.push(component);
+            }
         }
     }
 
@@ -167,6 +163,37 @@ mod tests {
         let result = strongly_connected_components(4, &edges);
 
         assert_eq!(result.n_components, 2);
+    }
+
+    #[test]
+    fn test_scc_order_matches_recursive_tarjan() {
+        // Same graph as test_scc_simple: {3} is emitted first (reverse topological order)
+        let edges = vec![(0, 1), (1, 2), (2, 0), (2, 3)];
+        let result = strongly_connected_components(4, &edges);
+
+        assert_eq!(result.components, vec![vec![3], vec![2, 1, 0]]);
+    }
+
+    #[test]
+    fn test_scc_deep_chain_does_not_overflow() {
+        // Test threads have a 2 MiB stack; the recursive version overflowed here.
+        let n = 1_000_000;
+        let edges: Vec<(usize, usize)> = (0..n - 1).map(|i| (i, i + 1)).collect();
+        let result = strongly_connected_components(n, &edges);
+
+        assert_eq!(result.n_components, n);
+        assert_eq!(result.components[0], vec![n - 1]);
+        assert_eq!(result.components[n - 1], vec![0]);
+    }
+
+    #[test]
+    fn test_scc_deep_cycle_is_one_component() {
+        let n = 1_000_000;
+        let edges: Vec<(usize, usize)> = (0..n).map(|i| (i, (i + 1) % n)).collect();
+        let result = strongly_connected_components(n, &edges);
+
+        assert_eq!(result.n_components, 1);
+        assert_eq!(result.components[0].len(), n);
     }
 
     #[test]

@@ -11,9 +11,15 @@ manipulation. Simplex is a journey through space.
     result = solve_lp(c, A, b)
     result = solve_lp(c, A, b, minimize=False)  # maximize
 
+    # sparse rows, other senses and variable bounds
+    result = solve_lp(c, [{0: 1.0, 2: 3.0}, {1: 1.0}], [4.0, 2.0], senses=[">=", "="],
+                      lb=[0, -1, 0], ub=[5, 1, float("inf")])
+
 How it works: starts at a vertex of the feasible polytope (phase 1 finds one if
 needed). Each iteration pivots to an adjacent vertex with better objective value.
-Bland's rule prevents cycling. Terminates when no improving neighbor exists.
+Variable bounds are handled inside the ratio test (a variable can also jump from
+one bound to the other without a pivot), so they cost no extra rows. Bland's rule
+prevents cycling. Terminates when no improving neighbor exists.
 
 Use this for:
 
@@ -25,210 +31,49 @@ Use this for:
 Parameters:
 
     c: objective coefficients (minimize c @ x)
-    A: constraint matrix (A @ x <= b)
-    b: constraint bounds
+    A: constraint rows, dense lists or sparse {column: coefficient} dicts
+    b: right-hand sides
     minimize: True for min, False for max (default: True)
+    senses: per row "<=", ">=" or "=" (default: all "<=")
+    lb, ub: variable bounds (default: 0 and +inf; use float("-inf") / float("inf") for none)
+    backend: "auto", "rust", or "python" (default: "auto")
 
 This also does the grunt work inside MILP, solving LP relaxations at each node.
+
+Backend: the simplex tableau has an optional Rust backend (3-100x faster) that
+returns the same results, bit for bit. Use backend="python" for the pure Python
+implementation.
 
 Don't use this for: integer constraints (use MILP), non-linear objectives
 (use gradient or anneal), or problems with poor numerical scaling (simplex
 can struggle with badly scaled coefficients).
 """
 
-from array import array
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
-from solvor.types import Result, Status
-from solvor.utils import check_matrix_dims, warn_large_coefficients
+from solvor.lp_engine import solve_cold
+from solvor.types import Result, Status  # noqa: F401  (Status stays importable from here, as in 0.6.2)
+from solvor.utils.lp_input import check_eps, normalize_lp
 
 __all__ = ["solve_lp"]
 
 
 def solve_lp(
     c: Sequence[float],
-    A: Sequence[Sequence[float]],
+    A: Sequence[Sequence[float] | Mapping[int, float]],
     b: Sequence[float],
     *,
     minimize: bool = True,
     eps: float = 1e-10,
     max_iter: int = 100_000,
+    senses: Sequence[str] | None = None,
+    lb: Sequence[float] | None = None,
+    ub: Sequence[float] | None = None,
+    backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
-    """Solve linear program: minimize c @ x subject to A @ x <= b, x >= 0."""
-    check_matrix_dims(c, A, b)
-    warn_large_coefficients(A)
-
-    m, n = len(b), len(c)
-    weights = list(c) if minimize else [-ci for ci in c]
-
-    matrix = []
-    for i in range(m):
-        row = array("d", A[i])
-        row.extend([0.0] * m)
-        row[n + i] = 1.0
-        row.append(b[i])
-        matrix.append(row)
-
-    obj = array("d", weights)
-    obj.extend([0.0] * (m + 1))
-    matrix.append(obj)
-
-    basis = array("i", range(n, n + m))
-    basis_set = set(basis)
-
-    if any(matrix[i][-1] < -eps for i in range(m)):
-        status, iters, matrix, basis, basis_set = _phase1(matrix, basis, basis_set, m, n, eps, max_iter)
-        if status != Status.OPTIMAL:
-            return Result(tuple([0.0] * n), float("inf"), iters, iters, Status.INFEASIBLE)
-        max_iter -= iters
-    else:
-        iters = 0
-
-    status, iters2, matrix, basis, basis_set = _phase2(matrix, basis, basis_set, m, eps, max_iter)
-    return _extract(matrix, basis, m, n, status, iters + iters2, minimize)
-
-
-def _phase1(matrix, basis, basis_set, m, n, eps, max_iter):
-    n_total = n + m
-    art_cols = []
-
-    orig_obj = array("d", matrix[-1])
-
-    for i in range(m):
-        if matrix[i][-1] < -eps:
-            # Flip entire row including RHS (use current length, not cached)
-            row_len = len(matrix[i])
-            for j in range(row_len):
-                matrix[i][j] *= -1
-
-            art_col = n_total + len(art_cols)
-
-            for row in matrix:
-                row.insert(-1, 0.0)
-
-            matrix[i][-2] = 1.0
-            basis_set.discard(basis[i])
-            basis[i] = art_col
-            basis_set.add(art_col)
-            art_cols.append(art_col)
-
-    if not art_cols:
-        return Status.OPTIMAL, 0, matrix, basis, basis_set
-
-    n_cols = len(matrix[0])
-    matrix[-1] = array("d", [0.0] * n_cols)
-
-    for col in art_cols:
-        matrix[-1][col] = 1.0
-
-    for i in range(m):
-        if basis[i] in art_cols:
-            for j in range(n_cols):
-                matrix[-1][j] -= matrix[i][j]
-
-    status, iters, matrix, basis, basis_set = _phase2(matrix, basis, basis_set, m, eps, max_iter)
-
-    if matrix[-1][-1] < -eps:
-        return Status.INFEASIBLE, iters, matrix, basis, basis_set
-
-    # Pivot out any artificial variables still in basis before removing columns
-    n_cols = len(matrix[0])
-    for i in range(m):
-        if basis[i] in art_cols:
-            # Find a non-artificial column to pivot in
-            for j in range(n_cols - 1 - len(art_cols)):  # Original + slack vars only
-                if j not in basis_set and abs(matrix[i][j]) > eps:
-                    matrix = _pivot(matrix, m, i, j, eps)
-                    basis_set.discard(basis[i])
-                    basis[i] = j
-                    basis_set.add(j)
-                    break
-
-    # Remove artificial columns (one at a time to preserve RHS at [-1])
-    for _ in art_cols:
-        for row in matrix:
-            del row[-2]
-
-    matrix[-1] = orig_obj
-    n_cols = len(matrix[0])
-
-    for i in range(m):
-        var = basis[i]
-        if var < n_cols - 1:
-            cost = matrix[-1][var]
-            if abs(cost) > eps:
-                for j in range(n_cols):
-                    matrix[-1][j] -= cost * matrix[i][j]
-
-    return Status.OPTIMAL, iters, matrix, basis, basis_set
-
-
-def _phase2(matrix, basis, basis_set, m, eps, max_iter):
-    n_cols = len(matrix[0])
-
-    for iteration in range(max_iter):
-        # Bland's rule for entering: smallest index with negative reduced cost
-        enter = -1
-        for j in range(n_cols - 1):
-            if j not in basis_set and matrix[-1][j] < -eps:
-                enter = j
-                break
-
-        if enter == -1:
-            return Status.OPTIMAL, iteration, matrix, basis, basis_set
-
-        # Bland's rule for leaving: minimum ratio, ties broken by smallest basis index
-        leave, min_ratio = -1, float("inf")
-        for i in range(m):
-            if matrix[i][enter] > eps:
-                ratio = matrix[i][-1] / matrix[i][enter]
-                if ratio < min_ratio - eps:
-                    min_ratio, leave = ratio, i
-                elif abs(ratio - min_ratio) <= eps:
-                    if leave == -1 or basis[i] < basis[leave]:
-                        leave = i
-
-        if leave == -1:
-            return Status.UNBOUNDED, iteration, matrix, basis, basis_set
-
-        matrix = _pivot(matrix, m, leave, enter, eps)
-        basis_set.discard(basis[leave])
-        basis[leave] = enter
-        basis_set.add(enter)
-
-    return Status.MAX_ITER, max_iter, matrix, basis, basis_set
-
-
-def _pivot(matrix, m, row, col, eps):
-    n_cols = len(matrix[0])
-    pivot_val = matrix[row][col]
-    if abs(pivot_val) < eps:
-        # Numerical instability, skip pivot
-        return matrix
-    inv = 1.0 / pivot_val
-
-    for j in range(n_cols):
-        matrix[row][j] *= inv
-
-    for i in range(m + 1):
-        if i != row:
-            f = matrix[i][col]
-            if abs(f) > eps:
-                for j in range(n_cols):
-                    matrix[i][j] -= f * matrix[row][j]
-
-    return matrix
-
-
-def _extract(matrix, basis, m, n, status, iters, minimize):
-    solution = [0.0] * n
-
-    for i in range(m):
-        if basis[i] < n:
-            solution[basis[i]] = matrix[i][-1]
-
-    obj = -matrix[-1][-1]
-    if not minimize:
-        obj = -obj
-
-    return Result(tuple(solution), obj, iters, iters, status)
+    """Solve linear program: minimize c @ x subject to A @ x (senses) b, lb <= x <= ub."""
+    check_eps(eps)
+    prob = normalize_lp(c, A, b, lb=lb, ub=ub, senses=senses)
+    cost = [float(v) for v in c]
+    return solve_cold(prob, cost, prob.lb, prob.ub, minimize=minimize, eps=eps, max_iter=max_iter, backend=backend)

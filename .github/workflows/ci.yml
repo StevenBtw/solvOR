@@ -20,11 +20,11 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --extra dev
+      - name: Install dependencies (tools only, so no extension build and no Rust toolchain download)
+        run: uv sync --extra dev --no-install-project
 
       - name: Run linter
-        run: uv run ruff check solvor/
+        run: uv run --no-sync ruff check solvor/
 
   typecheck:
     runs-on: ubuntu-latest
@@ -37,11 +37,38 @@ jobs:
           enable-cache: true
           python-version: "3.14"
 
-      - name: Install dependencies
-        run: uv sync --extra dev
+      - name: Install dependencies (tools only, so no extension build and no Rust toolchain download)
+        run: uv sync --extra dev --no-install-project
 
       - name: Run type checker
-        run: uv run ty check solvor/
+        run: uv run --no-sync ty check solvor/
+
+  rust-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          components: rustfmt, clippy
+      - name: rustfmt
+        run: cargo fmt --manifest-path rust/Cargo.toml --check
+      - name: clippy
+        run: cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
+      - name: cargo test
+        run: cargo test --manifest-path rust/Cargo.toml
+        env:
+          LD_LIBRARY_PATH: ${{ env.pythonLocation }}/lib
+      - name: MSRV (rust-version in rust/Cargo.toml; sdist builds use the user's toolchain)
+        run: |
+          msrv=$(sed -n 's/^rust-version = "\(.*\)"$/\1/p' rust/Cargo.toml)
+          rustup toolchain install "$msrv" --profile minimal
+          cargo +"$msrv" build --manifest-path rust/Cargo.toml
+        env:
+          LD_LIBRARY_PATH: ${{ env.pythonLocation }}/lib
 
   test-solvers:
     runs-on: ubuntu-latest
@@ -84,7 +111,7 @@ jobs:
           enable-cache: true
           python-version: "3.13"
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.99.0
       - run: uv sync --extra dev
       - name: Build Rust extension
         run: uv run maturin develop --release

@@ -45,12 +45,6 @@ Use *_edges(backend="python") for the pure Python implementation.
 
 Works with any hashable node type. For incoming edges (predecessors), swap
 the edge direction in your neighbors function.
-
-Note: SCC uses recursion internally. For very deep graphs (>1000 nodes in a
-single path), you may need to increase the recursion limit:
-
-    import sys
-    sys.setrecursionlimit(5000)  # adjust as needed
 """
 
 from collections import defaultdict, deque
@@ -79,7 +73,7 @@ def strongly_connected_components[S](
     Single-node components with no self-loop are also returned.
     """
     node_list = list(nodes)
-    index_counter = [0]
+    index_counter = 0
     stack: list[S] = []
     on_stack: set[S] = set()
     index: dict[S, int] = {}
@@ -87,36 +81,46 @@ def strongly_connected_components[S](
     components: list[list[S]] = []
     iterations = 0
 
-    def strongconnect(v: S) -> None:
-        nonlocal iterations
+    # Iterative Tarjan: an explicit stack of (node, neighbor iterator) frames, so the
+    # depth is not bounded by Python's recursion limit
+    for root in node_list:
+        if root in index:
+            continue
         iterations += 1
+        index[root] = low_link[root] = index_counter
+        index_counter += 1
+        stack.append(root)
+        on_stack.add(root)
+        frames = [(root, iter(neighbors(root)))]
 
-        index[v] = index_counter[0]
-        low_link[v] = index_counter[0]
-        index_counter[0] += 1
-        stack.append(v)
-        on_stack.add(v)
-
-        for w in neighbors(v):
-            if w not in index:
-                strongconnect(w)
-                low_link[v] = min(low_link[v], low_link[w])
-            elif w in on_stack:
-                low_link[v] = min(low_link[v], index[w])
-
-        if low_link[v] == index[v]:
-            component: list[S] = []
-            while True:
-                w = stack.pop()
-                on_stack.remove(w)
-                component.append(w)
-                if w == v:
+        while frames:
+            v, it = frames[-1]
+            for w in it:
+                if w not in index:
+                    iterations += 1
+                    index[w] = low_link[w] = index_counter
+                    index_counter += 1
+                    stack.append(w)
+                    on_stack.add(w)
+                    frames.append((w, iter(neighbors(w))))
                     break
-            components.append(component)
 
-    for v in node_list:
-        if v not in index:
-            strongconnect(v)
+                if w in on_stack:
+                    low_link[v] = min(low_link[v], index[w])
+            else:
+                frames.pop()
+                if low_link[v] == index[v]:
+                    component: list[S] = []
+                    while True:
+                        w = stack.pop()
+                        on_stack.remove(w)
+                        component.append(w)
+                        if w == v:
+                            break
+                    components.append(component)
+                if frames:
+                    u = frames[-1][0]
+                    low_link[u] = min(low_link[u], low_link[v])
 
     return Result(components, len(components), iterations, len(node_list))
 

@@ -52,7 +52,7 @@ def max_flow[Node](
         for v, cap, *_ in graph[u]:
             capacity[u][v] += cap
 
-    flow = defaultdict(lambda: defaultdict(int))
+    flow: defaultdict[Node, defaultdict[Node, float]] = defaultdict(lambda: defaultdict(int))
     total_flow = 0
     iterations = 0
 

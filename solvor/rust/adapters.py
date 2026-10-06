@@ -180,14 +180,22 @@ def _pagerank_edges_rust(
     tol: float = 1e-6,
 ) -> Result:
     """Rust adapter for edge-list PageRank."""
+    from solvor.pagerank import check_pagerank_params
+
+    check_pagerank_params(n_nodes, damping, max_iter, tol)  # same exceptions and messages as the Python backend
     rust = get_rust_module()
 
-    result = rust.pagerank(n_nodes, edges, damping, max_iter, tol)
+    try:
+        result = rust.pagerank(n_nodes, edges, damping, max_iter, tol)
+    except OverflowError:
+        # Endpoints beyond 64 bits are out of range like any other, and the Python backend ignores those
+        edges = [(u, v) for u, v in edges if 0 <= u < n_nodes and 0 <= v < n_nodes]
+        result = rust.pagerank(n_nodes, edges, damping, max_iter, tol)
 
-    scores = {i: s for i, s in enumerate(result["scores"])}
+    scores = dict(enumerate(result["scores"]))
     status = Status.OPTIMAL if result["converged"] else Status.MAX_ITER
 
-    return Result(scores, 0.0, result["iterations"], 0, status)
+    return Result(scores, result["residual"], result["iterations"], n_nodes, status)
 
 
 @rust_adapter("strongly_connected_components_edges")

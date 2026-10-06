@@ -13,6 +13,7 @@ from solvor.utils.data_structures import FenwickTree, UnionFind
 from solvor.utils.helpers import (
     Evaluator,
     assignment_cost,
+    canonical_order,
     debug,
     default_progress,
     is_feasible,
@@ -41,6 +42,7 @@ __all__ = [
     "Evaluator",
     "debug",
     "assignment_cost",
+    "canonical_order",
     "is_feasible",
     "random_permutation",
     "pairwise_swap_neighbors",

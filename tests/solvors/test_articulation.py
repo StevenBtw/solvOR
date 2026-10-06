@@ -174,3 +174,33 @@ class TestStress:
         result_br = bridges(nodes, lambda v: graph.get(v, []))
         assert result_ap.solution == set()
         assert result_br.solution == []
+
+
+class TestDeepGraphs:
+    """DFS depth far beyond Python's default recursion limit (1000)."""
+
+    def test_articulation_points_on_a_long_path(self):
+        n = 12_000
+        graph = {v: [w for w in (v - 1, v + 1) if 0 <= w < n] for v in range(n)}
+        result = articulation_points(range(n), lambda v: graph[v])
+        assert result.solution == set(range(1, n - 1))
+
+    def test_bridges_on_a_long_path(self):
+        n = 12_000
+        graph = {v: [w for w in (v - 1, v + 1) if 0 <= w < n] for v in range(n)}
+        result = bridges(range(n), lambda v: graph[v])
+        assert sorted(result.solution) == [(v, v + 1) for v in range(n - 1)]
+
+    def test_deep_random_tree(self):
+        """In a tree every edge is a bridge and every node of degree 2 or more is a cut vertex."""
+        import random
+
+        rnd = random.Random(7)
+        n = 100_000
+        graph: dict[int, list[int]] = {v: [] for v in range(n)}
+        for v in range(1, n):
+            parent = rnd.randrange(max(0, v - 50), v)
+            graph[v].append(parent)
+            graph[parent].append(v)
+        assert articulation_points(range(n), lambda v: graph[v]).solution == {v for v in range(n) if len(graph[v]) >= 2}
+        assert len(bridges(range(n), lambda v: graph[v]).solution) == n - 1

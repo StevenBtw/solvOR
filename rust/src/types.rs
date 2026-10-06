@@ -40,11 +40,6 @@ impl Progress {
         }
     }
 
-    pub fn with_best(mut self, best: f64) -> Self {
-        self.best = Some(best);
-        self
-    }
-
     pub fn with_evaluations(mut self, evaluations: usize) -> Self {
         self.evaluations = evaluations;
         self
@@ -60,4 +55,3 @@ impl Progress {
         Ok(dict)
     }
 }
-

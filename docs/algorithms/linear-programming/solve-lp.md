@@ -15,12 +15,16 @@ Linear programming with continuous variables. The simplex algorithm walks along 
 ```python
 def solve_lp(
     c: Sequence[float],
-    A: Sequence[Sequence[float]],
+    A: Sequence[Sequence[float] | Mapping[int, float]],
     b: Sequence[float],
     *,
     minimize: bool = True,
     eps: float = 1e-10,
     max_iter: int = 100_000,
+    senses: Sequence[str] | None = None,
+    lb: Sequence[float] | None = None,
+    ub: Sequence[float] | None = None,
+    backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result[tuple[float, ...]]
 ```
 
@@ -29,11 +33,14 @@ def solve_lp(
 | Parameter | Description |
 |-----------|-------------|
 | `c` | Objective coefficients (minimize c·x) |
-| `A` | Constraint matrix (Ax ≤ b) |
+| `A` | Constraint rows: dense lists, or sparse `{column: coefficient}` dicts |
 | `b` | Constraint right-hand sides |
+| `senses` | Per row `"<="`, `">="` or `"="` (default all `"<="`) |
+| `lb`, `ub` | Variable bounds (default `0` and `inf`; use `float("-inf")` for a free variable) |
 | `minimize` | If False, maximize instead |
 | `max_iter` | Maximum simplex iterations |
 | `eps` | Numerical tolerance |
+| `backend` | `"auto"` (default, Rust when installed), `"rust"` or `"python"`; both give identical results, bit for bit |
 
 ## Example
 
@@ -46,18 +53,18 @@ print(result.solution)  # [4.0, 0.0]
 print(result.objective)  # 12.0
 ```
 
-## Constraint Directions
+## Constraint Directions and Bounds
 
-All constraints are `Ax ≤ b`. For other directions:
+Rows default to `Ax ≤ b`. Pass `senses` for other directions and `lb`/`ub` for variable bounds; bounds cost nothing extra (no rows are added for them).
 
 ```python
-# Want: x + y >= 4
-# Multiply by -1: -x - y <= -4
-result = solve_lp(c, [[-1, -1]], [-4])
+# Minimize x + 2y with x + y >= 4 and x - y == 1, x in [-5, 5], y >= 0
+result = solve_lp([1, 2], [[1, 1], [1, -1]], [4, 1], senses=[">=", "="], lb=[-5, 0], ub=[5, float("inf")])
+print(result.solution)  # (2.5, 1.5)
 
-# Want: x + y == 4
-# Add both directions: x + y <= 4 AND x + y >= 4
-result = solve_lp(c, [[1, 1], [-1, -1]], [4, -4])
+# Sparse rows: only the nonzero coefficients (x0 + 2*x3 <= 10, x1 <= 4)
+result = solve_lp([-1, -1, 0, -1], [{0: 1, 3: 2}, {1: 1}], [10, 4])
+print(result.objective)  # -14.0
 ```
 
 ## How It Works
@@ -86,6 +93,10 @@ Each vertex corresponds to a *basic feasible solution*, setting n variables to z
 
 **Bland's rule:** Prevents cycling (revisiting the same vertex) by always picking the smallest index when ties occur.
 
+**Bounds:** A variable at its upper bound is replaced by `upper - x`, so every non-basic variable sits at zero and the ratio test only gains two cases: a basic variable can leave at its upper bound, and the entering variable can jump to its own upper bound without a pivot (a bound flip).
+
+**Scaling:** a row or column whose nonzero coefficients differ by a factor of 256 or more is multiplied by a power of two that brings them nearer 1, and the solution is mapped back. Powers of two scale without rounding. Other rows and columns are left as they are. In a scaled model, a column whose reduced cost is within `eps` still enters when a finite feasible step would improve the objective by more than `eps * (1 + |objective|)`, because next to a large coefficient a tiny reduced cost can hide a long step.
+
 For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikipedia.org/wiki/Simplex_algorithm) or the classic textbook by Chvátal.
 
 ## Complexity
@@ -93,10 +104,11 @@ For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikiped
 - **Time:** O(2^n) worst case, but O(n²m) average on random instances
 - **Space:** O(nm) for the tableau
 - **Guarantees:** Finds the exact global optimum (not approximate)
+- **Speed:** with the Rust extension (included in the pre-built wheels) the tableau arithmetic runs in Rust: a 540-variable, 202-row LP solves about 75 times faster. Same pivots, same result.
 
 ## Tips
 
-1. **Scaling matters.** Keep coefficients in similar ranges. Mixing 1e-8 and 1e8 causes numerical issues.
+1. **Scaling matters.** Keep coefficients in similar ranges. Scaling (see above) helps, but mixing 1e-8 and 1e8 still causes numerical issues.
 2. **Start with LP relaxation.** When solving MILP, solve without integer constraints first to get bounds.
 3. **Check status.** Always verify `result.ok` before using the solution.
 
