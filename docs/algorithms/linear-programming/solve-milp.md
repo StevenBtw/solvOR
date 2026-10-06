@@ -94,6 +94,18 @@ result = solve_milp([3, 2, 3], rows, [1, 1], binary=range(3), minimize=False)
 
 Before branching, `solve_milp` turns single-variable rows into bounds, rounds integer variables' bounds, and tightens rows whose variables and coefficients are all integers: the row is divided by the gcd of its coefficients and the right-hand side is rounded (down for `<=`, up for `>=`). A lexicographic "lock" row such as `-c1·x <= -best1 + 0.5` therefore becomes `-c1·x <= -best1`, which keeps every integer solution but gives a much tighter LP relaxation (on one 270-variable model: 1,391 nodes before, 3 after).
 
+## Badly Scaled Models
+
+Models whose coefficients differ by many orders of magnitude, such as big-M rows like `x <= 1e6 * z`, are hard for any floating point solver. `solve_milp` handles them in five ways:
+
+- A row or column whose nonzero coefficients differ by a factor of 256 or more is scaled by a power of two, which brings them nearer 1 without rounding. Other rows and columns keep the factor 1.
+- The LP relaxations use their own tolerance (1e-9); `eps` stays the integrality tolerance.
+- In a model with such a row or column, a node whose warm-started LP looks infeasible is solved again from scratch before it is pruned: a tableau that has drifted can report a false infeasibility.
+- An integer solution is accepted only after it is snapped to exact integers and every row is checked: a row holds when it is off by at most `eps * max(1, |activity|, |rhs|)`. Without the check, `x0 = 1e-6` would count as integral and the snap to 0 would move a `1e6 * x0` term by 1.
+- If a node's LP solution is visibly inaccurate (outside its bounds, or integral but still violating a row), nothing that depends on it is proven: the result is `FEASIBLE` (or `INFEASIBLE`) with an explanation in `result.error`, never `OPTIMAL`.
+
+Keep big-M values as small as the model allows; it also gives tighter LP bounds.
+
 ## Incremental Models
 
 `MilpModel` keeps the LP between solves, so adding rows (lazy cuts, objective locks) or changing the objective re-solves warm with the dual simplex instead of starting over.
@@ -127,6 +139,7 @@ Each solve also starts from the previous solution as an incumbent when it is sti
 2. **Tight formulations.** Presolve already tightens all-integer rows; for rows with continuous variables, prefer the tightest valid coefficients yourself.
 3. **Warm starting.** Pass a known feasible solution via `warm_start` to prune early.
 4. **Gap tolerance.** For large problems, set `gap_tol=0.01` to accept solutions within 1% of optimal.
+5. **Big-M values.** Use the smallest M that is valid; see Badly Scaled Models above.
 
 ## See Also
 

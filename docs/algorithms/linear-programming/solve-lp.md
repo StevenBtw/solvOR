@@ -93,6 +93,8 @@ Each vertex corresponds to a *basic feasible solution*, setting n variables to z
 
 **Bounds:** A variable at its upper bound is replaced by `upper - x`, so every non-basic variable sits at zero and the ratio test only gains two cases: a basic variable can leave at its upper bound, and the entering variable can jump to its own upper bound without a pivot (a bound flip).
 
+**Scaling:** a row or column whose nonzero coefficients differ by a factor of 256 or more is multiplied by a power of two that brings them nearer 1, and the solution is mapped back. Powers of two scale without rounding. Other rows and columns are left as they are.
+
 For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikipedia.org/wiki/Simplex_algorithm) or the classic textbook by Chvátal.
 
 ## Complexity
@@ -104,7 +106,7 @@ For the full algorithm, see [Linear Programming on Wikipedia](https://en.wikiped
 
 ## Tips
 
-1. **Scaling matters.** Keep coefficients in similar ranges. Mixing 1e-8 and 1e8 causes numerical issues.
+1. **Scaling matters.** Keep coefficients in similar ranges. Scaling (see above) helps, but mixing 1e-8 and 1e8 still causes numerical issues.
 2. **Start with LP relaxation.** When solving MILP, solve without integer constraints first to get bounds.
 3. **Check status.** Always verify `result.ok` before using the solution.
 

@@ -100,7 +100,7 @@ condensed_nodes, adjacency = result.solution
 - **Cycle detection.** If `topological_sort` returns `INFEASIBLE`, use `strongly_connected_components` to find the cycles.
 - **Build systems.** Process in reverse order of `topological_sort` result (dependencies first).
 - **Architecture validation.** SCCs with multiple nodes indicate coupling that may need refactoring.
-- **Recursion limit.** For very deep graphs (>1000 nodes in a single path), increase `sys.setrecursionlimit`.
+- **Deep graphs.** `strongly_connected_components`, `articulation_points` and `bridges` use an iterative DFS, so long dependency chains need no recursion limit changes.
 
 ## See Also
 
