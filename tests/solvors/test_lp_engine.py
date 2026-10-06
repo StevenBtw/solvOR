@@ -7,6 +7,7 @@ import pytest
 
 from solvor.lp_engine import BoundedSimplex, Standardized, WarmLP, kernel_class, solve_cold
 from solvor.rust import rust_available
+from solvor.simplex import solve_lp
 from solvor.types import Status
 from solvor.utils.lp_input import LinearProblem
 
@@ -61,7 +62,7 @@ class TestWarmMatchesCold:
                 warm = lp.solve(c, minimize=minimize)
                 warm_solves += lp.cold_solves == before
                 assert _same(warm, _cold(lp, c, minimize))
-        assert warm_solves > 1500  # most re-solves really are warm
+        assert warm_solves > 1400  # most re-solves really are warm (infeasible verdicts are confirmed cold)
 
     def test_general_sequences_with_free_variables_and_equalities(self):
         rng = random.Random(7)
@@ -148,6 +149,7 @@ class TestWarmOperations:
         result = lp.solve([1, 1], minimize=False)
         assert result.objective == 4.0  # x = 4, y = 0
         assert result.status == Status.OPTIMAL
+        assert lp.cold_solves == 2
 
 
 def _coef(rng, mode):
@@ -260,6 +262,29 @@ class TestWarmMatchesColdAtMilpTolerance:
                 assert _same(warm, cold)
 
 
+class TestFinalCheckTolerance:
+    def test_follows_a_looser_eps(self):
+        """The dual simplex accepts violations up to eps; the final check must too, or every warm solve rebuilds."""
+        prob = LinearProblem(2, [{0: 1.0, 1: 1.0}], [1.0], ["<="], [0.0, 0.0], [1.0, 1.0])
+        loose = WarmLP(prob, prob.lb, prob.ub, eps=1e-4, max_iter=100)
+        assert loose._feasible([1.00005, 0.0])
+        assert not loose._feasible([1.0005, 0.0])
+        tight = WarmLP(prob, prob.lb, prob.ub, eps=1e-9, max_iter=100)
+        assert not tight._feasible([1.00005, 0.0])
+
+
+class TestIterationBudget:
+    def test_warm_solves_stay_within_max_iter(self):
+        """The dual and primal passes of a warm solve share one max_iter budget."""
+        for prob, steps in _tolerance_trials(5, trials=40):  # trial 35 used 4 iterations before
+            lp = WarmLP(prob, prob.lb, prob.ub, eps=1e-6, max_iter=3)
+            for step in steps:
+                if step[0] != "solve":
+                    _edit(lp, step)
+                    continue
+                assert lp.solve(step[1], minimize=step[2]).iterations <= 3
+
+
 class TestRebuildCounter:
     def test_cold_pivots_do_not_count_towards_a_rebuild(self, monkeypatch):
         """Only pivots made after the last cold build count; otherwise big LPs would never warm-start."""
@@ -327,12 +352,12 @@ class TestRustKernelMatchesPython:
             cost = std.map_cost([rng.uniform(-5, 5) for _ in range(prob.n)])
             limit = rng.choice((0, 1, 2, 3, 1000))
             outputs = [k.solve(cost, limit) for k in kernels]
-            for _ in range(12):
+            for step in range(13):  # 12 random calls, each one checked
                 assert outputs[0] == outputs[1]
                 assert _bits(kernels[0].column_values()) == _bits(kernels[1].column_values())
                 states = [(k.pivots, k.phase1_done, k.m, k.width) for k in kernels]
                 assert states[0] == states[1]
-                if not kernels[0].phase1_done:
+                if step == 12 or not kernels[0].phase1_done:
                     break
                 op = rng.randrange(6)
                 if op == 0:
@@ -417,3 +442,81 @@ class TestKernelSelection:
         monkeypatch.setattr("solvor.rust._rust_available", False)
         with pytest.raises(ImportError, match="Rust backend explicitly requested"):
             kernel_class("rust")
+
+
+class TestWarmInfeasibleVerdicts:
+    def test_well_scaled_models_trust_the_warm_verdict(self):
+        """Well-scaled models keep the warm dual simplex's verdict, so their search does not change."""
+        prob = LinearProblem(2, [{0: 1.0, 1: 1.0}], [3.0], [">="], [0.0, 0.0], [2.0, 2.0])
+        lp = WarmLP(prob, prob.lb, prob.ub, eps=1e-9, max_iter=100)
+        assert lp.solve([1.0, 1.0], minimize=True).status == Status.OPTIMAL
+        lp.set_bounds([0.0, 0.0], [1.0, 1.0])
+        assert lp.solve([1.0, 1.0], minimize=True).status == Status.INFEASIBLE
+        assert (lp.cold_solves, lp.warm_solves) == (1, 1)
+
+    def test_badly_scaled_models_confirm_it_with_a_cold_solve(self):
+        """A drifted tableau of a badly scaled model (here 1000:1 in one row) can show a false infeasibility."""
+        prob = LinearProblem(2, [{0: 1000.0, 1: 1.0}], [1500.0], [">="], [0.0, 0.0], [2.0, 2.0])
+        lp = WarmLP(prob, prob.lb, prob.ub, eps=1e-9, max_iter=100)
+        assert lp.solve([1.0, 1.0], minimize=True).status == Status.OPTIMAL
+        lp.set_bounds([0.0, 0.0], [1.0, 1.0])
+        assert lp.solve([1.0, 1.0], minimize=True).status == Status.INFEASIBLE
+        assert lp.cold_solves == 2
+
+
+class TestScaling:
+    def test_well_scaled_rows_and_columns_keep_factor_one(self):
+        """Only a spread of 2**8 or more within a row or column is scaled; uniformly large rows are left alone."""
+        rows = [{0: 5.0, 1: 40.0, 2: 0.1}, {0: 1.0, 2: 3.3}, {3: 300.0, 4: 900.0}]
+        prob = LinearProblem(5, rows, [10.0, 4.0, 1000.0], ["<=", ">=", "<="], [0.0] * 5, [1.0] * 5)
+        std = Standardized(prob, prob.lb, prob.ub)
+        assert std.scale == [1.0] * 5
+        assert std.rows == [{0: 5.0, 1: 40.0, 2: 0.1}, {0: -1.0, 2: -3.3}, {3: 300.0, 4: 900.0}]
+        assert not std.badly_scaled
+
+    def test_bound_ranges_alone_do_not_scale(self):
+        ub = [0.25, 3000.0, 1e6, math.inf]
+        prob = LinearProblem(4, [{0: 1.0, 1: 2.0, 2: 3.0, 3: 4.0}], [10.0], ["<="], [0.0] * 4, ub)
+        std = Standardized(prob, prob.lb, prob.ub)
+        assert std.scale == [1.0] * 4
+        assert std.upper == ub
+
+    def test_wide_spread_gets_power_of_two_factors(self):
+        prob = LinearProblem(2, [{0: 1e6, 1: 1.0}, {0: 1.0, 1: 1.0}], [2e6, 1.0], ["<=", "<="], [0.0, 0.0], [1.0, 1.0])
+        std = Standardized(prob, prob.lb, prob.ub)
+        assert std.badly_scaled
+        assert std.scale == [2.0**-9, 1.0]
+        for row, original in zip(std.rows, prob.rows):
+            for j, v in row.items():
+                ratio = v / (original[j] * std.scale[j])
+                assert math.frexp(ratio)[0] == 0.5  # an exact power of two
+        assert std.to_x([2.0**9, 0.0]) == [1.0, 0.0]
+
+    def test_column_factor_keeps_the_scaled_range_between_1_and_2_11(self):
+        """A smaller range would read as a fixed column; a factor far below 1 would shrink the cost under eps."""
+        rows = [{0: 1e9, 1: 1e-6}, {0: 1.0, 1: 1e-9}]
+        prob = LinearProblem(2, rows, [1.0, 1.0], ["<=", "<="], [0.0, 0.0], [1.0, 1.0])
+        assert Standardized(prob, prob.lb, prob.ub).scale == [2.0**-10, 1.0]
+
+    def test_small_costs_survive_scaling(self):
+        c = [-2.87449063397315, -5.27017580582406e-05, 0.5313982799582897, 0.00036697885825528884]
+        c += [-1.6404823292206272, -0.000365963880148854, -0.35002494328736944, -2.195421747396047e-05]
+        row = {1: -0.4, 4: -4.0, 5: -0.2, 6: 1.0, 7: -700000.0}
+        result = solve_lp(c, [row], [0.5843833895089641], ub=[1] * 8)
+        assert abs(result.objective - -4.865438526336828) <= 1e-12
+
+    @pytest.mark.parametrize(("coefficient", "eps"), [(1e-6, 1e-6), (1e-11, 1e-10)])
+    def test_columns_with_tiny_coefficients_still_enter(self, coefficient, eps):
+        assert solve_lp([-1.0], [[coefficient]], [1.0], ub=[1.0], eps=eps).objective == -1.0
+
+    def test_subnormal_coefficients_do_not_crash(self):
+        assert solve_lp([-1, -1], [{0: 1e-310, 1: 1}], [1], ub=[1, 1]).objective == -2.0
+
+    def test_free_and_upper_bounded_columns_map_back_exactly(self):
+        """x0 is free (two scaled columns, the negative one in use) and x1 has only an upper bound."""
+        from solvor.simplex import solve_lp
+
+        inf = math.inf
+        result = solve_lp([1.0, -1.0], [{0: 1e6, 1: 1.0}], [-2e6 + 3], senses=[">="], lb=[-inf, -inf], ub=[inf, 5.0])
+        assert result.solution == (-2.000002, 5.0)
+        assert result.objective == -7.000002

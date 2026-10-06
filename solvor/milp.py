@@ -92,11 +92,14 @@ from solvor.milp_presolve import presolve_row, round_integer_bounds
 from solvor.types import Result, Status
 from solvor.utils import check_integers_valid
 from solvor.utils.lp_input import LinearProblem, normalize_bounds, normalize_lp, normalize_rows
+from solvor.utils.validate import check_non_negative
 
 __all__ = ["MilpModel", "solve_lexicographic", "solve_milp"]
 
 # Presolve runs as rows arrive, before solve() knows its eps; same value as solve_milp's default eps
 PRESOLVE_TOL = 1e-6
+# LP relaxations get their own, tighter tolerance; eps is the integrality and feasibility tolerance
+LP_EPS = 1e-9
 
 
 class MilpModel:
@@ -140,7 +143,7 @@ class MilpModel:
         self._b: list[float] = []
         self._senses: list[str] = []
         self._lp: WarmLP | None = None
-        self._lp_key: tuple[float, int] | None = None
+        self._lp_max_iter: int | None = None
         self._last: tuple[float, ...] | None = None
 
     @property
@@ -192,6 +195,7 @@ class MilpModel:
         n = self.n
         if len(c) != n:
             raise ValueError(f"Length mismatch: expected {n} elements in c, got {len(c)}")
+        check_non_negative(eps, name="eps")
         cost = [float(v) for v in c]
         if any(isnan(v) for v in cost):
             raise ValueError("c contains NaN")
@@ -203,7 +207,7 @@ class MilpModel:
         int_set = self._int_set
         int_list = sorted(int_set)
         lower, upper = tuple(self._lower), tuple(self._upper)
-        lp = self._warm_lp(prob, eps, max_iter)
+        lp = self._warm_lp(prob, max_iter)
         lp.set_bounds(lower, upper)
 
         root = lp.solve(cost, minimize=minimize)
@@ -227,14 +231,18 @@ class MilpModel:
             if best_solution is None and candidate is not None:
                 ws = tuple(float(v) for v in candidate)
                 if len(ws) == n and is_feasible(ws, prob, lower, upper, int_set, eps):
-                    best_solution = _snap(ws, int_list)
-                    best_obj = sum(cost[j] * best_solution[j] for j in range(n))
-                    all_solutions.append(best_solution)
+                    best_solution = _accepted(ws, int_list, prob, eps)
+                    if best_solution is not None:
+                        best_obj = sum(cost[j] * best_solution[j] for j in range(n))
+                        all_solutions.append(best_solution)
 
-        if _most_fractional(root.solution, int_list, eps) is None:
-            sol = _snap(root.solution, int_list)
-            self._last = sol
-            return Result(sol, sum(cost[j] * sol[j] for j in range(n)), 1, total_iters)
+        root_point = _clamp(root.solution, int_list, lower, upper)
+        root_inaccurate = _outside_bounds(root.solution, int_list, lower, upper, eps)
+        if not root_inaccurate and _most_fractional(root_point, int_list, eps) is None:
+            sol = _accepted(root_point, int_list, prob, eps)
+            if sol is not None:
+                self._last = sol
+                return Result(sol, sum(cost[j] * sol[j] for j in range(n)), 1, total_iters)
 
         # Rounding heuristics flip integer variables between 0 and 1
         looks_binary = all(-eps <= root.solution[j] <= 1 + eps for j in int_list)
@@ -243,9 +251,10 @@ class MilpModel:
             cols = prob.columns()
             rounded = round_binary(root.solution, int_list, cost, prob, cols, lower, upper, minimize, eps)
             if rounded is not None:
-                best_solution = _snap(rounded, int_list)
-                best_obj = sum(cost[j] * best_solution[j] for j in range(n))
-                all_solutions.append(best_solution)
+                best_solution = _accepted(rounded, int_list, prob, eps)
+                if best_solution is not None:
+                    best_obj = sum(cost[j] * best_solution[j] for j in range(n))
+                    all_solutions.append(best_solution)
 
         # LNS improvement for binary problems
         if heuristics and looks_binary and lns_iterations > 0 and best_solution is not None:
@@ -267,7 +276,8 @@ class MilpModel:
             )
             total_iters += iters
             if improved is not None:
-                improved = _snap(improved, int_list)
+                improved = _accepted(improved, int_list, prob, eps)
+            if improved is not None:
                 improved_obj = sum(cost[j] * improved[j] for j in range(n))
                 if (minimize and improved_obj < best_obj) or (not minimize and improved_obj > best_obj):
                     best_solution, best_obj = improved, improved_obj
@@ -278,6 +288,7 @@ class MilpModel:
         tree: list[tuple[float, int, tuple[float, ...], tuple[float, ...]]] = []
         counter = 0
         nodes_explored = 0
+        unreliable = 0  # nodes whose LP point was visibly inaccurate: nothing that depends on them is proven
         next_node: tuple[float, tuple[float, ...], tuple[float, ...], Result | None] | None = (
             sign * root.objective,
             lower,
@@ -312,24 +323,38 @@ class MilpModel:
             if best_solution is not None and sign * res.objective >= sign * best_obj - eps:
                 continue
 
-            frac_var = _most_fractional(res.solution, int_list, eps)
-
+            if _outside_bounds(res.solution, int_list, nl, nu, eps):
+                unreliable += 1
+            # Clamped: an LP value just past its bound would otherwise branch into the same node again
+            point = _clamp(res.solution, int_list, nl, nu)
+            frac_var = _most_fractional(point, int_list, eps)
+            sol = None
             if frac_var is None:
+                sol = _accepted(point, int_list, prob, eps)
+                if sol is None:  # integral within eps, but snapping breaks a row: branch on the largest fraction
+                    frac_var = _largest_fraction(point, int_list)
+                    if frac_var is None:  # exactly integral and still violating a row: drop the node
+                        unreliable += 1
+                        continue
+
+            if sol is not None:
                 # Found an integer-feasible solution
-                sol = _snap(res.solution, int_list)
                 sol_obj = sum(cost[j] * sol[j] for j in range(n))
 
                 if solution_limit > 1 and sol not in all_solutions:
                     all_solutions.append(sol)
                     if len(all_solutions) >= solution_limit:
                         self._last = best_solution or sol
-                        return Result(
+                        objective = best_obj if best_solution else sol_obj
+                        solutions = tuple(all_solutions)
+                        return _final(
                             best_solution or sol,
-                            best_obj if best_solution else sol_obj,
+                            objective,
                             nodes_explored,
                             total_iters,
                             Status.FEASIBLE,
-                            solutions=tuple(all_solutions),
+                            unreliable,
+                            solutions,
                         )
 
                 if sign * sol_obj < sign * best_obj:
@@ -338,11 +363,11 @@ class MilpModel:
                     gap = _compute_gap(best_obj, global_bound / sign if global_bound != 0 else 0)
                     if gap < gap_tol and solution_limit == 1:
                         self._last = best_solution
-                        return Result(best_solution, best_obj, nodes_explored, total_iters)
+                        return _final(best_solution, best_obj, nodes_explored, total_iters, Status.OPTIMAL, unreliable)
                 continue
 
             # Branch on the fractional variable: dive into the rounding direction, queue the other child
-            val = res.solution[frac_var]
+            val = point[frac_var]
             child_bound = sign * res.objective
             down_upper = list(nu)
             down_upper[frac_var] = floor(val)
@@ -356,19 +381,17 @@ class MilpModel:
             next_node = (child_bound, dive[0], dive[1], None)
 
         if best_solution is None:
-            return Result(None, no_solution, nodes_explored, total_iters, Status.INFEASIBLE)
+            return _final(None, no_solution, nodes_explored, total_iters, Status.INFEASIBLE, unreliable)
 
         self._last = best_solution
         status = Status.OPTIMAL if not tree else Status.FEASIBLE
-        if solution_limit > 1 and all_solutions:
-            return Result(best_solution, best_obj, nodes_explored, total_iters, status, solutions=tuple(all_solutions))
-        return Result(best_solution, best_obj, nodes_explored, total_iters, status)
+        solutions = tuple(all_solutions) if solution_limit > 1 and all_solutions else None
+        return _final(best_solution, best_obj, nodes_explored, total_iters, status, unreliable, solutions)
 
-    def _warm_lp(self, prob: LinearProblem, eps: float, max_iter: int) -> WarmLP:
-        key = (eps, max_iter)
-        if self._lp is None or self._lp_key != key:
-            self._lp = WarmLP(prob, prob.lb, prob.ub, eps=eps, max_iter=max_iter, backend=self._backend)
-            self._lp_key = key
+    def _warm_lp(self, prob: LinearProblem, max_iter: int) -> WarmLP:
+        if self._lp is None or self._lp_max_iter != max_iter:
+            self._lp = WarmLP(prob, prob.lb, prob.ub, eps=LP_EPS, max_iter=max_iter, backend=self._backend)
+            self._lp_max_iter = max_iter
         return self._lp
 
 
@@ -430,7 +453,8 @@ def solve_lexicographic(
     OPTIMAL or FEASIBLE. The result is OPTIMAL only if every stage was: a stage
     that stopped early (FEASIBLE) may have fixed a worse value for the later ones.
     """
-    result = Result(None, inf if minimize else -inf, 0, 0, Status.INFEASIBLE)
+    if len(objectives) == 0:  # not `not objectives`: numpy arrays have no truth value
+        raise ValueError("solve_lexicographic needs at least one objective")
     proven = True
     for k, c in enumerate(objectives):
         result = model.solve(c, minimize=minimize, **solve_kwargs)
@@ -446,6 +470,60 @@ def solve_lexicographic(
     if not proven and result.status == Status.OPTIMAL:
         return replace(result, status=Status.FEASIBLE)
     return result
+
+
+# Every row holds up to eps * max(1, |activity|, |rhs|) (SCIP's rule)
+def _rows_hold(x, prob, eps):
+    for row, bi, sense in zip(prob.rows, prob.b, prob.senses):
+        activity = sum(a * x[j] for j, a in row.items())
+        tol = eps * max(1.0, abs(activity), abs(bi))
+        if (sense != ">=" and activity > bi + tol) or (sense != "<=" and activity < bi - tol):
+            return False
+    return True
+
+
+# Snapped point, or None if a row fails: a 1e-6 snap through a 1e6 coefficient moves the row by 1
+def _accepted(x, int_list, prob, eps):
+    sol = _snap(x, int_list)
+    return sol if _rows_hold(sol, prob, eps) else None
+
+
+def _clamp(solution, int_list, lower, upper):
+    point = list(solution)
+    for j in int_list:
+        point[j] = min(max(point[j], lower[j]), upper[j])
+    return point
+
+
+def _outside_bounds(solution, int_list, lower, upper, eps):
+    for j in int_list:
+        if solution[j] < lower[j] - eps * max(1.0, abs(lower[j])):
+            return True
+        if solution[j] > upper[j] + eps * max(1.0, abs(upper[j])):
+            return True
+    return False
+
+
+def _largest_fraction(solution, int_list):
+    best_var, best_frac = None, 0.0
+    for j in int_list:
+        frac = abs(solution[j] - round(solution[j]))
+        if frac > best_frac:
+            best_var, best_frac = j, frac
+    return best_var
+
+
+# An unreliable node may hide better or feasible points, so nothing is proven: no OPTIMAL, and the error says why
+def _final(solution, objective, nodes, iters, status, unreliable, solutions=None):
+    if not unreliable:
+        return Result(solution, objective, nodes, iters, status, solutions=solutions)
+    error = (
+        f"{unreliable} branch-and-bound node(s) had an inaccurate LP solution (outside its bounds, or integral "
+        "but violating a row): numerical trouble, often from coefficients of very different magnitude"
+    )
+    if status == Status.OPTIMAL:
+        status = Status.FEASIBLE
+    return Result(solution, objective, nodes, iters, status, error=error, solutions=solutions)
 
 
 def _snap(solution: Sequence[float], int_list: list[int]) -> tuple[float, ...]:

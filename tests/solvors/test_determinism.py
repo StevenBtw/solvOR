@@ -21,6 +21,7 @@ node_set = set(nodes)
 nb = lambda v: und[v]
 print(json.dumps({
     "louvain": [sorted(c) for c in louvain(node_set, nb).solution],
+    "louvain_foreign_neighbors": repr(louvain(node_set, lambda v: und[v] | {None}).objective),
     "pagerank_python": [[k, repr(v)] for k, v in pagerank(node_set, nb, backend="python").solution.items()],
     "pagerank_auto": [[k, repr(v)] for k, v in pagerank(node_set, nb).solution.items()],
     "kcore": sorted(kcore_decomposition(node_set, nb).solution.items()),

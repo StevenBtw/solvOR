@@ -45,7 +45,7 @@ Two variants available:
 
 Both use the Rust backend when it is installed (pagerank() maps nodes to
 integers first); pass backend="python" for the pure Python implementation.
-The backends agree to floating point rounding.
+Both backends return the same scores and iteration counts, bit for bit.
 
 Works with any hashable node type. Results are deterministic when nodes are
 mutually comparable: nodes are processed in sorted order. For incoming edges

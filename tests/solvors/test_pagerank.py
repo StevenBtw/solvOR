@@ -309,6 +309,8 @@ class TestPageRankInvalidInputParity:
 
     @pytest.mark.parametrize("backend", _BACKENDS)
     def test_negative_and_out_of_range_endpoints_are_ignored(self, backend):
-        dirty = pagerank_edges(3, [(0, 1), (1, 2), (2, 0), (5, 1), (1, -1), (-2, 0)], backend=backend)
+        dirty = pagerank_edges(
+            3, [(0, 1), (1, 2), (2, 0), (5, 1), (1, -1), (-2, 0), (2**64, 0), (0, -(2**70))], backend=backend
+        )
         clean = pagerank_edges(3, [(0, 1), (1, 2), (2, 0)], backend="python")
         assert dirty.solution == clean.solution

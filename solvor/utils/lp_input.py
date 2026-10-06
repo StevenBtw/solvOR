@@ -129,11 +129,11 @@ def normalize_rows(
 def normalize_bounds(
     n: int, lb: Sequence[float] | None = None, ub: Sequence[float] | None = None
 ) -> tuple[list[float], list[float]]:
-    """Validate variable bounds; defaults 0.0 and +inf."""
-    return _bounds(lb, n, 0.0, "lb"), _bounds(ub, n, inf, "ub")
+    """Validate variable bounds; defaults 0.0 and +inf. lb = +inf or ub = -inf leaves no value, so it is rejected."""
+    return _bounds(lb, n, 0.0, "lb", inf), _bounds(ub, n, inf, "ub", -inf)
 
 
-def _bounds(values: Sequence[float] | None, n: int, default: float, name: str) -> list[float]:
+def _bounds(values: Sequence[float] | None, n: int, default: float, name: str, impossible: float) -> list[float]:
     if values is None:
         return [default] * n
     out = [float(v) for v in values]
@@ -141,4 +141,6 @@ def _bounds(values: Sequence[float] | None, n: int, default: float, name: str) -
         raise ValueError(f"Length mismatch: expected {n} elements in {name}, got {len(out)}")
     if any(isnan(v) for v in out):
         raise ValueError(f"{name} contains NaN")
+    if impossible in out:
+        raise ValueError(f"{name} contains {impossible}")
     return out

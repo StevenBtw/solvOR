@@ -13,8 +13,8 @@ mod types;
 /// solvOR Rust acceleration module.
 ///
 /// This module provides optimized Rust implementations of solvOR's
-/// graph algorithms. Functions have the same signatures as their
-/// Python counterparts for seamless integration.
+/// graph algorithms and the LP simplex kernel. Functions and classes have the
+/// same signatures as their Python counterparts for seamless integration.
 #[pymodule]
 fn _solvor_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Shortest paths

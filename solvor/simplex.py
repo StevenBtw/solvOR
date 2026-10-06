@@ -12,7 +12,8 @@ manipulation. Simplex is a journey through space.
     result = solve_lp(c, A, b, minimize=False)  # maximize
 
     # sparse rows, other senses and variable bounds
-    result = solve_lp(c, [{0: 1.0, 2: 3.0}, {1: 1.0}], [4.0, 2.0], senses=[">=", "="], lb=[0, -1, 0], ub=[5, 1, None])
+    result = solve_lp(c, [{0: 1.0, 2: 3.0}, {1: 1.0}], [4.0, 2.0], senses=[">=", "="],
+                      lb=[0, -1, 0], ub=[5, 1, float("inf")])
 
 How it works: starts at a vertex of the feasible polytope (phase 1 finds one if
 needed). Each iteration pivots to an adjacent vertex with better objective value.
@@ -54,6 +55,7 @@ from typing import Literal
 from solvor.lp_engine import solve_cold
 from solvor.types import Result, Status  # noqa: F401  (Status stays importable from here, as in 0.6.2)
 from solvor.utils.lp_input import normalize_lp
+from solvor.utils.validate import check_non_negative
 
 __all__ = ["solve_lp"]
 
@@ -72,6 +74,7 @@ def solve_lp(
     backend: Literal["auto", "rust", "python"] | None = None,
 ) -> Result:
     """Solve linear program: minimize c @ x subject to A @ x (senses) b, lb <= x <= ub."""
+    check_non_negative(eps, name="eps")
     prob = normalize_lp(c, A, b, lb=lb, ub=ub, senses=senses)
     cost = [float(v) for v in c]
     return solve_cold(prob, cost, prob.lb, prob.ub, minimize=minimize, eps=eps, max_iter=max_iter, backend=backend)

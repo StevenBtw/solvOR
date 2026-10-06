@@ -87,3 +87,30 @@ class TestSensesAndBounds:
         prob = normalize_lp([1], [[1]], [1], lb=[2], ub=[1])
         assert prob.lb == [2.0]
         assert prob.ub == [1.0]
+
+
+class TestImpossibleBounds:
+    """A lower bound of +inf or an upper bound of -inf leaves no value for the variable."""
+
+    def test_lower_bound_plus_infinity_is_rejected(self):
+        with pytest.raises(ValueError, match="lb contains inf"):
+            normalize_lp([1, 1], [[1, 1]], [4], lb=[0, math.inf])
+
+    def test_upper_bound_minus_infinity_is_rejected(self):
+        with pytest.raises(ValueError, match="ub contains -inf"):
+            normalize_lp([1, 1], [[1, 1]], [4], ub=[-math.inf, 5])
+
+    def test_solvers_reject_them_too(self):
+        from solvor import MilpModel, solve_lp, solve_milp
+
+        with pytest.raises(ValueError, match="lb contains inf"):
+            solve_lp([1], [[1]], [4], lb=[math.inf])
+        with pytest.raises(ValueError, match="ub contains -inf"):
+            solve_milp([1], [[1]], [4], [0], ub=[-math.inf])
+        with pytest.raises(ValueError, match="lb contains inf"):
+            MilpModel(1, lb=[math.inf])
+
+    @pytest.mark.parametrize("name", ["lb", "ub"])
+    def test_nan_bounds_are_rejected(self, name):
+        with pytest.raises(ValueError, match=f"{name} contains NaN"):
+            normalize_lp([1, 1], [[1, 1]], [4], **{name: [0, math.nan]})

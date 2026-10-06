@@ -110,7 +110,7 @@ class TestMilpModel:
             MilpModel(2, binary=[2])
 
     def test_changing_eps_between_solves(self):
-        """The kept LP is tied to eps and max_iter; a different value rebuilds it."""
+        """The kept LP is tied to max_iter (its tolerance is fixed); other eps or max_iter values still solve."""
         model = MilpModel(5, binary=range(5))
         model.add_rows(_odd_cycle(5), [1.0] * 5)
         assert model.solve([1.0] * 5, minimize=False).objective == 2.0
@@ -188,6 +188,24 @@ class TestSolveLexicographic:
         model.add_rows([{0: 1}], [2], [">="])
         result = solve_lexicographic(model, [[1], [1]])
         assert result.status == Status.INFEASIBLE
+
+
+class TestLexicographicInput:
+    def test_objectives_without_a_truth_value(self):
+        """numpy arrays have no truth value; the empty check must use len()."""
+
+        class Objectives(list):
+            def __bool__(self):
+                raise ValueError("the truth value of an array is ambiguous")
+
+        model = MilpModel(2, binary=range(2))
+        model.add_rows([{0: 1.0, 1: 1.0}], [1.0])
+        assert solve_lexicographic(model, Objectives([[1.0, 2.0]]), minimize=False).objective == 2.0
+
+    def test_no_objectives_is_an_error(self):
+        model = MilpModel(2, binary=range(2))
+        with pytest.raises(ValueError, match="at least one objective"):
+            solve_lexicographic(model, [])
 
 
 class TestLexicographicStatus:

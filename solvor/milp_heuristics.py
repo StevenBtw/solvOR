@@ -125,6 +125,9 @@ def round_binary(lp_solution, int_set, c, prob, cols, lower, upper, minimize, ep
             move(j_off, 0.0)
             improved = True
 
+    # The incremental activities can drift (cancellation next to huge coefficients): recheck from scratch
+    if not is_feasible(sol, prob, lower, upper, int_set, eps):
+        return None
     return tuple(sol)
 
 

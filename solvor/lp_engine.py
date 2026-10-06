@@ -4,7 +4,8 @@ Dense-tableau LP engine shared by solve_lp, solve_milp and MilpModel.
 Internal module. Three layers:
 
     Standardized   maps x (lb <= x <= ub, rows with senses) onto columns
-                   y >= lo with optional upper bounds and rows "<=" or "="
+                   y >= lo with optional upper bounds and rows "<=" or "=",
+                   scaling rows and columns whose coefficients differ by 2**8 or more
     BoundedSimplex the tableau: primal simplex (phase 1 and 2), dual simplex,
                    in-place bound changes and row additions; the Rust extension
                    has a port with the same methods and bit-identical results
@@ -22,7 +23,7 @@ deterministic and cycle-free.
 
 from array import array
 from collections.abc import Sequence
-from math import inf
+from math import frexp, inf, ldexp
 from typing import Literal
 
 from solvor.rust import get_backend, get_rust_module
@@ -32,12 +33,43 @@ from solvor.utils.lp_input import LinearProblem
 __all__ = ["BoundedSimplex", "Standardized", "WarmLP", "kernel_class", "solve_cold"]
 
 
+# Rows and columns whose coefficients differ by a factor of 2**8 or more get scaled
+SCALE_THRESHOLD = 8
+
+
+def _spread(magnitudes):
+    return frexp(max(magnitudes))[1] - frexp(min(magnitudes))[1]
+
+
+def _pow2_scale(magnitudes):
+    # 2**-k brings the geometric mean of the largest and smallest magnitude near 1. Powers of two scale without
+    # rounding, and frexp exponents are exact on every platform.
+    if _spread(magnitudes) < SCALE_THRESHOLD:
+        return 1.0
+    k = (frexp(max(magnitudes))[1] + frexp(min(magnitudes))[1] - 2) // 2
+    return ldexp(1.0, -min(max(k, -1000), 1000))  # subnormal or huge coefficients would overflow ldexp
+
+
+def _column_scale(magnitudes, span):
+    # A scaled column's range stays in [1, 2**11): a smaller one would read as a fixed column, and a factor far
+    # below 1 would shrink the column's cost under eps. Unbounded columns count as range 1.
+    factor = _pow2_scale(magnitudes) if magnitudes else 1.0
+    if factor == 1.0:
+        return 1.0
+    top = ldexp(1.0, frexp(span)[1] - 1) if 0.0 < span < inf else 1.0
+    return min(max(factor, ldexp(top, -10)), top)
+
+
 class Standardized:
     """Maps x with lb <= x <= ub onto columns y and rows onto '<=' or '='.
 
-    x = lb + y when lb is finite, x = ub - y when only ub is finite, and
-    x = y_plus - y_minus when x is free. '>=' rows are negated. The mapping is
-    fixed when it is built; later bound changes become bounds on y (see y_bounds).
+    x = lb + s*y when lb is finite, x = ub - s*y when only ub is finite, and
+    x = s*(y_plus - y_minus) when x is free. '>=' rows are negated. s is a power
+    of two that brings the coefficients of a column whose coefficients differ by
+    2**8 or more nearer 1, and such rows are scaled the same way; other rows and
+    columns keep the factor 1, so well-scaled models are solved exactly as without
+    scaling. The mapping is fixed when it is built; later bound changes become
+    bounds on y (see y_bounds).
     """
 
     def __init__(self, prob: LinearProblem, lb: Sequence[float], ub: Sequence[float]):
@@ -47,13 +79,20 @@ class Standardized:
         self.second = [-1] * n
         self.offset = [0.0] * n
         self.sign = [1.0] * n
+        magnitudes: list[list[float]] = [[] for _ in range(n)]
+        for row in prob.rows:
+            for j, a in row.items():
+                if a != 0.0:
+                    magnitudes[j].append(abs(a))
+        self.scale = [_column_scale(magnitudes[j], ub[j] - lb[j]) for j in range(n)]
+        self.badly_scaled = any(_spread(m) >= SCALE_THRESHOLD for m in magnitudes if m)
         self.upper: list[float] = []
         for j in range(n):
             lo, hi = lb[j], ub[j]
             self.first[j] = len(self.upper)
             if lo > -inf:
                 self.offset[j] = lo
-                self.upper.append(hi - lo)
+                self.upper.append((hi - lo) / self.scale[j])
             elif hi < inf:
                 self.offset[j], self.sign[j] = hi, -1.0
                 self.upper.append(inf)
@@ -83,10 +122,16 @@ class Standardized:
         for j, a in row.items():
             r -= a * self.offset[j]
             p = self.first[j]
-            new[p] = new.get(p, 0.0) + a * self.sign[j]
+            new[p] = new.get(p, 0.0) + a * self.sign[j] * self.scale[j]
             q = self.second[j]
             if q >= 0:
-                new[q] = new.get(q, 0.0) - a
+                new[q] = new.get(q, 0.0) - a * self.scale[j]
+        magnitudes = [abs(v) for v in new.values() if v != 0.0]
+        f = _pow2_scale(magnitudes) if magnitudes else 1.0
+        if f != 1.0:
+            self.badly_scaled = True
+            new = {k: v * f for k, v in new.items()}
+            r *= f
         if sense == ">=":
             return {k: -v for k, v in new.items()}, -r, False
         return new, r, sense == "="
@@ -94,19 +139,20 @@ class Standardized:
     def map_cost(self, cost: Sequence[float]) -> list[float]:
         out = [0.0] * self.n_cols
         for j in range(self.n):
-            out[self.first[j]] += cost[j] * self.sign[j]
+            out[self.first[j]] += cost[j] * self.sign[j] * self.scale[j]
             if self.second[j] >= 0:
-                out[self.second[j]] -= cost[j]
+                out[self.second[j]] -= cost[j] * self.scale[j]
         return out
 
     def y_bounds(self, j: int, lb: float, ub: float) -> tuple[float, float] | None:
         """Bounds on x_j's column, or None if this mapping cannot express them (rebuild needed)."""
         if self.second[j] >= 0:
             return None
+        s = self.scale[j]
         if self.sign[j] > 0:
-            lo, hi = lb - self.offset[j], ub - self.offset[j]
+            lo, hi = (lb - self.offset[j]) / s, (ub - self.offset[j]) / s
         else:
-            lo, hi = self.offset[j] - ub, self.offset[j] - lb
+            lo, hi = (self.offset[j] - ub) / s, (self.offset[j] - lb) / s
         if lo == -inf:
             return None
         return lo, hi
@@ -114,9 +160,9 @@ class Standardized:
     def to_x(self, y: Sequence[float]) -> list[float]:
         x = []
         for j in range(self.n):
-            v = self.offset[j] + self.sign[j] * y[self.first[j]]
+            v = self.offset[j] + self.sign[j] * self.scale[j] * y[self.first[j]]
             if self.second[j] >= 0:
-                v -= y[self.second[j]]
+                v -= self.scale[j] * y[self.second[j]]
             x.append(v)
         return x
 
@@ -126,6 +172,8 @@ class BoundedSimplex:
 
     Columns are [structural | slack | artificial | slacks of added rows], the
     right-hand side sits at index `width`, and the objective row is T[m].
+    rust/src/algorithms/simplex.rs mirrors this class operation for operation:
+    change both, or the backends stop returning identical results.
     """
 
     def __init__(
@@ -496,8 +544,9 @@ class WarmLP:
     left a reduced cost slightly wrong). It rebuilds from scratch when a warm start
     is not possible or not trustworthy: a column mapping that cannot express the
     new bounds, a dual-infeasible unbounded column, an iteration limit, a warm
-    UNBOUNDED, too many pivots since the last build (numerical drift), or a
-    solution that fails the final feasibility check.
+    UNBOUNDED, a warm INFEASIBLE in a badly scaled model, too many pivots since
+    the last build (numerical drift), or a solution that fails the final
+    feasibility check.
     """
 
     REBUILD_PIVOTS = 2000
@@ -594,6 +643,8 @@ class WarmLP:
         if status == Status.MAX_ITER:
             return None
         if status == Status.INFEASIBLE:
+            if std.badly_scaled:
+                return None  # a drifted tableau of a badly scaled model can show a false infeasibility
             self.warm_solves += 1
             return Result(tuple([0.0] * self.n), inf if minimize else -inf, iters, iters, Status.INFEASIBLE)
         if cost_y != self.cost_y:
@@ -601,7 +652,7 @@ class WarmLP:
             self.cost_y = cost_y
         # Always: a dual pivot on a tiny element can leave a reduced cost slightly
         # negative, and the primal pass is a no-op when the basis is already optimal
-        status, it = lp.primal(self.max_iter)
+        status, it = lp.primal(self.max_iter - iters)  # one budget for both passes
         iters += it
         if status in (Status.MAX_ITER, Status.UNBOUNDED):
             return None  # an unbounded ray from a drifted tableau is not trusted: rebuild
@@ -625,7 +676,7 @@ class WarmLP:
         return Result(tuple(x), sum(cj * xj for cj, xj in zip(c, x)), iters, iters, status)
 
     def _feasible(self, x: Sequence[float]) -> bool:
-        tol = 1e-6
+        tol = max(1e-6, self.eps)  # never stricter than the simplex's own feasibility tolerance
         for j in range(self.n):
             if x[j] < self.lb[j] - tol * (1 + abs(self.lb[j])) or x[j] > self.ub[j] + tol * (1 + abs(self.ub[j])):
                 return False

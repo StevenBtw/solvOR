@@ -101,7 +101,45 @@ def _selection(seed):
     return n, rows, objectives
 
 
+def _assignment(seed):
+    """Generalized assignment: unit rows next to capacity rows, small costs with many ties."""
+    rng = random.Random(seed)
+    agents, jobs = rng.randint(2, 4), rng.randint(4, 9)
+    n = agents * jobs
+    rows, rhs, senses = [], [], []
+    for j in range(jobs):
+        rows.append({a * jobs + j: 1.0 for a in range(agents)})
+        rhs.append(1.0)
+        senses.append("=")
+    for a in range(agents):
+        weights = {a * jobs + j: float(rng.randint(2, 9)) for j in range(jobs)}
+        rows.append(weights)
+        rhs.append(float(int(sum(weights.values()) / agents * 1.15)))
+        senses.append("<=")
+    return [float(rng.randint(1, 4)) for _ in range(n)], rows, rhs, senses
+
+
 class TestMilpGolden:
+    @pytest.mark.parametrize("backend", BACKENDS)
+    def test_search_counts_of_well_scaled_models(self, backend):
+        """Node and LP iteration counts too: well-scaled models must not change in any output field."""
+        out = []
+        for seed in range(3):
+            c, rows, rhs = _knapsack(seed)
+            r = solve_milp(c, rows, rhs, binary=range(len(c)), minimize=False, backend=backend)
+            out.append([r.status.name, r.objective, r.solution, r.iterations, r.evaluations])
+        for seed in range(3):
+            n, rows, objectives = _selection(seed)
+            model = MilpModel(n, binary=range(n), backend=backend)
+            model.add_rows(rows, [1.0] * len(rows))
+            r = solve_lexicographic(model, objectives, minimize=False)
+            out.append([r.status.name, r.objective, r.solution, r.iterations, r.evaluations])
+        for seed in range(20):
+            c, rows, rhs, senses = _assignment(seed)
+            r = solve_milp(c, rows, rhs, binary=range(len(c)), senses=senses, backend=backend)
+            out.append([r.status.name, r.objective, r.solution, r.iterations, r.evaluations])
+        assert _digest(out) == "6af56692afca5614"
+
     @pytest.mark.parametrize("backend", BACKENDS)
     def test_knapsacks(self, backend):
         out = []

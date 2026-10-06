@@ -79,9 +79,9 @@ def louvain[S](
     index = {v: i for i, v in enumerate(node_list)}
     adj: list[dict[int, float]] = [{} for _ in range(n)]
     for i, v in enumerate(node_list):
-        for w in canonical_order(neighbors(v)):
-            j = index.get(w)
-            if j is not None and j != i and j not in adj[i]:
+        # Sort ids, not neighbor values: values that are not nodes may not be comparable
+        for j in sorted({index[w] for w in neighbors(v) if w in index}):
+            if j != i and j not in adj[i]:
                 adj[i][j] = 1.0
                 adj[j][i] = 1.0
 

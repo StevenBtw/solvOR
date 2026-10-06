@@ -31,3 +31,8 @@ def test_uninstalled_source_tree_does_not_raise():
     )
     proc = subprocess.run([sys.executable, "-c", script], capture_output=True, text=True, check=True)
     assert proc.stdout.strip() == "0.0.0+unknown"
+
+
+def test_version_lookup_leaves_no_names_behind():
+    assert "PackageNotFoundError" not in dir(solvor)
+    assert "_dist_version" not in dir(solvor)

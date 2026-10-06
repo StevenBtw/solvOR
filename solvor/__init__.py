@@ -56,6 +56,7 @@ try:
     __version__ = _dist_version("solvor")
 except PackageNotFoundError:  # imported from a source tree that was never installed
     __version__ = "0.0.0+unknown"
+del PackageNotFoundError, _dist_version
 
 __all__ = [
     "solve_lp",

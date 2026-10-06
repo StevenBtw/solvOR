@@ -1,5 +1,6 @@
 """Tests for the MILP (mixed-integer linear programming) solver."""
 
+import itertools
 import math
 import random
 
@@ -925,15 +926,18 @@ class TestWarmBranchAndBound:
 
     def test_branching_on_free_integer_variables(self):
         """Free variables are split into two columns; branching on them rebuilds the LP (cold path)."""
+        from solvor import MilpModel
+
         inf = float("inf")
         # maximize x + y, x + y <= 3.5, x - y <= 0.5, both integer and free
-        result = solve_milp(
-            [1, 1], [[1, 1], [1, -1]], [3.5, 0.5], [0, 1], minimize=False, lb=[-inf, -inf], ub=[inf, inf]
-        )
+        model = MilpModel(2, integers=[0, 1], lb=[-inf, -inf], ub=[inf, inf])
+        model.add_rows([[1, 1], [1, -1]], [3.5, 0.5])
+        result = model.solve([1, 1], minimize=False)
         assert result.status == Status.OPTIMAL
         assert result.objective == 3.0
         x, y = result.solution
         assert x + y <= 3.5 and x - y <= 0.5
+        assert model._lp.cold_solves == 3  # the root and both children
 
 
 class TestPresolveAndRootEdgeCases:
@@ -1094,3 +1098,314 @@ class TestRustBackendMatchesPython:
                 return solve_lp(c, rows, b, senses=senses, ub=ub, minimize=minimize, backend=backend)
 
             assert _result_bits(run("rust")) == _result_bits(run("python"))
+
+
+class TestRoundingHeuristicFeasibility:
+    def test_flip_phase_rechecks_rows_from_scratch(self):
+        """Row activities updated move by move lose precision next to huge coefficients."""
+        from solvor.milp_heuristics import is_feasible, round_binary
+        from solvor.utils.lp_input import LinearProblem
+
+        rows = [{0: -8.0, 1: -500000000.0, 2: 29.7, 4: 800000000.0, 5: -5e17}]
+        prob = LinearProblem(6, rows, [-7.748617323482724], ["<="], [0.0] * 6, [1.0] * 6)
+        lp_solution = [0.2099488293152899, 0.9408729203857055, 0.3400624281282216]
+        lp_solution += [0.43758774543069257, 0.46682868187470317, 0.7282506053122182]
+        c = [4.069278007872276, 1.7833431329349612, -2.7511507368031674]
+        c += [-3.2224847655908393, 3.070239286758948, -2.159208031527664]
+        bounds = [0.0] * 6, [1.0] * 6
+        rounded = round_binary(lp_solution, list(range(6)), c, prob, prob.columns(), *bounds, True, 1e-6)
+        assert rounded is None or is_feasible(rounded, prob, *bounds, set(range(6)), 1e-6)
+
+
+def _brute_force(c, rows, b, senses, lb, ub, minimize):
+    best = None
+    for x in itertools.product(*(range(lo, hi + 1) for lo, hi in zip(lb, ub))):
+        if all(_row_holds(sum(a * x[j] for j, a in row.items()), bi, s) for row, bi, s in zip(rows, b, senses)):
+            value = sum(cj * xj for cj, xj in zip(c, x))
+            if best is None or (value < best if minimize else value > best):
+                best = value
+    return best
+
+
+def _row_holds(activity, rhs, sense, tol=1e-6):
+    if sense == "<=":
+        return activity <= rhs + tol
+    if sense == ">=":
+        return activity >= rhs - tol
+    return abs(activity - rhs) <= tol
+
+
+class TestRandomMilpsAgainstEnumeration:
+    """Small pure-integer models with every sense and general bounds, checked against brute force."""
+
+    @pytest.mark.parametrize("seed", range(3))
+    def test_optimum_matches_enumeration(self, seed):
+        rng = random.Random(seed)
+        for _ in range(80):
+            n, m = rng.randint(1, 4), rng.randint(1, 4)
+            lb = [rng.randint(-2, 1) for _ in range(n)]
+            ub = [lo + rng.randint(0, 3) for lo in lb]
+            rows = [
+                {j: round(rng.uniform(-5, 5), 1) for j in range(n) if rng.random() < 0.8} or {0: 1.0} for _ in range(m)
+            ]
+            senses = [rng.choice(("<=", ">=", "=")) for _ in range(m)]
+            point = [rng.randint(lo, hi) for lo, hi in zip(lb, ub)]
+            b = []
+            for row, sense in zip(rows, senses):
+                activity = sum(a * point[j] for j, a in row.items())
+                slack = 0.0 if sense == "=" else round(rng.uniform(0, 3), 2)
+                b.append(round(activity + (slack if sense == "<=" else -slack), 6))
+            c = [round(rng.uniform(-5, 5), 1) for _ in range(n)]
+            minimize = rng.random() < 0.5
+
+            best = _brute_force(c, rows, b, senses, lb, ub, minimize)
+            result = solve_milp(c, rows, b, list(range(n)), senses=senses, lb=lb, ub=ub, minimize=minimize)
+            assert result.status == Status.OPTIMAL
+            assert abs(result.objective - best) <= 1e-6 * (1 + abs(best))
+            for row, bi, sense in zip(rows, b, senses):
+                assert _row_holds(sum(a * result.solution[j] for j, a in row.items()), bi, sense)
+
+
+class TestToleranceValidation:
+    @pytest.mark.parametrize("backend", ["python", "rust"] if rust_available() else ["python"])
+    def test_negative_eps_is_rejected(self, backend):
+        """Every backend answers a negative tolerance the same way: with a clear error."""
+        with pytest.raises(ValueError, match="eps cannot be negative"):
+            solve_lp([1, 1], [{0: 1.0}, {1: 1.0}], [2.0, 3.0], minimize=False, eps=-1e-9, backend=backend)
+        with pytest.raises(ValueError, match="eps cannot be negative"):
+            solve_milp([1, 1], [{0: 1.0}, {1: 1.0}], [2.0, 3.0], [0], minimize=False, eps=-1e-9, backend=backend)
+
+
+def _rows_hold_scip(x, rows, senses, b, tol=1e-6):
+    for row, sense, bi in zip(rows, senses, b):
+        activity = sum(a * x[j] for j, a in row.items())
+        slack = tol * max(1.0, abs(activity), abs(bi))
+        if (sense != ">=" and activity > bi + slack) or (sense != "<=" and activity < bi - slack):
+            return False
+    return True
+
+
+def _solve_binary_and_check(rows, senses, b, c, minimize, optimum):
+    result = solve_milp(c, rows, b, binary=range(len(c)), senses=senses, minimize=minimize)
+    assert result.status == Status.OPTIMAL
+    assert _rows_hold_scip(result.solution, rows, senses, b)
+    assert abs(result.objective - optimum) <= 1e-9 * (1 + abs(optimum))
+    return result
+
+
+class TestBadlyScaledModels:
+    """Big-M style models: coefficients from 0.1 to millions in one model (rows checked with SCIP's rule)."""
+
+    def test_lp_tolerance_does_not_hide_the_optimum(self):
+        """The LP relaxation used eps = 1e-6 and stopped at x0 = 4.7e-7 (objective 0 instead of 2.52)."""
+        c = [2.5163104287499944, -4.7405318243649806]
+        _solve_binary_and_check([{0: -5e6, 1: -3.3}], ["<="], [-2.3514730439064113], c, False, 2.5163104287499944)
+
+    def test_snapping_does_not_break_a_row(self):
+        """x0 = 1e-6 counted as integral; snapped to 0 it left x1 = 1 against x1 = 1e6 * x0."""
+        c = [-2.562093184840478, -1.0517327680030952]
+        result = _solve_binary_and_check([{0: -1e6, 1: 1.0}], ["="], [0.0], c, True, 0.0)
+        assert result.solution == (0.0, 0.0)
+
+    def test_warm_start_is_checked_after_snapping(self):
+        """A warm start integral within eps (x0 = 1e-6) must not become the snapped, infeasible incumbent (0, 1)."""
+        c = [-2.562093184840478, -1.0517327680030952]
+        result = solve_milp(c, [{0: -1e6, 1: 1.0}], [0.0], binary=range(2), senses=["="], warm_start=[1e-6, 1.0])
+        assert result.solution == (0.0, 0.0)
+
+    def test_heuristic_incumbents_are_checked_after_snapping(self):
+        """The rounding heuristic kept x2 = 4.3e-7, which the snap turned into a row miss of 3."""
+        rows = [{0: 5.0, 1: -1e6, 2: -7e6, 3: -2.0, 4: -2e5, 5: -1e6}]
+        c = [2.8441012261202054, -4.524021736073057, -3.7715374036018523, 0.5481142956078688]
+        c += [-0.4958735098908509, -3.21847585015014, 3.896952037963757, 3.7952544725896207]
+        _solve_binary_and_check(rows, ["="], [0.0], c, False, 7.692206510553378)
+
+    def test_warm_infeasible_nodes_are_confirmed(self):
+        """With the 1e-9 LP tolerance the warm dual simplex declared a feasible child node infeasible."""
+        rows = [
+            {1: -6e6, 3: 3e6, 4: 8e6, 5: 4e6, 6: 9.0},
+            {1: 5e6, 2: -0.4, 4: -6.6, 6: -9e5},
+            {0: 3.0, 2: -0.5, 3: 5e6, 4: 3e5, 5: -1.0, 6: -5e6},
+        ]
+        b = [9000009.308447689, 4099993.0, 300003.8795286772]
+        c = [-2.145834072845918, -1.4808880618828324, 4.052435658348175, 0.5395145944051594]
+        c += [0.9075918846188857, 0.6795827279977615, -2.7891935471904272]
+        _solve_binary_and_check(rows, ["<=", "=", "<="], b, c, True, -1.4558881389521168)
+
+    def test_branching_makes_progress_past_a_bound(self):
+        """x4 = 1.00002 above its bound 1 made a child equal to its parent, repeated until max_nodes."""
+        rows = [
+            {1: 0.4},
+            {1: 0.2, 2: -10000.0, 3: 6.0, 4: 3.0},
+            {0: 0.5, 1: -2.0, 2: 16.5, 3: 200000.0, 4: -200000.0},
+            {1: 0.6000000000000001, 2: -23.099999999999998, 3: -700000.0},
+        ]
+        b = [-2.256291121305105, -9990.8, 12.96820133207468, -700022.5]
+        c = [2.9311927588536255, 4.207579188178338, 1.1890808182541441, -4.8816307226265305, -2.210998079058201]
+        result = solve_milp(c, rows, b, binary=range(5), senses=[">=", "=", ">=", "="], minimize=False)
+        assert result.iterations < 100
+        assert _rows_hold_scip(result.solution, rows, [">=", "=", ">=", "="], b)
+        assert abs(result.objective - 1.235223963601376) <= 1e-9 * 2.3
+        # The optimum is found, but from an LP point outside its bound: not proven, and the error says so
+        assert result.status == Status.FEASIBLE and "numerical" in result.error
+
+    def test_lp_points_outside_their_bounds_are_not_proven(self):
+        """The root LP put x3 at -0.0077 (bound 0); clamped, it gave a feasible point that is not the optimum."""
+        rows = [
+            {0: -3.0, 4: -700000.0, 5: 50000.0, 6: -0.2, 7: 0.4},
+            {2: 6.0, 3: 50000.0, 4: -6.0, 5: 7.0, 6: 6.6},
+            {2: 0.6000000000000001, 3: -0.1, 4: -400000.0, 5: -0.5, 6: -300000.0, 7: 5.0},
+            {0: -3.3, 2: 40000.0, 4: 600000.0, 5: 10000.0, 7: -0.1},
+        ]
+        senses, b = ["=", ">=", "<=", "="], [-649999.6, 6.810339198790282, -399993.234756114, 649999.9]
+        c = [-3.6184461677239432, -3.9164905819668583, 1.9161305521404461, -2.0076431776637294]
+        c += [-1.8179276355594642, 3.0330916243635713, 2.7896169502043424, -0.43219699544256684]
+        result = solve_milp(c, rows, b, binary=range(8), senses=senses)
+        optimum = -3.2250362141286013
+        if result.status == Status.OPTIMAL:
+            assert abs(result.objective - optimum) <= 1e-9 * (1 + abs(optimum))
+        else:
+            assert "numerical" in result.error
+
+    def test_dropped_nodes_are_reported(self):
+        """An integral LP point that violates a row cannot be judged: no OPTIMAL claim, and the error says why."""
+        rows = [
+            {3: -7.0, 4: -3e6, 7: -23.099999999999998},
+            {0: -7.0, 1: 1e6, 4: -4e6, 5: 8e5, 6: 6.6, 7: 23.099999999999998},
+            {0: 3e6, 1: -4.0, 2: 13.2, 3: -6.6, 5: 7.0, 6: 5e6, 7: -16.5},
+        ]
+        b = [-3000030.1, -2199983.9, 2999993.1]
+        c = [3.280624190410572, -1.3433818029543412, -3.895062008925081, -3.3763548817312694]
+        c += [4.234166628804495, -4.371006300243073, -4.55088572799649, 1.7420543589916377]
+        result = solve_milp(c, rows, b, binary=range(8), senses=["=", "=", "="])
+        assert result.status != Status.OPTIMAL
+        assert "numerical" in result.error
+        assert result.solution is None or _rows_hold_scip(result.solution, rows, ["=", "=", "="], b)
+
+
+def _binary_optimum(rows, senses, b, c, minimize, tol):
+    best = None
+    for x in itertools.product((0.0, 1.0), repeat=len(c)):
+        if _rows_hold_scip(x, rows, senses, b, tol):
+            value = sum(cj * xj for cj, xj in zip(c, x))
+            if best is None or (value < best if minimize else value > best):
+                best = value
+    return best
+
+
+def _big_m_model(rng, top):
+    """Binary model with coefficients from 0.1 to about 9 * top around a known feasible point."""
+    n, m = rng.randint(2, 8), rng.randint(1, 4)
+    magnitudes = [1.0, 0.1, 3.3, top / 10, top]
+    rows = [
+        {j: rng.choice((-1, 1)) * rng.choice(magnitudes) * rng.randint(1, 9) for j in range(n) if rng.random() < 0.7}
+        or {0: 1.0}
+        for _ in range(m)
+    ]
+    senses = [rng.choice(("<=", ">=", "=")) for _ in range(m)]
+    point = [float(rng.randint(0, 1)) for _ in range(n)]
+    b = []
+    for row, sense in zip(rows, senses):
+        activity = sum(a * point[j] for j, a in row.items())
+        b.append(activity + (0.0 if sense == "=" else rng.uniform(0, 3) * (1 if sense == "<=" else -1)))
+    return rows, senses, b, [rng.uniform(-5, 5) for _ in range(n)]
+
+
+class TestScaledBigMModels:
+    def test_small_costs_next_to_big_m_coefficients(self):
+        """A tie-breaking cost of 1e-4 on a column with a 1e6 coefficient must not vanish under the tolerance."""
+        result = solve_milp([1e-4, 0.0], [{0: 1e6, 1: 1.0}], [2e6], binary=[0], ub=[1, 1], minimize=False)
+        assert result.solution == (1.0, 0.0) and result.objective == 1e-4
+        c = [4.8263813017791174e-05, -0.0002651055823561933, -0.8301041915060114]
+        c += [-0.0003008426727270034, 1.4081045512398038, -2.5690099435366245e-05]
+        rows = [
+            {0: 6e5, 4: -9.899999999999999, 5: -0.1},
+            {0: 0.4, 1: 6e5, 2: 6.0, 3: -7e5, 4: -0.1, 5: 0.6000000000000001},
+        ]
+        _solve_binary_and_check(rows, ["=", "<="], [-0.1, 3.353379651823708], c, True, -0.83069582986053)
+
+    def test_tiny_coefficient_columns_still_enter(self):
+        assert solve_milp([-1.0, -1.0], [{0: 1e-10, 1: 1.0}], [1.0], binary=[0, 1]).objective == -2.0
+
+    def test_roundoff_does_not_prove_infeasibility(self):
+        """Trusting every warm INFEASIBLE at the 1e-9 LP tolerance dropped a feasible node (a 5e-9 violation)."""
+        c = [-2.47472862553468, -0.7863686739024436, -4.269612210645622, 2.4424301956668506]
+        c += [-2.9460668791522893, 3.043069422804246, -1.6783578007028166, 1.8220326479211693]
+        rows = [
+            {3: -1, 4: -2, 5: -1, 6: 1},
+            {0: -1, 1: 684, 5: -451, 6: -1, 7: 1},
+            {0: 2, 2: 481, 3: 2, 5: -664},
+            {0: -1, 1: -769, 2: 1, 3: 2, 4: 556, 6: 607},
+        ]
+        b = [1.6123537276187543, 233.0, -662.3149863271886, -160.0]
+        _solve_binary_and_check(rows, ["<=", "=", ">=", "="], b, c, True, 4.842805791787006)
+
+    def test_scaled_lp_finds_the_feasible_point(self):
+        """Unscaled, coefficients from 0.1 to 9e5 in one row made every LP after branching look infeasible."""
+        rows = [
+            {0: 16.5, 1: 9.0, 2: 2.0, 3: -3.0, 4: -400000.0},
+            {0: -0.9, 1: -900000.0, 2: -23.099999999999998, 3: -0.8, 4: 30000.0},
+            {0: 19.799999999999997, 1: -20000.0, 2: 40000.0, 4: 0.1},
+        ]
+        c = [2.037460921609398, -4.231395140277435, 0.08676655689652613, 2.380731270181263, -2.394041283846513]
+        _solve_binary_and_check(rows, [">=", "=", "="], [-0.8386488309790875, 0.0, 0.0], c, False, 0.0)
+
+    def test_cuts_added_to_a_scaled_model_match_a_fresh_solve(self):
+        """Rows added after the build use the existing column factors and get their own row factor."""
+        from solvor import MilpModel
+
+        for seed in range(60):
+            rng = random.Random(seed)
+            n = 6
+            rows = [
+                {j: rng.choice((1.0, 3.3, 1e5, 1e6)) * rng.randint(1, 9) for j in range(n) if rng.random() < 0.7}
+                or {0: 1.0}
+                for _ in range(3)
+            ]
+            rhs = [sum(r.values()) * 0.5 for r in rows]
+            cut = {j: rng.choice((1.0, 2e5)) for j in range(n - 1, -1, -2)}
+            c = [rng.uniform(1, 5) for _ in range(n)]
+            model = MilpModel(n, binary=range(n))
+            model.add_rows(rows, rhs)
+            model.solve(c, minimize=False)
+            model.add_rows([cut], [sum(cut.values()) * 0.4])
+            incremental = model.solve(c, minimize=False)
+            fresh = solve_milp(c, [*rows, cut], [*rhs, sum(cut.values()) * 0.4], binary=range(n), minimize=False)
+            assert incremental.status == fresh.status
+            assert abs(incremental.objective - fresh.objective) <= 1e-9 * (1 + abs(fresh.objective))
+
+    @pytest.mark.parametrize(
+        ("top", "limit", "cost_scales"),
+        [(1e5, 2, (1.0,)), (1e6, 6, (1.0,)), (1e5, 2, (1.0, 1e-4)), (1e6, 6, (1.0, 1e-4))],
+    )
+    def test_big_m_models_against_brute_force(self, top, limit, cost_scales):
+        """No point violates a row, every wrong answer says it is not proven, and both stay rare (spec: 0.1%, 0.3%)."""
+        rng = random.Random(2026)
+        scale_rng = random.Random(7)  # separate, so cost_scales=(1.0,) keeps the original sample
+        infeasible = unexplained = explained = downgraded = 0
+        for _ in range(1000):
+            rows, senses, b, c = _big_m_model(rng, top)
+            c = [v * scale_rng.choice(cost_scales) for v in c]  # small costs: tie-breakers next to big-M rows
+            for minimize in (True, False):
+                strict = _binary_optimum(rows, senses, b, c, minimize, 1e-12)
+                loose = _binary_optimum(rows, senses, b, c, minimize, 1e-6)
+                result = solve_milp(c, rows, b, binary=range(len(c)), senses=senses, minimize=minimize)
+                if result.solution is not None and not _rows_hold_scip(result.solution, rows, senses, b):
+                    infeasible += 1
+                    continue
+                if result.solution is None:
+                    wrong = strict is not None
+                else:
+                    low, high = (loose, strict) if minimize else (strict, loose)
+                    # solve_milp's own optimality tolerance (eps, gap_tol): small costs make 1e-7 differences ties
+                    slack = 1e-6 * (1 + abs(strict if strict is not None else loose))
+                    wrong = not (low - slack <= result.objective <= high + slack)
+                if wrong:
+                    unexplained += result.error is None
+                    explained += result.error is not None
+                else:
+                    downgraded += result.error is not None
+        assert infeasible == 0
+        assert unexplained == 0
+        assert explained <= limit
+        assert downgraded <= 20  # right answers that could not be proven: FEASIBLE with an explanation
