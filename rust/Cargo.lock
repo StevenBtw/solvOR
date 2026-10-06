@@ -103,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "solvor-rs"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "pyo3",
 ]

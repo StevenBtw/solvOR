@@ -20,11 +20,11 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --extra dev
+      - name: Install dependencies (tools only, so no extension build and no Rust toolchain download)
+        run: uv sync --extra dev --no-install-project
 
       - name: Run linter
-        run: uv run ruff check solvor/
+        run: uv run --no-sync ruff check solvor/
 
   typecheck:
     runs-on: ubuntu-latest
@@ -37,11 +37,11 @@ jobs:
           enable-cache: true
           python-version: "3.14"
 
-      - name: Install dependencies
-        run: uv sync --extra dev
+      - name: Install dependencies (tools only, so no extension build and no Rust toolchain download)
+        run: uv sync --extra dev --no-install-project
 
       - name: Run type checker
-        run: uv run ty check solvor/
+        run: uv run --no-sync ty check solvor/
 
   rust-lint:
     runs-on: ubuntu-latest

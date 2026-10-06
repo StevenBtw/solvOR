@@ -7,7 +7,8 @@ on:
       - "docs/**"
       - "mkdocs.yml"
       - "solvor/**"  # Rebuild when code changes (for API docs)
-      - "pyproject.toml"  # Rebuild when version changes
+      - "pyproject.toml"  # Rebuild when docs dependencies change
+      - "rust/Cargo.toml"  # Rebuild when the version changes (its only source)
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
