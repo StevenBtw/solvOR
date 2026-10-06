@@ -1175,6 +1175,66 @@ class TestToleranceValidation:
         with pytest.raises(ValueError, match="eps cannot be negative"):
             solve_milp([1, 1], [{0: 1.0}, {1: 1.0}], [2.0, 3.0], [0], minimize=False, eps=-1e-9, backend=backend)
 
+    @pytest.mark.parametrize("eps", [math.nan, math.inf])
+    def test_non_finite_eps_is_rejected(self, eps):
+        """NaN turned every tolerance test false and inf made every point feasible: both returned wrong OPTIMALs."""
+        with pytest.raises(ValueError, match="eps must be finite"):
+            solve_lp([-1.0], [[1.0]], [1.0], eps=eps)
+        with pytest.raises(ValueError, match="eps must be finite"):
+            solve_milp([-1.0], [[1.0]], [1.0], [0], eps=eps)
+
+
+class TestSearchLimits:
+    def test_node_limit_without_a_solution_is_not_infeasible(self):
+        """Nodes are still queued, so nothing is proven: the limit is reported, not infeasibility."""
+        result = solve_milp([-1, -1], [[1.5, 1.5]], [2.5], [0, 1], heuristics=False, max_nodes=0)
+        assert result.status == Status.MAX_ITER
+        assert result.solution is None
+
+    def test_exhausted_search_without_a_solution_is_infeasible(self):
+        result = solve_milp([-1, -1], [[2, 2], [-2, -2]], [3, -3], [0, 1], heuristics=False)
+        assert result.status == Status.INFEASIBLE
+
+    def test_integral_root_is_listed_in_solutions(self):
+        result = solve_milp([-1, -1], [[1, 1]], [2], [0, 1], solution_limit=3)
+        assert result.status == Status.OPTIMAL
+        assert result.solutions == (result.solution,)
+
+
+class TestGoodIncumbents:
+    def test_a_good_warm_start_does_not_hide_the_optimum(self):
+        """The root LP stopped short of its optimum, above this warm start, which then pruned the root as OPTIMAL."""
+        c = [-5.4636895050399394e-05, 0.4394396523049169, -0.00018110723271795248]
+        c += [0.000131256340651038, -3.617974675406224e-05]
+        rows = [
+            {2: 100000.0, 3: 16.5, 4: -0.1},
+            {0: -0.1, 1: 3.3, 2: 900000.0, 4: 80000.0},
+            {0: -500000.0, 1: 0.5, 2: 0.4, 3: -60000.0},
+        ]
+        b = [-1.6482232040437539, 79998.91243002671, 0.11135838376362472]
+        result = solve_milp(c, rows, b, binary=range(5), senses=[">=", ">=", "<="], warm_start=(1, 0, 1, 0, 0))
+        assert result.status == Status.OPTIMAL
+        assert result.solution == (1.0, 0.0, 1.0, 0.0, 1.0)
+
+
+class TestRoundingFlips:
+    def test_flips_never_worsen_the_rounding(self):
+        """Minimizing, turning off a variable with a negative cost raises the objective."""
+        from solvor.milp_heuristics import round_binary
+        from solvor.utils.lp_input import LinearProblem
+
+        prob = LinearProblem(2, [{0: 1.0, 1: 1.0}], [2.0], ["<="], [0.0, 0.0], [1.0, 1.0])
+        rounded = round_binary([0.6, 0.6], [0, 1], [-1.0, 2.0], prob, prob.columns(), [0.0] * 2, [1.0] * 2, True, 1e-6)
+        assert rounded == (1.0, 0.0)
+
+
+class TestPresolveLargeRightHandSides:
+    def test_large_integral_rhs_is_not_declared_infeasible(self):
+        """Integrality cannot be judged above 1e15, which presolve used to read as an impossible row."""
+        result = solve_milp([1, 1], [[1, 1]], [1e15], [0, 1], senses=["="], ub=[1e15, 1e15])
+        assert result.status == Status.OPTIMAL
+        assert result.solution[0] + result.solution[1] == 1e15
+
 
 def _rows_hold_scip(x, rows, senses, b, tol=1e-6):
     for row, sense, bi in zip(rows, senses, b):

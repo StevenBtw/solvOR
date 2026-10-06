@@ -149,6 +149,7 @@ class TestBoundsAndSenses:
     def test_upper_bound_only(self):
         # maximize x with x <= 4 as a bound and no lower bound
         result = solve_lp([1], [], [], minimize=False, lb=[-math.inf], ub=[4])
+        assert result.status == Status.OPTIMAL
         assert result.solution == (4.0,)
 
     def test_fixed_variable(self):

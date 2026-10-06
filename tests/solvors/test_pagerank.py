@@ -1,5 +1,7 @@
 """Tests for PageRank algorithm."""
 
+import math
+
 import pytest
 
 from solvor.pagerank import pagerank, pagerank_edges
@@ -293,7 +295,9 @@ class TestPageRankInvalidInputParity:
             ({"damping": -0.5}, "damping -0.5 must be in [0, 1)"),
             ({"max_iter": 0}, "max_iter must be positive"),
             ({"max_iter": -1}, "max_iter must be positive"),
-            ({"tol": 0.0}, "tol must be positive"),
+            ({"tol": 0.0}, "tol must be positive and finite"),
+            ({"tol": math.nan}, "tol must be positive and finite"),
+            ({"tol": math.inf}, "tol must be positive and finite"),
         ],
     )
     def test_bad_parameters(self, backend, kwargs, message):

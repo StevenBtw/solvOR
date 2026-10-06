@@ -1,6 +1,7 @@
 """Tests for the LP engine's warm re-solves (bound changes, added rows, new objectives)."""
 
 import math
+import pickle
 import random
 
 import pytest
@@ -9,7 +10,7 @@ from solvor.lp_engine import BoundedSimplex, Standardized, WarmLP, kernel_class,
 from solvor.rust import rust_available
 from solvor.simplex import solve_lp
 from solvor.types import Status
-from solvor.utils.lp_input import LinearProblem
+from solvor.utils.lp_input import LinearProblem, normalize_lp
 
 
 def _cold(lp: WarmLP, c, minimize):
@@ -424,6 +425,28 @@ class TestRustKernelMatchesPython:
         with pytest.raises(IndexError, match="out of range"):
             lp.add_row({lp.width: 1.0}, 1.0, False)
 
+    def test_gain_check_matches_and_survives_pickling(self):
+        prob = normalize_lp(_LONG_STEP_C, _LONG_STEP_ROWS, _LONG_STEP_B, senses=_LONG_STEP_SENSES, ub=[1] * 5)
+        results = []
+        for backend in ("python", "rust"):
+            lp = WarmLP(prob, prob.lb, prob.ub, eps=1e-9, max_iter=1000, backend=backend)
+            results.append(_result_bits(lp.solve(_LONG_STEP_C, minimize=True)))
+        assert results[0] == results[1]
+        copy = pickle.loads(pickle.dumps(lp.lp))
+        assert copy.check_gains is True
+
+    def test_state_with_out_of_range_indices_is_rejected(self):
+        """A bad basis or row index would panic in the next solve instead of failing here."""
+        rust_kernel = kernel_class("rust")
+        lp = rust_kernel([{0: 1.0, 1: 1.0}], [4.0], [False], [10.0, 10.0], 1e-9)
+        scalars, bounds, (flipped, is_basic, basis, row_of), t = lp.__getstate__()
+        bad_basis = (flipped, is_basic, [2**60] * len(basis), row_of)
+        bad_rows = (flipped, is_basic, basis, [2**60] * len(row_of))
+        for indices in (bad_basis, bad_rows):
+            fresh = rust_kernel.__new__(rust_kernel, *lp.__getnewargs__())
+            with pytest.raises(ValueError, match="inconsistent BoundedSimplex state"):
+                fresh.__setstate__((scalars, bounds, indices, t))
+
 
 class TestKernelSelection:
     def test_python_backend_never_loads_rust(self, monkeypatch):
@@ -520,3 +543,45 @@ class TestScaling:
         result = solve_lp([1.0, -1.0], [{0: 1e6, 1: 1.0}], [-2e6 + 3], senses=[">="], lb=[-inf, -inf], ub=[inf, 5.0])
         assert result.solution == (-2.000002, 5.0)
         assert result.objective == -7.000002
+
+
+_LONG_STEP_C = [-5.4636895050399394e-05, 0.4394396523049169, -0.00018110723271795248]
+_LONG_STEP_C += [0.000131256340651038, -3.617974675406224e-05]
+_LONG_STEP_ROWS = [
+    {2: 100000.0, 3: 16.5, 4: -0.1},
+    {0: -0.1, 1: 3.3, 2: 900000.0, 4: 80000.0},
+    {0: -500000.0, 1: 0.5, 2: 0.4, 3: -60000.0},
+]
+_LONG_STEP_B = [-1.6482232040437539, 79998.91243002671, 0.11135838376362472]
+_LONG_STEP_SENSES = [">=", ">=", "<="]
+
+
+class TestGainCheck:
+    """A reduced cost within eps can hide a large gain: the slack of the third row costs only -1.1e-10 per unit,
+    but can move about 5e5 units, so stopping there loses 5.5e-5 of an objective of -2.7e-4."""
+
+    @pytest.mark.parametrize("backend", ["python", "rust"] if rust_available() else ["python"])
+    @pytest.mark.parametrize("eps", [1e-9, 1e-8])
+    def test_tiny_reduced_cost_with_a_long_step_still_enters(self, backend, eps):
+        result = solve_lp(
+            _LONG_STEP_C, _LONG_STEP_ROWS, _LONG_STEP_B, senses=_LONG_STEP_SENSES, ub=[1] * 5, eps=eps, backend=backend
+        )
+        assert result.status == Status.OPTIMAL
+        assert result.objective == -0.0002719238745224141
+
+    def test_only_badly_scaled_models_check_gains(self):
+        """Well-scaled models keep the plain eps test, so their results stay bit-identical."""
+        badly = normalize_lp(_LONG_STEP_C, _LONG_STEP_ROWS, _LONG_STEP_B, senses=_LONG_STEP_SENSES, ub=[1] * 5)
+        well = normalize_lp([1.0, 2.0], [{0: 1.0, 1: 3.0}], [4.0], ub=[1e6, 1e6])
+        for prob, expected in ((badly, True), (well, False)):
+            lp = WarmLP(prob, prob.lb, prob.ub, eps=1e-9, max_iter=1000, backend="python")
+            lp.solve(list(prob.lb), minimize=True)
+            assert lp.lp.check_gains is expected
+
+    def test_a_scaled_cut_turns_the_check_on(self):
+        prob = normalize_lp([1.0, 2.0], [{0: 1.0, 1: 3.0}], [4.0], ub=[1.0, 1.0])
+        lp = WarmLP(prob, prob.lb, prob.ub, eps=1e-9, max_iter=1000, backend="python")
+        lp.solve([1.0, 2.0], minimize=False)
+        assert lp.lp.check_gains is False
+        lp.add_row({0: 1e6, 1: 1.0}, 5e5, "<=")
+        assert lp.lp.check_gains is True

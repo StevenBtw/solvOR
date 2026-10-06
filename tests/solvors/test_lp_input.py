@@ -50,6 +50,17 @@ class TestRows:
         with pytest.raises(ValueError, match="c contains NaN"):
             normalize_lp([math.nan], [[1]], [1])
 
+    def test_infinite_costs_and_coefficients_rejected(self):
+        """Solving an infinite cost or coefficient gave OPTIMAL with a NaN objective or a violated row."""
+        with pytest.raises(ValueError, match="c contains inf"):
+            normalize_lp([math.inf, 1], [[1, 1]], [1])
+        with pytest.raises(ValueError, match="c contains -inf"):
+            normalize_lp([1, -math.inf], [[1, 1]], [1])
+        with pytest.raises(ValueError, match="A row 0 contains inf"):
+            normalize_lp([1, 1], [{0: math.inf, 1: 1}], [1])
+        with pytest.raises(ValueError, match="A row 1 contains -inf"):
+            normalize_lp([1, 1], [[1, 1], [-math.inf, 0]], [1, 1])
+
     def test_large_coefficients_warn(self):
         with pytest.warns(UserWarning, match="Large coefficients"):
             normalize_lp([1], [{0: 1e12}], [1])

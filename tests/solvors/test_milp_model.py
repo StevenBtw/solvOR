@@ -104,6 +104,10 @@ class TestMilpModel:
             model.solve([1, 2, 3])
         with pytest.raises(ValueError, match="c contains NaN"):
             model.solve([1, math.nan])
+        with pytest.raises(ValueError, match="c contains inf"):
+            model.solve([math.inf, 1])
+        with pytest.raises(ValueError, match="A row 0 contains inf"):
+            model.add_rows([{0: math.inf}], [1])
         with pytest.raises(ValueError, match="column 2 outside"):
             model.add_rows([{2: 1.0}], [1])
         with pytest.raises(ValueError, match="Invalid index in binary"):
