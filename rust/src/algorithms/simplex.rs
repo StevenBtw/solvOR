@@ -14,7 +14,7 @@
 use crate::types::Status;
 
 const INF: f64 = f64::INFINITY;
-const NONE: usize = usize::MAX;
+pub(crate) const NONE: usize = usize::MAX;
 
 /// Dense tableau for: rows . y + s = rhs, lo <= y <= hi, slack s >= 0 (s = 0 on '=' rows).
 ///
@@ -31,6 +31,8 @@ pub struct BoundedSimplex {
     pub(crate) art_tol: Vec<f64>,
     /// False until phase 1 has found a feasible basis.
     pub(crate) phase1_done: bool,
+    /// Set by the caller for badly scaled models, see `gain_column`.
+    pub(crate) check_gains: bool,
     pub(crate) lo: Vec<f64>,
     pub(crate) hi: Vec<f64>,
     pub(crate) span: Vec<f64>,
@@ -82,6 +84,7 @@ impl BoundedSimplex {
             pivots: 0,
             art_tol,
             phase1_done: width == n + m,
+            check_gains: false,
             lo: vec![0.0; width],
             hi,
             span,
@@ -200,39 +203,17 @@ impl BoundedSimplex {
         for iteration in 0..limit {
             // Bland's rule for entering: smallest index with negative reduced cost (fixed columns never enter)
             let obj = &self.t[m];
-            let Some(enter) =
-                (0..w).find(|&j| obj[j] < -eps && !self.is_basic[j] && self.span[j] > eps)
-            else {
+            let mut enter = (0..w)
+                .find(|&j| obj[j] < -eps && !self.is_basic[j] && self.span[j] > eps)
+                .unwrap_or(NONE);
+            if enter == NONE && self.check_gains {
+                enter = self.gain_column();
+            }
+            if enter == NONE {
                 return (Status::Optimal, iteration);
-            };
-
-            // Bounded ratio test: a basic column hits 0 or its span, or the entering column
-            // reaches its own other bound first (bound flip). Ties go to the smallest basis index.
-            let (mut best, mut leave, mut to_upper) = (self.span[enter], NONE, false);
-            for i in 0..m {
-                let a = self.t[i][enter];
-                let (mut ratio, up) = if a > eps {
-                    (self.t[i][w] / a, false)
-                } else {
-                    let span_basic = self.span[self.basis[i]];
-                    if a < -eps && span_basic < INF {
-                        ((span_basic - self.t[i][w]) / -a, true)
-                    } else {
-                        continue;
-                    }
-                };
-                if ratio < 0.0 {
-                    ratio = 0.0;
-                }
-                if ratio < best - eps
-                    || (leave != NONE
-                        && (ratio - best).abs() <= eps
-                        && self.basis[i] < self.basis[leave])
-                {
-                    (best, leave, to_upper) = (ratio, i, up);
-                }
             }
 
+            let (best, leave, to_upper) = self.ratio(enter);
             if leave == NONE {
                 if best == INF {
                     return (Status::Unbounded, iteration);
@@ -248,6 +229,56 @@ impl BoundedSimplex {
             }
         }
         (Status::MaxIter, limit)
+    }
+
+    /// Bounded ratio test: a basic column hits 0 or its span, or the entering column
+    /// reaches its own other bound first (bound flip). Ties go to the smallest basis index.
+    fn ratio(&self, enter: usize) -> (f64, usize, bool) {
+        let (m, w, eps) = (self.m, self.width, self.eps);
+        let (mut best, mut leave, mut to_upper) = (self.span[enter], NONE, false);
+        for i in 0..m {
+            let a = self.t[i][enter];
+            let (mut ratio, up) = if a > eps {
+                (self.t[i][w] / a, false)
+            } else {
+                let span_basic = self.span[self.basis[i]];
+                if a < -eps && span_basic < INF {
+                    ((span_basic - self.t[i][w]) / -a, true)
+                } else {
+                    continue;
+                }
+            };
+            if ratio < 0.0 {
+                ratio = 0.0;
+            }
+            if ratio < best - eps
+                || (leave != NONE
+                    && (ratio - best).abs() <= eps
+                    && self.basis[i] < self.basis[leave])
+            {
+                (best, leave, to_upper) = (ratio, i, up);
+            }
+        }
+        (best, leave, to_upper)
+    }
+
+    /// A reduced cost within eps can hide a large gain when its column can move far: in a badly
+    /// scaled model the slack of a row with a large coefficient costs 1e-10 per unit and moves 1e5
+    /// units. The first column whose finite step gains more than eps * (1 + |objective|) enters;
+    /// each such pivot lowers the objective, so it cannot cycle, and a column with no limit is
+    /// left alone, so noise never claims UNBOUNDED. NONE if there is no such column.
+    fn gain_column(&self) -> usize {
+        let (w, eps) = (self.width, self.eps);
+        let obj = &self.t[self.m];
+        let tol = eps * (1.0 + obj[w].abs());
+        (0..w)
+            .find(|&j| {
+                obj[j] < 0.0 && !self.is_basic[j] && self.span[j] > eps && {
+                    let best = self.ratio(j).0;
+                    best < INF && -obj[j] * best > tol
+                }
+            })
+            .unwrap_or(NONE)
     }
 
     // Warm operations

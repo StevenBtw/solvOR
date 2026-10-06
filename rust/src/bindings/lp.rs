@@ -33,7 +33,7 @@ fn iteration_limit(max_iter: &Bound<'_, PyAny>) -> PyResult<i64> {
 
 /// Pickle state: scalars, bounds, flags and indices, then the tableau.
 type State = (
-    (usize, usize, f64, usize, usize, u64, bool),
+    (usize, usize, f64, usize, usize, u64, bool, bool),
     (Vec<f64>, Vec<f64>, Vec<f64>, Vec<f64>),
     (Vec<bool>, Vec<bool>, Vec<usize>, Vec<usize>),
     Vec<Vec<f64>>,
@@ -102,6 +102,17 @@ impl PyBoundedSimplex {
     #[getter]
     fn phase1_done(&self) -> bool {
         self.inner.phase1_done
+    }
+
+    /// Whether `primal` also enters columns whose tiny reduced cost hides a large gain.
+    #[getter]
+    fn check_gains(&self) -> bool {
+        self.inner.check_gains
+    }
+
+    #[setter]
+    fn set_check_gains(&mut self, value: bool) {
+        self.inner.check_gains = value;
     }
 
     /// Number of rows.
@@ -196,6 +207,7 @@ impl PyBoundedSimplex {
                 lp.art_end,
                 lp.pivots,
                 lp.phase1_done,
+                lp.check_gains,
             ),
             (
                 lp.art_tol.clone(),
@@ -215,7 +227,7 @@ impl PyBoundedSimplex {
 
     fn __setstate__(&mut self, state: State) -> PyResult<()> {
         let (
-            (m, width, eps, art_start, art_end, pivots, phase1_done),
+            (m, width, eps, art_start, art_end, pivots, phase1_done, check_gains),
             (art_tol, lo, hi, span),
             (flipped, is_basic, basis, row_of),
             t,
@@ -233,6 +245,8 @@ impl PyBoundedSimplex {
             || t.len() != m + 1
             || t.iter().any(|row| row.len() != width + 1)
             || !(art_start <= art_end && art_end <= width && art_tol.len() == art_end - art_start)
+            || basis.iter().any(|&j| j >= width)
+            || row_of.iter().any(|&r| r != sx::NONE && r >= m)
         {
             return Err(PyValueError::new_err("inconsistent BoundedSimplex state"));
         }
@@ -245,6 +259,7 @@ impl PyBoundedSimplex {
             pivots,
             art_tol,
             phase1_done,
+            check_gains,
             lo,
             hi,
             span,

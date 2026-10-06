@@ -138,6 +138,29 @@ fn python_sum(values: impl Iterator<Item = f64>) -> f64 {
 mod tests {
     use super::*;
 
+    // Expected values are what CPython 3.14's sum() returns for the same lists
+    #[test]
+    fn test_python_sum_compensation() {
+        assert_eq!(python_sum([1e100, 1.0, -1e100].into_iter()), 1.0);
+        assert_eq!(python_sum([0.1; 10].into_iter()), 1.0);
+        let zero = python_sum([-0.0, -0.0].into_iter());
+        assert!(zero == 0.0 && zero.is_sign_positive());
+    }
+
+    #[test]
+    fn test_python_sum_non_finite() {
+        assert_eq!(
+            python_sum([f64::INFINITY, 1e100, -1e100].into_iter()),
+            f64::INFINITY
+        );
+        assert_eq!(
+            python_sum([1e308, 1e308, -1e308].into_iter()),
+            f64::INFINITY
+        );
+        assert!(python_sum([1.0, f64::NAN, 2.0].into_iter()).is_nan());
+        assert!(python_sum([f64::INFINITY, f64::NEG_INFINITY].into_iter()).is_nan());
+    }
+
     #[test]
     fn test_simple_pagerank() {
         // Simple chain: 0 -> 1 -> 2

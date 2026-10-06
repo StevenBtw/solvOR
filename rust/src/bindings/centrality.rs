@@ -36,8 +36,8 @@ pub fn pagerank(
     if max_iter == 0 {
         return Err(PyValueError::new_err("max_iter must be positive"));
     }
-    if tol <= 0.0 {
-        return Err(PyValueError::new_err("tol must be positive"));
+    if !(tol > 0.0 && tol.is_finite()) {
+        return Err(PyValueError::new_err("tol must be positive and finite"));
     }
 
     // Negative endpoints are ignored, like endpoints >= n_nodes (and like the Python backend)
