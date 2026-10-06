@@ -4,6 +4,8 @@ What broke, what got fixed, and what's new.
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-10-06
+
 ### Added
 
 - **LP/MILP input:** `solve_lp` and `solve_milp` accept sparse rows (`{column: coefficient}` dicts, mixable with dense rows), per-row `senses` (`"<="`, `">="`, `"="`) and variable bounds `lb`/`ub`. `solve_milp` adds `binary=` (0/1 variables) and `integers` becomes optional. The 0.6.2 call form is unchanged.
@@ -14,8 +16,9 @@ What broke, what got fixed, and what's new.
 - **Deep graphs:** `articulation_points`, `bridges` and `strongly_connected_components` no longer raise `RecursionError` when the DFS goes deeper than Python's recursion limit (about 1,000 nodes on one path; code dependency graphs reach that easily). All three now use an iterative DFS with the same results, result order and iteration counts; a 100,000-node path or tree takes under 0.3 s. The SCC docstring's advice to raise the recursion limit is removed.
 - **Rust SCC crash:** `strongly_connected_components_edges` with the Rust backend (the default) no longer kills the Python process with a native stack overflow on deep graphs (a 100,000-node chain did). The Rust implementation is now iterative; results are identical to the Python backend, component order included.
 - **Version:** `solvor.__version__` reported 0.6.1 in the 0.6.2 release. It now reads the installed package metadata, and the version lives only in `rust/Cargo.toml`.
-- **Determinism:** `louvain` and `pagerank` no longer depend on set iteration order: with mutually comparable nodes (ints, strs, tuples) the same graph gives the same result under any `PYTHONHASHSEED`. Result lists and dicts follow sorted node order.
-- **PageRank:** `max_iter=0`, `tol <= 0` and `damping` outside `[0, 1)` now raise `ValueError` on both backends (the Python path crashed or misbehaved). `pagerank_edges(backend="python")` ignores out-of-range edges like the Rust backend instead of raising `IndexError`, and the Rust backend now also ignores edges with negative endpoints (it raised `OverflowError`). A negative `n_nodes` raises `ValueError` on both backends.
+- **Determinism:** `louvain` and `pagerank` no longer depend on set iteration order: with mutually comparable nodes (ints, strs, tuples) the same graph gives the same result under any `PYTHONHASHSEED`, also when `neighbors` returns values that are not nodes (they are ignored). Result lists and dicts follow sorted node order.
+- **PageRank:** `max_iter=0`, `tol <= 0` and `damping` outside `[0, 1)` now raise `ValueError` on both backends (the Python path crashed or misbehaved). `pagerank_edges(backend="python")` ignores out-of-range edges like the Rust backend instead of raising `IndexError`, and the Rust backend now also ignores edges with negative endpoints or endpoints beyond 64 bits (it raised `OverflowError`). A negative `n_nodes` raises `ValueError` on both backends.
+- **Badly scaled MILPs (big-M):** `solve_milp` and `MilpModel` could return a point that violates a constraint, a worse objective than the optimum, or no solution for a feasible model when big-M coefficients of about 1e5 and up sit next to coefficients near 1 (0.6.2 too). The LP relaxations now use their own 1e-9 tolerance, rows and columns whose coefficients differ by a factor of 256 or more are scaled by powers of two, every integer solution is checked against all rows after it is snapped to integers, a warm-started "infeasible" verdict in such a model is confirmed with a fresh LP, and branching can no longer repeat a node. On 2,000 solves of random binary models with coefficients from 0.1 to 9e6, 0.6.2 returned 131 points that violate a row, 67 worse objectives and 115 "no solution" answers for feasible models, all without a warning; 0.6.3 returns 0, 2 and 4, each with the reason in `error` and none marked `OPTIMAL`.
 
 ### Result changes
 
@@ -32,6 +35,7 @@ Every change in solver output is listed here, float-level ones included, so down
 - **LP iteration counts** include bound flips (a variable jumping between its bounds without a pivot).
 - **MILP solutions:** integer variables are exactly integral (`1.0`, not `0.9999999999999998`) and the objective is recomputed from them, so objectives like `79.00000000000007` become `79.0`.
 - **MILP tie-breaking:** the new search order (depth-first dives) can return a different optimal solution than before where several optima tie; objectives are unchanged.
+- **Badly scaled LPs and MILPs:** `solve_lp`, `solve_milp` and `MilpModel` now scale every row and column whose nonzero coefficients differ by a factor of 256 or more (binary exponents 8 or more apart). Such models can get a different solution, objective, status, `iterations` and `evaluations`, usually a correct answer where 0.6.2 was wrong. When branch and bound meets a node whose LP solution is visibly inaccurate (outside its bounds, or integral but violating a row), the result is `FEASIBLE` instead of `OPTIMAL` (or `INFEASIBLE`), with the reason in `error`. Models without such a row or column are not scaled; in every comparison we ran (the golden digests, which now include node and LP iteration counts, and random well-scaled LP and MILP families) their results are bit-identical to those without this change.
 - **MILP counts:** `iterations` (nodes explored) and `evaluations` (LP iterations, now including bound flips and warm-started dual pivots) change with the new presolve and search, usually to much smaller values.
 
 ### Changed
@@ -43,7 +47,7 @@ Every change in solver output is listed here, float-level ones included, so down
 - **MILP presolve:** single-variable rows become bounds; rows with only integer variables and integer coefficients are divided by their gcd and get an integral right-hand side. Lexicographic lock rows with a `+0.5` slack now solve at or near the root (a 270-variable model: 83.5 s and 1,391 nodes to 0.01 s and 3 nodes; 20 recorded calls from a downstream project: 105.6 s to 0.05 s, same objectives).
 - **MILP heuristics:** the rounding heuristic updates row activities incrementally instead of re-checking every row after every move (a 540-variable model spent 174 s there).
 - **Validation** runs once per call instead of in every branch-and-bound node.
-- **LP/MILP input:** an empty `A` is accepted (only bounds), rows with an infinite right-hand side are dropped when they can never bind and make the model infeasible when they can never hold.
+- **LP/MILP input:** an empty `A` is accepted (only bounds), rows with an infinite right-hand side are dropped when they can never bind and make the model infeasible when they can never hold. A lower bound of `+inf`, an upper bound of `-inf` or a negative `eps` raises `ValueError` (a negative `eps` crashed with `ZeroDivisionError`).
 - **MILP branch and bound** re-solves each node with the dual simplex from its parent's basis and dives depth-first before taking the best queued node (7 branching benchmarks: 8.6 s to 2 s, 5 to 14 times fewer LP pivots).
 - **LP/MILP Rust kernel:** the simplex tableau behind `solve_lp`, `solve_milp` and `MilpModel` runs in Rust when the extension is installed (new `backend` keyword, `"auto"` by default). It performs the same float operations in the same order as the Python kernel, so results are bit-identical on either backend; branch and bound, presolve and heuristics stay in Python. 13 branching benchmarks run about 60 times faster in total, the root LP of a 540-variable packing model about 75 times faster.
 
@@ -442,6 +446,10 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
+[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...HEAD
+[0.6.3]: https://github.com/StevenBtw/solvOR/compare/v0.6.2...v0.6.3
+[0.6.2]: https://github.com/StevenBtw/solvOR/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/StevenBtw/solvOR/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/StevenBtw/solvOR/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/StevenBtw/solvOR/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/StevenBtw/solvOR/compare/v0.5.3...v0.5.4
