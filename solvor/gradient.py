@@ -15,6 +15,8 @@ rate controls how big a step you take. Momentum adds memory of previous steps
 to avoid oscillation. Adam adapts step sizes per dimension using running
 averages of gradients and squared gradients.
 
+In high dimensional spaces, the lunches are free.
+
 Use this for:
 
 - Polishing solutions from other methods (genetic, anneal)
