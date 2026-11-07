@@ -792,7 +792,7 @@ The project uses GitHub Actions (`.github/workflows/`):
 **publish.yml** - Runs on GitHub releases:
 
 - Builds abi3 wheels for Linux, macOS and Windows plus an sdist with `PyO3/maturin-action`, then publishes to PyPI.
-- The version lives in one place, `rust/Cargo.toml`. `pyproject.toml` declares it dynamic and `solvor.__version__` reads the installed metadata. A release bumps `rust/Cargo.toml`, moves the CHANGELOG `[Unreleased]` entries under the new version, and tags `v<version>`; the workflow refuses a tag that does not match `rust/Cargo.toml`.
+- The version lives in one place, `rust/Cargo.toml`. `pyproject.toml` declares it dynamic and `solvor.__version__` reads the installed metadata. A release bumps `rust/Cargo.toml`, replaces `Unreleased` in the CHANGELOG heading of that version with the release date, and tags `v<version>`; the workflow refuses a tag that does not match `rust/Cargo.toml`.
 
 ## Type Checking
 
@@ -839,7 +839,7 @@ uv run mkdocs build --strict
 2. Create a feature branch
 3. Make your changes
 4. Run tests and linter
-5. Update `CHANGELOG.md` under `[Unreleased]` if your changes are user-facing
+5. Update `CHANGELOG.md` under the unreleased version if your changes are user-facing
 6. Submit a PR with a clear description
 
 ## Changelog
@@ -857,14 +857,18 @@ We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 - Documentation-only changes
 - Test additions/fixes
 
-Add entries under `[Unreleased]` in the appropriate category:
-- `Added` - new features
-- `Changed` - changes in existing functionality
-- `Fixed` - bug fixes
-- `Removed` - removed features
-- `Result changes` - any change in what a solver returns for the same input
+The next version has its own section from the start, such as `## [0.6.4] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
 
-Maintainers will move unreleased entries to a versioned section during releases.
+- `Gotta need for speed`: performance, with numbers (`345 ms to 12 ms`)
+- `Changed`: calls that ran in the previous release and now fail or behave differently, opened by one line saying so
+- `Result changes`: any change in what a solver returns for the same input
+- `Added`: new solvers and features
+- `Deprecated`: what replaces it, and the release that removes it
+- `Removed`: removed features
+- `Fixed`: bug fixes, with what was wrong
+- `Contributors`: `Thanks to [name](link) for ... ([#N](link))`
+
+Each entry is one bullet that starts with a bold label and a colon outside the bold (`- **PageRank**: ...`), or with a bold subject that the sentence continues (`- **Validation** runs once per call ...`). Write what changed for the user, not how, and use no em or en dashes.
 
 **Result changes.** Downstream projects cache results derived from solver outputs, so any change in what a solver returns for the same input (a different tied optimum, a different community order, a float that moves in the last bit) goes under `### Result changes`, even when it is an improvement. `tests/solvors/test_golden_results.py` pins the outputs of a fixed set of inputs bit for bit and fails when one of them changes: update the digest only together with the CHANGELOG entry. It covers only those inputs and fields, so a passing run does not prove that nothing else changed; judge every change to solver code yourself. Patch releases should leave every digest unchanged.
 
