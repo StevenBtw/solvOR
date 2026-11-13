@@ -3,7 +3,10 @@ title: solvOR - Pure Python Optimization Library
 description: Learn optimization by reading the code. 40+ algorithms, zero dependencies. Each solver fits in one readable file.
 ---
 
-![solvOR logo](assets/logo.svg){ .logo-hero }
+# solvOR { .visually-hidden }
+
+![solvOR](assets/logo-light.svg#only-light){ .logo-hero }
+![solvOR](assets/logo-dark.svg#only-dark){ .logo-hero }
 
 **Solvor all your optimization needs.**
 
@@ -53,6 +56,12 @@ solvOR is a pure Python optimization library designed for learning and experimen
     While not as fast as [OR-Tools](https://developers.google.com/optimization) on large instances, solvOR handles real problems effectively. Solves Sudoku instantly, TSP-100 in seconds, and scales to thousands of variables for many problem types.
 
 </div>
+
+## Try it
+
+Pick an example, poke at it, and press **Solve** to watch the solver get there one step at a time. Hover the picture for the numbers behind it, and the dotted words for a quick definition. The code underneath is the solvOR call for exactly the problem in the picture, so you can copy it and check.
+
+<div class="solvor-gallery"></div>
 
 ---
 
