@@ -1,0 +1,129 @@
+/* solvOR-specific rules. Colours and the shared template live in extra.css (generated from the design tokens). */
+
+/* The wordmark in the header carries the name. */
+.md-header__topic .md-ellipsis { display: none; }
+
+/* Hero wordmark on the home page */
+.md-typeset .logo-hero { height: 64px; width: auto; margin: 0.5rem 0 0.75rem; }
+
+.md-typeset code { font-size: 0.85em; }
+
+/* Visually hidden (for accessibility and search engines) */
+.visually-hidden,
+.md-typeset h1.visually-hidden {
+  position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important;
+  margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important;
+}
+
+/* Permalinks appear on hover only */
+.md-typeset .headerlink { opacity: 0; transition: opacity var(--duration-fast, 120ms); }
+.md-typeset :is(h1, h2, h3, h4, h5, h6):hover .headerlink { opacity: 1; }
+
+/* Gallery on the home page (docs/javascripts/gallery.js). Ochre marks the optimum and nothing else. */
+.solvor-gallery { margin: 1.5rem 0; border: 1px solid var(--md-default-fg-color--lightest); border-radius: var(--radius-box); }
+.sg-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0 1.25rem; padding: 0 1.25rem; border-bottom: 1px solid var(--md-default-fg-color--lightest); }
+.sg-tabs [role="tab"] { flex: none; white-space: nowrap; appearance: none; background: none; border: 0; padding: 0.7rem 0 0.6rem; cursor: pointer;
+  font: inherit; font-size: 0.8rem; color: var(--md-default-fg-color--light); box-shadow: inset 0 -2px 0 transparent; }
+.sg-tabs [role="tab"]:hover { color: var(--md-default-fg-color); }
+.sg-tabs [role="tab"][aria-selected="true"] { color: var(--md-default-fg-color); box-shadow: inset 0 -2px 0 var(--sig-rule); }
+.solvor-gallery :focus-visible { outline: 2px solid var(--sig-rule); outline-offset: 2px; }
+.sg-body { padding: 1rem 1.25rem 0.25rem; }
+.sg-stage { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
+@media (max-width: 44em) { .sg-stage { grid-template-columns: 1fr; } .sg-tabs { gap: 0 0.9rem; padding: 0 0.9rem; } }
+.sg-svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; }
+.md-typeset .sg-title { margin: 0 0 0.3rem; font-family: var(--md-heading-font, inherit); font-weight: 600; }
+.md-typeset .sg-hint { margin: 0 0 0.75rem; font-size: 0.8rem; color: var(--md-default-fg-color--light); }
+.md-typeset .sg-note { margin: 1rem 0 0; font-size: 0.8rem; color: var(--md-default-fg-color--light); }
+.md-typeset .sg-log { margin: 0.6rem 0 0; min-height: 2.6em; font-size: 0.8rem; }
+.md-typeset .sg-code { margin-top: 0.75rem; }
+.md-typeset .sg-code .highlight { margin: 0 0 1rem; }
+
+/* Controls: crisp containers, softer controls. */
+.sg-field { display: block; font-size: 0.75rem; color: var(--md-default-fg-color--light); font-family: var(--md-code-font-family, monospace); text-transform: uppercase; letter-spacing: 0.06em; }
+.sg-range { display: block; width: 100%; accent-color: var(--sig-rule); margin: 0.4rem 0 0.1rem; }
+.sg-angle { text-transform: none; color: var(--md-default-fg-color); font-variant-numeric: tabular-nums; }
+.sg-ends { display: flex; justify-content: space-between; margin: 0 0 0.6rem; font-size: 0.65rem; color: var(--md-default-fg-color--light); }
+.sg-seg { display: inline-flex; margin: 0 0 0.75rem; border: 1px solid var(--md-default-fg-color--lighter); border-radius: var(--radius-control); overflow: hidden; }
+.sg-seg button { appearance: none; background: none; border: 0; padding: 0.3rem 0.75rem; cursor: pointer; font: inherit; font-size: 0.75rem; color: var(--md-default-fg-color--light); }
+.sg-seg button + button { border-left: 1px solid var(--md-default-fg-color--lighter); }
+.sg-seg button[aria-pressed="true"] { color: var(--md-default-fg-color); background: var(--md-default-fg-color--lightest); }
+.sg-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin-top: 0.25rem; }
+.sg-btn { appearance: none; cursor: pointer; font: inherit; font-size: 0.75rem; padding: 0.3rem 0.7rem; border-radius: var(--radius-control);
+  background: none; color: var(--md-default-fg-color); border: 1px solid var(--md-default-fg-color--lighter); }
+.sg-btn:hover:not(:disabled) { border-color: var(--md-default-fg-color--light); }
+.sg-btn:disabled { opacity: 0.45; cursor: default; }
+/* Dark text on ochre in both schemes: the header band colour is the darkest token in each. */
+.sg-btn--primary { min-width: 4.6em; background: var(--sig-rule); border-color: var(--sig-rule); color: var(--sig-header-bg); font-weight: 600; }
+.sg-btn--primary:hover:not(:disabled) { border-color: var(--md-default-fg-color); }
+.sg-count { flex-basis: 100%; font-size: 0.75rem; color: var(--md-default-fg-color--light); font-family: var(--md-code-font-family, monospace); font-variant-numeric: tabular-nums; }
+.md-typeset .sg-stats { font-size: 0.8rem; margin: 0 0 0.5rem; border: 0; }
+.md-typeset .sg-stats th { text-align: left; font-weight: 400; color: var(--md-default-fg-color--light); padding: 0.15rem 1rem 0.15rem 0; border: 0; }
+.md-typeset .sg-stats td { font-family: var(--md-code-font-family, monospace); font-variant-numeric: tabular-nums; padding: 0.15rem 0; border: 0; }
+
+/* Learning aids: dotted glossary terms, a legend under the picture, one floating tooltip (the only shadow here). */
+.solvor-gallery { position: relative; }
+.sg-term { text-decoration: underline dotted var(--md-default-fg-color--light); text-underline-offset: 3px; cursor: help; }
+.sg-term:hover, .sg-term:focus-visible { text-decoration-color: var(--sig-rule); }
+.sg-figure { min-width: 0; }
+.md-typeset .sg-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin: 0.6rem 0 0; padding: 0;
+  font-size: 0.7rem; color: var(--md-default-fg-color--light); }
+.md-typeset .sg-legend li { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; }
+.md-typeset .sg-restore-row { margin: 0.4rem 0 0; font-size: 0.7rem; }
+.sg-restore-row[hidden] { display: none; }
+.sg-restore { appearance: none; background: none; border: 0; padding: 0; cursor: pointer; font: inherit; color: var(--md-typeset-a-color);
+  text-decoration: underline; text-decoration-color: var(--md-default-fg-color--lighter); text-underline-offset: 3px; }
+.sg-restore:hover { text-decoration-color: currentColor; }
+.sg-key { width: 12px; height: 12px; flex: none; }
+.sg-tip { position: absolute; z-index: 5; max-width: 17rem; padding: 0.45rem 0.6rem; pointer-events: none;
+  font-size: 0.7rem; line-height: 1.45; color: var(--md-default-fg-color);
+  background: var(--md-default-bg-color); border: 1px solid var(--md-default-fg-color--lighter); border-radius: var(--radius-box);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18); }
+.sg-tip strong { font-weight: 600; margin-right: 0.15rem; }
+.sg-tip[hidden] { display: none; }
+.sg-tip .sg-tip-k { color: var(--md-default-fg-color--light); }
+.sg-tip code { font-size: 0.95em; }
+
+/* Shared marks. */
+.sg-grid line { stroke: var(--md-default-fg-color--lightest); stroke-width: 1; }
+.sg-axis, .sg-label { fill: var(--md-default-fg-color--light); font: 12px var(--md-code-font-family, monospace); }
+.sg-label { font-size: 10px; cursor: help; }
+.sg-tick { fill: var(--md-default-fg-color--light); font: 9px var(--md-code-font-family, monospace); }
+.sg-trail { fill: none; stroke: var(--md-default-fg-color); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.sg-dot { fill: var(--md-default-fg-color--light); }
+.sg-here { fill: none; stroke: var(--md-default-fg-color); stroke-width: 2; }
+.sg-here.is-done { fill: var(--sig-rule); stroke: var(--sig-rule); }
+
+/* Simplex / interior point */
+.sg-region { fill: var(--sig-highlight); fill-opacity: 0.55; stroke: var(--md-default-fg-color--lighter); stroke-width: 1.5; }
+.sg-level { stroke: var(--md-default-fg-color--light); stroke-width: 1.25; stroke-dasharray: 5 4; }
+.sg-arrow { stroke: var(--md-default-fg-color--light); stroke-width: 1.5; }
+.sg-arrowhead { fill: var(--md-default-fg-color--light); }
+.sg-corner { fill: var(--md-default-bg-color); stroke: var(--md-default-fg-color--light); stroke-width: 1.5; }
+.sg-corner.is-best { fill: var(--sig-rule); stroke: var(--sig-rule); }
+
+/* A* */
+.sg-cell { fill: transparent; stroke: var(--md-default-fg-color--lightest); stroke-width: 1; cursor: crosshair; }
+.sg-cell.is-wall { fill: var(--md-default-fg-color--light); stroke: var(--md-default-fg-color--light); }
+.sg-cell.is-closed { fill: var(--md-default-fg-color--lighter); }
+.sg-cell.is-open { fill: var(--sig-highlight); stroke: var(--md-default-fg-color--lighter); }
+.sg-route { fill: none; stroke: var(--sig-rule); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
+.sg-marker { pointer-events: none; }
+.sg-marker circle { fill: var(--md-default-bg-color); stroke: var(--md-default-fg-color); stroke-width: 1.5; }
+.sg-marker text { fill: var(--md-default-fg-color); font: 600 12px var(--md-code-font-family, monospace); text-anchor: middle; }
+
+/* Tabu search */
+.sg-edge { stroke: var(--md-default-fg-color--light); stroke-width: 1.5; }
+.sg-edge.is-fresh { stroke: var(--md-default-fg-color); stroke-width: 3; }
+.sg-edge.is-done { stroke: var(--sig-rule); stroke-width: 2.5; }
+.sg-edge.is-cut { stroke: var(--md-default-fg-color--light); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.sg-city { cursor: grab; }
+.sg-city circle { fill: var(--md-default-bg-color); stroke: var(--md-default-fg-color--light); stroke-width: 1.5; }
+.sg-city.is-here circle { stroke: var(--md-default-fg-color); stroke-width: 2.5; }
+.sg-city text { fill: var(--md-default-fg-color); font: 9px var(--md-code-font-family, monospace); text-anchor: middle; pointer-events: none; }
+
+/* Nelder-Mead */
+.sg-contours path, .sg-contour-key { fill: none; stroke: var(--md-default-fg-color--light); stroke-width: 1; }
+.sg-min { stroke: var(--md-default-fg-color--light); stroke-width: 1.5; }
+.sg-simplex { fill: var(--sig-highlight); fill-opacity: 0.6; stroke: var(--md-default-fg-color); stroke-width: 1.5; stroke-linejoin: round; }
+.sg-start { fill: var(--md-default-bg-color); stroke: var(--md-default-fg-color--light); stroke-width: 1.5; }
+@media (prefers-reduced-motion: reduce) { .md-typeset .headerlink { transition: none; } }

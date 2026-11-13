@@ -8,19 +8,21 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  # Opens in dark; the toggle switches to light and remembers the choice.
   palette:
     - scheme: slate
       primary: custom
-      accent: teal
+      accent: custom
       toggle:
-        icon: material/brightness-4
+        icon: lucide/moon
         name: Switch to light mode
     - scheme: default
       primary: custom
-      accent: teal
+      accent: custom
       toggle:
-        icon: material/brightness-7
+        icon: lucide/sun
         name: Switch to dark mode
+  font: false  # fonts are self-hosted: docs/stylesheets/extra.css and fonts/, nothing from Google
   features:
     - navigation.instant
     - navigation.instant.prefetch
@@ -37,7 +39,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   logo: assets/logo.svg
-  favicon: assets/favicon.ico
+  favicon: assets/favicon.svg
 
 plugins:
   - search
@@ -114,10 +116,13 @@ extra:
 
 extra_javascript:
   - javascripts/mathjax.js
+  - javascripts/gallery.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
+# extra.css is generated from the design tokens (D:/Repos/design/tokens/dist/solvor/zensical/); solvor.css holds site rules.
 extra_css:
   - stylesheets/extra.css
+  - stylesheets/solvor.css
 
 nav:
   - Home: index.md
