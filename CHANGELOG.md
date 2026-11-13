@@ -4,6 +4,17 @@ What broke, what got fixed, and what's new.
 
 ## [0.6.4] - Unreleased
 
+### Changed
+
+- **Docs build with Zensical**: the site builds with `zensical build` instead of Material for MkDocs, which stopped receiving fixes on 2026-11-05. `uv sync --extra docs` installs it; `mkdocs.yml` and the content are unchanged.
+- **Docs have their own look**: ochre on charcoal with the Red Hat typefaces, opening in dark with a toggle to light. The wordmark is redrawn as outlines, so it no longer depends on the reader having Arial.
+- **Docs fonts are served by the site**: the Red Hat typefaces ship with the docs (`docs/stylesheets/fonts/`, with their licences), so a visit no longer contacts Google Fonts.
+- **Docs build on current pymdown-extensions**: the `docs` extra needs `mkdocstrings[python]>=1.0.8`; older versions fail under Zensical with pymdown-extensions 13.
+
+### Added
+
+- **Interactive examples on the home page**: four tabs (simplex with an interior-point switch, A* on a grid, tabu search on a TSP, Nelder-Mead on Himmelblau's function) to edit by hand, with a Solve button that steps to the optimum every 0.5 s, a legend, hover tooltips with the numbers behind the picture and short definitions for the jargon. The code under each picture is the matching solvOR call for the problem as drawn.
+
 ## [0.6.3] - 2026-10-06
 
 MILP and graph release. `solve_lp` and `solve_milp` take sparse rows, row senses and variable bounds, `MilpModel` adds rows and re-solves warm, and badly scaled (big-M) models no longer return wrong answers marked `OPTIMAL`. Plus deep graphs without `RecursionError`, Louvain with both of its phases, deterministic `louvain` and `pagerank`, and an LP/MILP kernel in Rust (13 branching benchmarks about 60 times faster). Louvain communities and some LP and MILP results change: see Result changes.
