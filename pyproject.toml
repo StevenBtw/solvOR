@@ -37,9 +37,9 @@ dev = [
     "prek>=0.5"
 ]
 docs = [
-    "mkdocs>=1.6",
-    "mkdocs-material>=9",
-    "mkdocstrings[python]>=1.0",
+    "zensical>=0.1.1",
+    # 1.0.8 is the first that renders with current pymdown-extensions (older: Highlight() missing "md")
+    "mkdocstrings[python]>=1.0.8",
     "mkdocs-git-revision-date-localized-plugin>=1.5.1",
 ]
 
