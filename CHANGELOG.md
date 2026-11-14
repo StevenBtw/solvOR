@@ -2,7 +2,9 @@
 
 What broke, what got fixed, and what's new.
 
-## [0.6.4] - Unreleased
+## [0.6.4] - 2026-11-14
+
+Docs release: the site builds with Zensical, has its own look with fonts served locally, and opens on interactive examples. Solver code and results are unchanged from 0.6.3.
 
 ### Changed
 
