@@ -437,6 +437,7 @@
       aria: 'Grid maze with the A* search frontier and path',
 
       mount({ svg, changed }) {
+        svg.dataset.drag = '';
         const cells = [];
         const layer = svgEl('g', {}, svg);
         for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
@@ -622,6 +623,7 @@
       restore() { state.cities = DEFAULT.map((p) => p.slice()); },
 
       mount({ svg, changed }) {
+        svg.dataset.drag = '';
         g = {
           edges: svgEl('g', {}, svg),
           cities: state.cities.map((p, i) => {
@@ -801,12 +803,13 @@
       const snap = () => simplex.map((p) => p.slice());
       const b0 = values.indexOf(Math.min(...values));
       const frames = [{ simplex: snap(), best: simplex[b0].slice(), bestVal: values[b0], msg: 'Start with a triangle: the start point plus one corner nudged along x and one along y (initial_step = 0.5 means half of each coordinate). Evaluate f at all three. The triangle is the [[simplex|nm-simplex]].' }];
-      let iteration = 0;
-      for (iteration = 1; iteration <= 1000; iteration++) {
+      const MAX_ITER = 1000;
+      let iteration = 0, converged = false;
+      for (iteration = 1; iteration <= MAX_ITER; iteration++) {
         const order = [0, 1, 2].sort((a, b) => values[a] - values[b]);
         simplex = order.map((i) => simplex[i]); values = order.map((i) => values[i]);
         const best = values[0], worst = values[n], second = values[n - 1];
-        if (Math.abs(worst - best) < TOL) break;
+        if (Math.abs(worst - best) < TOL) { converged = true; break; }
         const centroid = [0, 0];
         for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) centroid[j] += simplex[i][j];
         for (let j = 0; j < n; j++) centroid[j] /= n;
@@ -836,9 +839,13 @@
         const bi = values.indexOf(Math.min(...values));
         frames.push({ simplex: snap(), best: simplex[bi].slice(), bestVal: values[bi], msg: `Iteration ${iteration}, ${op}. Best f = ${small(values[bi])}.` });
       }
+      if (!converged) iteration = MAX_ITER; // nelder_mead reports max_iter when the loop runs out
       const bi = values.indexOf(Math.min(...values));
+      const at = `(${fmt(simplex[bi][0])}, ${fmt(simplex[bi][1])})`;
       frames.push({ simplex: snap(), best: simplex[bi].slice(), bestVal: values[bi], iterations: iteration, done: true,
-        msg: `The three corner values now differ by less than ${TOL} ([[tol]]), so it stops at (${fmt(simplex[bi][0])}, ${fmt(simplex[bi][1])}).` });
+        msg: converged
+          ? `The three corner values now differ by less than ${TOL} ([[tol]]), so it stops at ${at}.`
+          : `After ${MAX_ITER} iterations the corner values still differ by more than ${TOL} ([[tol]]), so it gives up at ${at}.` });
       return frames;
     }
 
@@ -857,6 +864,7 @@
       aria: 'Contour map of Himmelblau’s function with the Nelder–Mead triangle',
 
       mount({ svg, changed }) {
+        svg.dataset.drag = '';
         contours = contours || contourPaths();
         const layer = svgEl('g', { class: 'sg-contours' }, svg);
         contours.forEach((d, i) => svgEl('path', { d, 'stroke-opacity': (1 - i * 0.08).toFixed(2) }, layer));
@@ -1070,6 +1078,7 @@
       const fresh = svg.cloneNode(false);
       svg.replaceWith(fresh);
       svg = fresh;
+      delete svg.dataset.drag; // set by the mounts that drag on the picture; without it touch scrolls the page
       controls.innerHTML = '';
       cur.mount({ svg, controls, changed });
       watchSvg();

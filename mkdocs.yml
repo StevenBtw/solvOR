@@ -52,9 +52,6 @@ plugins:
             show_symbol_type_heading: true
             show_symbol_type_toc: true
             docstring_style: google
-  - git-revision-date-localized:
-      enable_creation_date: true
-      type: timeago
 
 markdown_extensions:
   - abbr
@@ -119,7 +116,7 @@ extra_javascript:
   - javascripts/gallery.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
-# extra.css is generated from the design tokens (D:/Repos/design/tokens/dist/solvor/zensical/); solvor.css holds site rules.
+# extra.css is generated from the solvOR design tokens and copied in as is, so don't edit it here; site rules go in solvor.css.
 extra_css:
   - stylesheets/extra.css
   - stylesheets/solvor.css

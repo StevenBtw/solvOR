@@ -17,7 +17,8 @@
 
 /* Permalinks appear on hover only */
 .md-typeset .headerlink { opacity: 0; transition: opacity var(--duration-fast, 120ms); }
-.md-typeset :is(h1, h2, h3, h4, h5, h6):hover .headerlink { opacity: 1; }
+.md-typeset :is(h1, h2, h3, h4, h5, h6):hover .headerlink,
+.md-typeset .headerlink:focus-visible { opacity: 1; }
 
 /* Gallery on the home page (docs/javascripts/gallery.js). Ochre marks the optimum and nothing else. */
 .solvor-gallery { margin: 1.5rem 0; border: 1px solid var(--md-default-fg-color--lightest); border-radius: var(--radius-box); }
@@ -30,7 +31,8 @@
 .sg-body { padding: 1rem 1.25rem 0.25rem; }
 .sg-stage { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: start; }
 @media (max-width: 44em) { .sg-stage { grid-template-columns: 1fr; } .sg-tabs { gap: 0 0.9rem; padding: 0 0.9rem; } }
-.sg-svg { width: 100%; height: auto; display: block; touch-action: none; user-select: none; }
+.sg-svg { width: 100%; height: auto; display: block; user-select: none; }
+.sg-svg[data-drag] { touch-action: none; } /* only the pictures you drag on; the others let touch scroll the page */
 .md-typeset .sg-title { margin: 0 0 0.3rem; font-family: var(--md-heading-font, inherit); font-weight: 600; }
 .md-typeset .sg-hint { margin: 0 0 0.75rem; font-size: 0.8rem; color: var(--md-default-fg-color--light); }
 .md-typeset .sg-note { margin: 1rem 0 0; font-size: 0.8rem; color: var(--md-default-fg-color--light); }
