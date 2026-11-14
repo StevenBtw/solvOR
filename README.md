@@ -4,7 +4,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/solvOR)](https://pypi.org/project/solvOR/)
 [![Downloads](https://img.shields.io/pypi/dm/solvOR)](https://pypi.org/project/solvOR/)
-[![Python 3.12 | 3.13 | 3.14](https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue.svg)](https://pypi.org/project/solvOR/)
+[![Python 3.13 | 3.14 | 3.15](https://img.shields.io/badge/python-3.13%20%7C%203.14%20%7C%203.15-blue.svg)](https://pypi.org/project/solvOR/)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
@@ -498,7 +498,7 @@ result = floyd_warshall(n_nodes, edges)
 result = floyd_warshall(n_nodes, edges, backend="python")
 ```
 
-Pre-built wheels include Rust extensions for Linux, macOS, and Windows: one abi3 wheel per platform that works on CPython 3.12 and newer. If Rust isn't available, solvOR falls back to Python automatically.
+Pre-built wheels include Rust extensions for Linux, macOS, and Windows: one abi3 wheel per platform that works on CPython 3.13 and newer. If Rust isn't available, solvOR falls back to Python automatically.
 
 See the [Performance docs](https://solvOR.ai/getting-started/performance/) for which algorithms have Rust backends and benchmarks.
 

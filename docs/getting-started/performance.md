@@ -147,7 +147,7 @@ uv run maturin develop --release
 
 The `maturin develop` command compiles the Rust code and installs it as a Python extension.
 
-The repository pins its compiler in `rust-toolchain.toml` (currently Rust 1.99.0); rustup installs it automatically on the first build.
+The repository pins its compiler in `rust-toolchain.toml` (currently Rust 1.100.0); rustup installs it automatically on the first build.
 
 ## Pure Python Fallback
 

@@ -7,7 +7,7 @@
 
 Thanks for your interest in contributing to solvOR!
 
-**Python 3.12+** is required. The project is tested on Python 3.12, 3.13, and 3.14, and developed with 3.14 in mind primarily.
+**Python 3.13+** is required. The project is tested on Python 3.13, 3.14, and 3.15, and developed with 3.14 in mind primarily.
 
 **Tooling:** We use [uv](https://docs.astral.sh/uv/) for package management, [Ruff](https://docs.astral.sh/ruff/) for linting/formatting, [ty](https://docs.astral.sh/ty/) for type checking, and [Codecov](https://codecov.io/) for coverage tracking.
 
@@ -742,7 +742,7 @@ uv run pytest -m real_world --no-cov
 
 ### Documentation Tests
 
-The `test_docs.py` file runs `mkdocs build --strict` to catch documentation issues before they reach production:
+The `test_docs.py` file runs `zensical build --strict` to catch documentation issues before they reach production:
 
 - Missing type annotations on public APIs
 - Broken internal links
@@ -784,10 +784,10 @@ The project uses GitHub Actions (`.github/workflows/`):
 **ci.yml** - Runs on push to `main`/`dev` and PRs:
 
 - `lint` - Ruff linter
-- `typecheck` - ty type checker (Python 3.12, 3.13, 3.14)
+- `typecheck` - ty type checker (Python 3.14)
 - `test-solvers` - All solver tests with coverage (88% minimum)
 - `test-examples` - Example file tests
-- `test-docs` - MkDocs strict build (catches missing type hints, broken links)
+- `test-docs` - Zensical strict build (catches missing type hints, broken links)
 
 **publish.yml** - Runs on GitHub releases:
 
@@ -807,14 +807,14 @@ Type hints are required on public APIs but optional for internal helpers.
 
 ## Documentation
 
-Docs live in `docs/` and are built with MkDocs + Material theme. Deployed to [solvOR.ai](https://solvOR.ai) via GitHub Actions.
+Docs live in `docs/` and are built with [Zensical](https://zensical.org) from `mkdocs.yml` (`uv sync --extra docs` installs it). Deployed to [solvOR.ai](https://solvOR.ai) via GitHub Actions.
 
 ```bash
 # Serve locally
-uv run mkdocs serve
+uv run zensical serve
 
 # Build (use --strict to catch issues before CI does)
-uv run mkdocs build --strict
+uv run zensical build --strict
 ```
 
 **Strict mode catches:** Missing type annotations on public APIs, broken links, invalid markdown. CI runs this automatically via `test_docs.py`.
@@ -854,10 +854,10 @@ We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with 
 
 **When NOT to update:**
 - Internal refactoring with no API changes
-- Documentation-only changes (unless the docs are what the release ships, like 0.6.4)
+- Documentation-only changes (unless the docs are what the release ships, like 0.7.0)
 - Test additions/fixes
 
-The next version has its own section from the start, such as `## [0.6.4] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
+The next version has its own section from the start, such as `## [0.7.1] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
 
 - `Gotta need for speed`: performance, with numbers (`345 ms to 12 ms`)
 - `Changed`: calls that ran in the previous release and now fail or behave differently, opened by one line saying so

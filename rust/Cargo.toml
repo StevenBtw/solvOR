@@ -1,6 +1,6 @@
 [package]
 name = "solvor-rs"
-version = "0.6.4"
+version = "0.7.0"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 [dependencies]
 # `extension-module` is enabled by maturin via [tool.maturin] features in pyproject.toml,
 # so `cargo test` can still link libpython.
-pyo3 = { version = "0.29", features = ["abi3-py312"] }
+pyo3 = { version = "0.30", features = ["abi3-py313"] }
 
 [profile.release]
 lto = "thin"

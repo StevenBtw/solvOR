@@ -3,7 +3,7 @@ name = "solvor"
 dynamic = ["version"]
 description = "Solvor all your optimization needs."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = []
 authors = [
     { name = "Steven Grond" }
@@ -15,9 +15,9 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
 
@@ -28,13 +28,13 @@ PyPI = "https://pypi.org/project/solvOR/"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=9.1",
-    "pytest-cov>=7",
-    "ruff>=0.16",
-    "pre-commit>=4.6",
-    "ty>=0.0.84",
-    "maturin>=1.15,<2.0",
-    "prek>=0.5"
+    "pytest>=9.2",
+    "pytest-cov>=7.1",
+    "ruff>=0.17.5",
+    "pre-commit>=4.7",
+    "ty>=0.0.104",
+    "maturin>=1.16,<2.0",
+    "prek>=0.5.10"
 ]
 docs = [
     "zensical>=0.1.1",
@@ -56,6 +56,8 @@ include = ["solvor/**/*.py", "py.typed", "LICENSE"]
 [tool.ruff]
 line-length = 120
 exclude = ["examples"]
+# Ruff's default without "*.md" (added in 0.17): code blocks in the docs stay as written.
+include = ["*.py", "*.pyi", "*.pyw", "*.ipynb", "**/pyproject.toml", "**/ruff.toml", "**/.ruff.toml"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

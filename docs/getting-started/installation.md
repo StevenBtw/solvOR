@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Python 3.12 or higher
+- Python 3.13 or higher
 - No external dependencies
 
 ## Install from PyPI
@@ -44,4 +44,4 @@ cd solvOR
 uv sync --extra dev
 ```
 
-This installs pytest, ruff, type checkers, and mkdocs for documentation.
+This installs pytest, ruff, ty and maturin. Add `--extra docs` for the documentation tools (Zensical).
