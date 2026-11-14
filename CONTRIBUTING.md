@@ -844,7 +844,7 @@ uv run mkdocs build --strict
 
 ## Changelog
 
-We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with three sections of our own (`Gotta need for speed`, `Result changes`, `Contributors`) and the order below.
 
 **When to update the changelog:**
 - Adding new solvers or features
@@ -854,7 +854,7 @@ We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 
 **When NOT to update:**
 - Internal refactoring with no API changes
-- Documentation-only changes
+- Documentation-only changes (unless the docs are what the release ships, like 0.6.4)
 - Test additions/fixes
 
 The next version has its own section from the start, such as `## [0.6.4] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
