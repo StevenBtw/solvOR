@@ -49,7 +49,7 @@ def rust_available() -> bool:
     global _rust_available
     if _rust_available is None:
         try:
-            import solvor._solvor_rust  # noqa: F401  # ty: ignore[unresolved-import]
+            import solvor._solvor_rust  # noqa: F401  # ty: ignore[import-not-found]
 
             _rust_available = True
         except ImportError:
@@ -114,7 +114,7 @@ def get_rust_module() -> ModuleType:
     """
     if not rust_available():
         raise ImportError("Rust backend not available")
-    import solvor._solvor_rust  # ty: ignore[unresolved-import]
+    import solvor._solvor_rust  # ty: ignore[import-not-found]
 
     return solvor._solvor_rust
 
@@ -160,7 +160,7 @@ def with_rust_backend[**P, T](fn: Callable[P, T]) -> Callable[..., T]:
     ) -> T:
         selected = get_backend(backend)
         if selected == "rust":
-            adapter = _adapters.get(fn.__name__)  # ty: ignore[unresolved-attribute]
+            adapter = _adapters.get(fn.__name__)  # ty: ignore[missing-attribute]
             if adapter:
                 return adapter(*args, **kwargs)
         return fn(*args, **kwargs)

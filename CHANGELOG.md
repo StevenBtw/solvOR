@@ -12,6 +12,7 @@ Python versions and docs release: solvOR now supports Python 3.13 to 3.15, and t
 - **Docs have their own look**: ochre on charcoal with the Red Hat typefaces, opening in dark with a toggle to light. The wordmark is redrawn as outlines, so it no longer depends on the reader having Arial.
 - **Docs fonts are served by the site**: the Red Hat typefaces ship with the docs (`docs/stylesheets/fonts/`, with their licences), so a visit no longer contacts Google Fonts.
 - **Docs pages show no dates**: Zensical does not run `git-revision-date-localized`, so pages lose their created and last-updated dates. The plugin is gone from `mkdocs.yml` and the `docs` extra.
+- **Wheels build with pyo3 0.30 and Rust 1.100.0**: the toolchain pin (`rust-toolchain.toml`) moves from 1.99.0. Building from the sdist still needs Rust 1.88 or newer.
 - **Docs build on current pymdown-extensions**: the `docs` extra needs `mkdocstrings[python]>=1.0.8`; older versions fail under Zensical with pymdown-extensions 13.
 
 ### Added
