@@ -1,3 +1,10 @@
+<picture>
+  <source media="(max-width: 556px) and (prefers-color-scheme: dark), (min-width: 768px) and (max-width: 844px) and (prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/StevenBtw/solvOR/main/.github/readme/header-narrow-dark.svg">
+  <source media="(max-width: 556px), (min-width: 768px) and (max-width: 844px)" srcset="https://raw.githubusercontent.com/StevenBtw/solvOR/main/.github/readme/header-narrow-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/StevenBtw/solvOR/main/.github/readme/header-dark.svg">
+  <img alt="solvOR: Pure Python optimization solvers, each in one readable file." src="https://raw.githubusercontent.com/StevenBtw/solvOR/main/.github/readme/header-light.svg" width="100%">
+</picture>
+
 [![Build Status](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml)
 [![Docs](https://github.com/StevenBtw/solvOR/actions/workflows/docs.yml/badge.svg)](https://solvOR.ai)
 [![codecov](https://codecov.io/gh/StevenBtw/solvOR/graph/badge.svg?token=A3H2COO119)](https://codecov.io/gh/StevenBtw/solvOR)
@@ -5,12 +12,6 @@
 [![PyPI](https://img.shields.io/pypi/v/solvOR)](https://pypi.org/project/solvOR/)
 [![Downloads](https://img.shields.io/pypi/dm/solvOR)](https://pypi.org/project/solvOR/)
 [![Python 3.13 | 3.14 | 3.15](https://img.shields.io/badge/python-3.13%20%7C%203.14%20%7C%203.15-blue.svg)](https://pypi.org/project/solvOR/)
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.svg">
-  <img alt="solvOR" src="docs/assets/logo-light.svg" width="200">
-</picture>
 
 Solvor all your optimization needs.
 
