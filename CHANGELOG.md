@@ -8,9 +8,10 @@ Docs release: the site builds with Zensical, has its own look with fonts served 
 
 ### Changed
 
-- **Docs build with Zensical**: the site builds with `zensical build` instead of Material for MkDocs, which stopped receiving fixes on 2026-11-05. `uv sync --extra docs` installs it; `mkdocs.yml` and the content are unchanged.
+- **Docs build with Zensical**: the site builds with `zensical build` instead of Material for MkDocs, which stopped receiving fixes on 2026-11-05. `uv sync --extra docs` installs it and reads the same `mkdocs.yml`.
 - **Docs have their own look**: ochre on charcoal with the Red Hat typefaces, opening in dark with a toggle to light. The wordmark is redrawn as outlines, so it no longer depends on the reader having Arial.
 - **Docs fonts are served by the site**: the Red Hat typefaces ship with the docs (`docs/stylesheets/fonts/`, with their licences), so a visit no longer contacts Google Fonts.
+- **Docs pages show no dates**: Zensical does not run `git-revision-date-localized`, so pages lose their created and last-updated dates. The plugin is gone from `mkdocs.yml` and the `docs` extra.
 - **Docs build on current pymdown-extensions**: the `docs` extra needs `mkdocstrings[python]>=1.0.8`; older versions fail under Zensical with pymdown-extensions 13.
 
 ### Added
@@ -468,7 +469,8 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
-[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...HEAD
+[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.6.4...HEAD
+[0.6.4]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/StevenBtw/solvOR/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/StevenBtw/solvOR/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/StevenBtw/solvOR/compare/v0.6.0...v0.6.1
