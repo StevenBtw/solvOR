@@ -854,10 +854,10 @@ We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with 
 
 **When NOT to update:**
 - Internal refactoring with no API changes
-- Documentation-only changes (unless the docs are what the release ships, like 0.7.0)
+- Documentation-only changes (unless the docs are what the release ships, like 1.0.0)
 - Test additions/fixes
 
-The next version has its own section from the start, such as `## [0.7.1] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
+The next version has its own section from the start, such as `## [1.0.1] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
 
 - `Gotta need for speed`: performance, with numbers (`345 ms to 12 ms`)
 - `Changed`: calls that ran in the previous release and now fail or behave differently, opened by one line saying so

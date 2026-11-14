@@ -2,9 +2,9 @@
 
 What broke, what got fixed, and what's new.
 
-## [0.7.0] - 2026-11-14
+## [1.0.0] - 2026-11-14
 
-Python versions and docs release: solvOR now supports Python 3.13 to 3.15, and the docs site builds with Zensical, has its own look and opens on interactive examples. Python 3.12 is no longer supported; on 3.12, pip keeps installing 0.6.3. Solver code and results are unchanged from 0.6.3.
+Stable release: 1.0.0 is the first release marked Production/Stable, with the same solver code and results as 0.6.3. It supports Python 3.13 to 3.15 (on 3.12, pip keeps installing 0.6.3), and the docs site builds with Zensical, has its own look and opens on interactive examples. Version 0.7.0 was tagged but never reached PyPI; its changes ship here.
 
 ### Changed
 
@@ -475,8 +475,8 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
-[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.7.0...HEAD
-[0.7.0]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...v0.7.0
+[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...v1.0.0
 [0.6.3]: https://github.com/StevenBtw/solvOR/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/StevenBtw/solvOR/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/StevenBtw/solvOR/compare/v0.6.0...v0.6.1
