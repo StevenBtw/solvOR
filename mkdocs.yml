@@ -1,6 +1,6 @@
 site_name: solvOR
-site_url: https://solvOR.ai
-site_description: Pure Python optimization library, zero dependencies, maximum performance
+site_url: https://solvor.ai/
+site_description: Optimization algorithms in pure Python, each in one readable file. No dependencies.
 site_author: Steven Bytheway
 repo_url: https://github.com/StevenBtw/solvOR
 repo_name: StevenBtw/solvOR
@@ -8,6 +8,8 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  # Link preview tags (Open Graph, Twitter card) for every page: overrides/main.html
+  custom_dir: overrides
   # Opens in dark; the toggle switches to light and remembers the choice.
   palette:
     - scheme: slate
@@ -99,18 +101,6 @@ extra:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/solvOR/
   generator: false
-  meta:
-    - property: og:type
-      content: website
-    - property: og:image
-      content: https://solvor.ai/assets/social-card.png
-    - property: og:image:width
-      content: "1200"
-    - property: og:image:height
-      content: "630"
-    - name: twitter:card
-      content: summary_large_image
-
 extra_javascript:
   - javascripts/mathjax.js
   - javascripts/gallery.js

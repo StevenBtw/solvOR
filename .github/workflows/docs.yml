@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "overrides/**"  # Page templates (link preview tags)
       - "solvor/**"  # Rebuild when code changes (for API docs)
       - "pyproject.toml"  # Rebuild when docs dependencies change
       - "rust/Cargo.toml"  # Rebuild when the version changes (its only source)
