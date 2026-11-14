@@ -2,78 +2,99 @@
 
 What broke, what got fixed, and what's new.
 
-## [Unreleased]
+## [0.6.4] - 2026-11-14
 
-## [0.6.3] - 2026-10-06
+Docs release: the site builds with Zensical, has its own look with fonts served locally, and opens on interactive examples. Solver code and results are unchanged from 0.6.3.
+
+### Changed
+
+- **Docs build with Zensical**: the site builds with `zensical build` instead of Material for MkDocs, which stopped receiving fixes on 2026-11-05. `uv sync --extra docs` installs it and reads the same `mkdocs.yml`.
+- **Docs have their own look**: ochre on charcoal with the Red Hat typefaces, opening in dark with a toggle to light. The wordmark is redrawn as outlines, so it no longer depends on the reader having Arial.
+- **Docs fonts are served by the site**: the Red Hat typefaces ship with the docs (`docs/stylesheets/fonts/`, with their licences), so a visit no longer contacts Google Fonts.
+- **Docs pages show no dates**: Zensical does not run `git-revision-date-localized`, so pages lose their created and last-updated dates. The plugin is gone from `mkdocs.yml` and the `docs` extra.
+- **Docs build on current pymdown-extensions**: the `docs` extra needs `mkdocstrings[python]>=1.0.8`; older versions fail under Zensical with pymdown-extensions 13.
 
 ### Added
 
-- **LP/MILP input:** `solve_lp` and `solve_milp` accept sparse rows (`{column: coefficient}` dicts, mixable with dense rows), per-row `senses` (`"<="`, `">="`, `"="`) and variable bounds `lb`/`ub`. `solve_milp` adds `binary=` (0/1 variables) and `integers` becomes optional. The 0.6.2 call form is unchanged.
-- **Incremental MILP:** `MilpModel` adds rows and re-solves warm (lazy cuts, objective locks, new objectives); `solve_lexicographic` optimizes objectives in priority order on a model (a 270-variable, 4-stage downstream model: 7.4 ms). Adding a cut to a 540-variable model and re-solving takes 13% of a fresh solve.
+- **Interactive examples on the home page**: four tabs (simplex with an interior-point switch, A* on a grid, tabu search on a TSP, Nelder-Mead on Himmelblau's function) to edit by hand, with a Solve button that steps to the optimum every 0.5 s, a legend, hover tooltips with the numbers behind the picture and short definitions for the jargon. The code under each picture is the matching solvOR call for the problem as drawn.
 
-### Fixed
+## [0.6.3] - 2026-10-06
 
-- **Deep graphs:** `articulation_points`, `bridges` and `strongly_connected_components` no longer raise `RecursionError` when the DFS goes deeper than Python's recursion limit (about 1,000 nodes on one path; code dependency graphs reach that easily). All three now use an iterative DFS with the same results, result order and iteration counts; a 100,000-node path or tree takes under 0.3 s. The SCC docstring's advice to raise the recursion limit is removed.
-- **Rust SCC crash:** `strongly_connected_components_edges` with the Rust backend (the default) no longer kills the Python process with a native stack overflow on deep graphs (a 100,000-node chain did). The Rust implementation is now iterative; results are identical to the Python backend, component order included.
-- **Version:** `solvor.__version__` reported 0.6.1 in the 0.6.2 release. It now reads the installed package metadata, and the version lives only in `rust/Cargo.toml`.
-- **Determinism:** `louvain` and `pagerank` no longer depend on set iteration order: with mutually comparable nodes (ints, strs, tuples) the same graph gives the same result under any `PYTHONHASHSEED`, also when `neighbors` returns values that are not nodes (they are ignored). Result lists and dicts follow sorted node order.
-- **PageRank:** `max_iter=0`, a `tol` that is not positive and finite, and `damping` outside `[0, 1)` now raise `ValueError` on both backends (the Python path crashed or misbehaved). `pagerank_edges(backend="python")` ignores out-of-range edges like the Rust backend instead of raising `IndexError`, and the Rust backend now also ignores edges with negative endpoints or endpoints beyond 64 bits (it raised `OverflowError`). A negative `n_nodes` raises `ValueError` on both backends.
-- **Badly scaled MILPs (big-M):** `solve_milp` and `MilpModel` could return a point that violates a constraint, a worse objective than the optimum, or no solution for a feasible model when big-M coefficients of about 1e5 and up sit next to coefficients near 1 (0.6.2 too). The LP relaxations now use their own 1e-9 tolerance, rows and columns whose coefficients differ by a factor of 256 or more are scaled by powers of two, every integer solution is checked against all rows after it is snapped to integers, a warm-started "infeasible" verdict in such a model is confirmed with a fresh LP, and branching can no longer repeat a node. On 2,000 solves of random binary models with coefficients from 0.1 to 9e6, 0.6.2 returned 131 points that violate a row, 67 worse objectives and 115 "no solution" answers for feasible models, all without a warning; 0.6.3 returns 0, 2 and 4, each with the reason in `error` and none marked `OPTIMAL`.
-- **Small costs next to big-M rows:** in a badly scaled model the LP behind `solve_lp`, `solve_milp` and `MilpModel` could stop short of its optimum when a reduced cost below `eps` hid a large gain (the slack of a row with a large coefficient costs almost nothing per unit but can move very far). With a good `warm_start`, branch and bound then pruned the root and returned that warm start as `OPTIMAL`. Such a column now enters when its step gains more than `eps * (1 + |objective|)`; well-scaled models keep the plain test. On 800 random LPs with costs down to 1e-5 next to coefficients up to 9e6, answers worse than HiGHS dropped from 14 to 1 (0.6.2 had this too).
+MILP and graph release. `solve_lp` and `solve_milp` take sparse rows, row senses and variable bounds, `MilpModel` adds rows and re-solves warm, and badly scaled (big-M) models no longer return wrong answers marked `OPTIMAL`. Plus deep graphs without `RecursionError`, Louvain with both of its phases, deterministic `louvain` and `pagerank`, and an LP/MILP kernel in Rust (13 branching benchmarks about 60 times faster). Louvain communities and some LP and MILP results change: see Result changes.
+
+### Gotta need for speed
+
+- **LP/MILP Rust kernel**: the simplex tableau behind `solve_lp`, `solve_milp` and `MilpModel` runs in Rust when the extension is installed (new `backend` keyword, `"auto"` by default). It performs the same float operations in the same order as the Python kernel, so results are bit-identical on either backend; branch and bound, presolve and heuristics stay in Python. 13 branching benchmarks run about 60 times faster in total, the root LP of a 540-variable packing model about 75 times faster.
+- **LP engine**: bounded-variable simplex. Bounds no longer become rows, so binary models no longer need identity rows and branch-and-bound nodes no longer add bound rows (540 binary variables: root LP 108 ms to 11 ms).
+- **MILP branch and bound** re-solves each node with the dual simplex from its parent's basis and dives depth-first before taking the best queued node (7 branching benchmarks: 8.6 s to 2 s, 5 to 14 times fewer LP pivots).
+- **MILP presolve**: single-variable rows become bounds; rows with only integer variables and integer coefficients are divided by their gcd and get an integral right-hand side. Lexicographic lock rows with a `+0.5` slack now solve at or near the root (a 270-variable model: 83.5 s and 1,391 nodes to 0.01 s and 3 nodes; 20 recorded calls from a downstream project: 105.6 s to 0.05 s, same objectives).
+- **MILP heuristics**: the rounding heuristic updates row activities incrementally instead of re-checking every row after every move (a 540-variable model spent 174 s there).
+- **Validation** runs once per call instead of in every branch-and-bound node.
+- **PageRank**: the callback `pagerank` now runs on the Rust backend when installed (9,091 nodes, 33,580 arcs: 345 ms to 12 ms; the pure Python path also dropped to 183 ms). New `backend` keyword. The Rust and Python backends now return bit-identical scores and iteration counts (same max-norm convergence test, same compensated summation), so results do not depend on whether the Rust wheel is installed.
+
+### Changed
+
+Calls that ran in 0.6.2 and now fail or behave differently. Changes in what a solver returns are under Result changes.
+
+- **LP/MILP input**: an empty `A` is accepted (only bounds), rows with an infinite right-hand side are dropped when they can never bind and make the model infeasible when they can never hold. A lower bound of `+inf`, an upper bound of `-inf`, an infinite cost or constraint coefficient, or an `eps` that is negative, NaN or infinite raises `ValueError` (a negative `eps` crashed with `ZeroDivisionError`; the others returned `OPTIMAL` with a NaN objective, a violated row or a wrong point).
+- **Wheels**: one abi3 wheel per platform (CPython 3.12+) built with pyo3 0.29, instead of one wheel per Python version.
+- **Rust toolchain**: pinned to 1.99.0 for development and CI (`rust-toolchain.toml`); building from the sdist needs Rust 1.88 or newer. CI now runs rustfmt, clippy (warnings are errors), `cargo test` and a 1.88 build check.
 
 ### Result changes
 
 Every change in solver output is listed here, float-level ones included, so downstream caches know which upgrade invalidates them.
 
 - **Louvain now runs both phases.** Earlier releases only ran local moving and never aggregated communities, although the docs described both phases. Results change: fewer, larger communities with higher modularity (a 1,000-node path: 500 pairs at 0.50 before, above 0.9 now; a 9,091-node code graph: 1,821 communities at 0.587 before, 115 at 0.823 now). Nodes and neighbors are now processed in sorted order, so even the first level only matches earlier releases for inputs that were already sorted. If you store community labels, expect them to change. `result.iterations` now counts local-moving passes over all levels. Community list order is now by smallest member.
-- **PageRank, Rust backend:** scores change at the float level (now bit-identical to the Python backend; it used an L1 convergence test before, so it ran more iterations). Rust `pagerank_edges` now reports `objective` = the last iteration's largest score change and `evaluations` = the number of nodes (it returned 0.0 and 0).
-- **PageRank, Python backend:** scores change in their last few bits (up to about 4 ulp: it multiplies by the reciprocal of the out-degree instead of dividing); iteration counts are unchanged.
-- **Result order:** `louvain` and `pagerank` list and dict entries now follow sorted node order (for mutually comparable nodes) instead of input order.
-- **LP/MILP:** optimal objectives are unchanged (a 300-instance snapshot from 0.6.2 is part of the test suite), but where several optimal solutions exist `solve_lp` and `solve_milp` may return a different one than 0.6.2 (new LP engine and presolve).
-- **Unbounded LP:** `solve_lp` reports an objective of `-inf` (minimize) or `inf` (maximize) instead of the last vertex's value (`solve_milp` already did).
-- **Infeasible LP when maximizing:** `solve_lp` reports an objective of `-inf` (it reported `inf` for both directions); minimizing still gives `inf`.
-- **Iteration limit before a feasible point:** `solve_lp` reports `MAX_ITER` (it reported `INFEASIBLE`), with no solution; `solve_milp` returns `MAX_ITER` when the root LP hits the limit instead of branching on an unfinished LP, and when `max_nodes` stops the search before any solution is found (it reported `INFEASIBLE`, which nothing had proven).
+- **PageRank, Rust backend**: scores change at the float level (now bit-identical to the Python backend; it used an L1 convergence test before, so it ran more iterations). Rust `pagerank_edges` now reports `objective` = the last iteration's largest score change and `evaluations` = the number of nodes (it returned 0.0 and 0).
+- **PageRank, Python backend**: scores change in their last few bits (up to about 4 ulp: it multiplies by the reciprocal of the out-degree instead of dividing); iteration counts are unchanged.
+- **Result order**: `louvain` and `pagerank` list and dict entries now follow sorted node order (for mutually comparable nodes) instead of input order.
+- **LP/MILP**: optimal objectives are unchanged (a 300-instance snapshot from 0.6.2 is part of the test suite), but where several optimal solutions exist `solve_lp` and `solve_milp` may return a different one than 0.6.2 (new LP engine and presolve).
+- **Unbounded LP**: `solve_lp` reports an objective of `-inf` (minimize) or `inf` (maximize) instead of the last vertex's value (`solve_milp` already did).
+- **Infeasible LP when maximizing**: `solve_lp` reports an objective of `-inf` (it reported `inf` for both directions); minimizing still gives `inf`.
+- **Iteration limit before a feasible point**: `solve_lp` reports `MAX_ITER` (it reported `INFEASIBLE`), with no solution; `solve_milp` returns `MAX_ITER` when the root LP hits the limit instead of branching on an unfinished LP, and when `max_nodes` stops the search before any solution is found (it reported `INFEASIBLE`, which nothing had proven).
 - **LP iteration counts** include bound flips (a variable jumping between its bounds without a pivot).
-- **MILP solutions:** integer variables are exactly integral (`1.0`, not `0.9999999999999998`) and the objective is recomputed from them, so objectives like `79.00000000000007` become `79.0`. With `solution_limit > 1`, `result.solutions` is now also set when the root LP is already integral (it was `None`).
-- **MILP tie-breaking:** the new search order (depth-first dives) can return a different optimal solution than before where several optima tie; objectives are unchanged.
-- **Badly scaled LPs and MILPs:** `solve_lp`, `solve_milp` and `MilpModel` now scale every row and column whose nonzero coefficients differ by a factor of 256 or more (binary exponents 8 or more apart). Such models can get a different solution, objective, status, `iterations` and `evaluations`, usually a correct answer where 0.6.2 was wrong. When branch and bound meets a node whose LP solution is visibly inaccurate (outside its bounds, or integral but violating a row), the result is `FEASIBLE` instead of `OPTIMAL` (or `INFEASIBLE`), with the reason in `error`. Models without such a row or column are not scaled; in every comparison we ran (the golden digests, which now include node and LP iteration counts, and random well-scaled LP and MILP families) their results are bit-identical to those without this change.
-- **MILP rounding heuristic:** its flip phase no longer turns off a variable with a negative cost when minimizing (or turns on one with a negative cost when maximizing), which made the first incumbent worse. Incumbents, node counts and, where optima tie, the returned solution can change.
-- **MILP counts:** `iterations` (nodes explored) and `evaluations` (LP iterations, now including bound flips and warm-started dual pivots) change with the new presolve and search, usually to much smaller values.
+- **MILP solutions**: integer variables are exactly integral (`1.0`, not `0.9999999999999998`) and the objective is recomputed from them, so objectives like `79.00000000000007` become `79.0`. With `solution_limit > 1`, `result.solutions` is now also set when the root LP is already integral (it was `None`).
+- **MILP tie-breaking**: the new search order (depth-first dives) can return a different optimal solution than before where several optima tie; objectives are unchanged.
+- **Badly scaled LPs and MILPs**: `solve_lp`, `solve_milp` and `MilpModel` now scale every row and column whose nonzero coefficients differ by a factor of 256 or more (binary exponents 8 or more apart). Such models can get a different solution, objective, status, `iterations` and `evaluations`, usually a correct answer where 0.6.2 was wrong. When branch and bound meets a node whose LP solution is visibly inaccurate (outside its bounds, or integral but violating a row), the result is `FEASIBLE` instead of `OPTIMAL` (or `INFEASIBLE`), with the reason in `error`. Models without such a row or column are not scaled; in every comparison we ran (the golden digests, which now include node and LP iteration counts, and random well-scaled LP and MILP families) their results are bit-identical to those without this change.
+- **MILP rounding heuristic**: its flip phase no longer turns off a variable with a negative cost when minimizing (or turns on one with a negative cost when maximizing), which made the first incumbent worse. Incumbents, node counts and, where optima tie, the returned solution can change.
+- **MILP counts**: `iterations` (nodes explored) and `evaluations` (LP iterations, now including bound flips and warm-started dual pivots) change with the new presolve and search, usually to much smaller values.
 
-### Changed
+### Added
 
-- **PageRank speed:** the callback `pagerank` now runs on the Rust backend when installed (9,091 nodes, 33,580 arcs: 345 ms to 12 ms; the pure Python path also dropped to 183 ms). New `backend` keyword. The Rust and Python backends now return bit-identical scores and iteration counts (same max-norm convergence test, same compensated summation), so results do not depend on whether the Rust wheel is installed.
-- **Wheels:** one abi3 wheel per platform (CPython 3.12+) built with pyo3 0.29, instead of one wheel per Python version.
-- **Rust toolchain:** pinned to 1.99.0 for development and CI (`rust-toolchain.toml`); building from the sdist needs Rust 1.88 or newer. CI now runs rustfmt, clippy (warnings are errors), `cargo test` and a 1.88 build check.
-- **LP engine:** bounded-variable simplex. Bounds no longer become rows, so binary models no longer need identity rows and branch-and-bound nodes no longer add bound rows (540 binary variables: root LP 108 ms to 11 ms).
-- **MILP presolve:** single-variable rows become bounds; rows with only integer variables and integer coefficients are divided by their gcd and get an integral right-hand side. Lexicographic lock rows with a `+0.5` slack now solve at or near the root (a 270-variable model: 83.5 s and 1,391 nodes to 0.01 s and 3 nodes; 20 recorded calls from a downstream project: 105.6 s to 0.05 s, same objectives).
-- **MILP heuristics:** the rounding heuristic updates row activities incrementally instead of re-checking every row after every move (a 540-variable model spent 174 s there).
-- **Validation** runs once per call instead of in every branch-and-bound node.
-- **LP/MILP input:** an empty `A` is accepted (only bounds), rows with an infinite right-hand side are dropped when they can never bind and make the model infeasible when they can never hold. A lower bound of `+inf`, an upper bound of `-inf`, an infinite cost or constraint coefficient, or an `eps` that is negative, NaN or infinite raises `ValueError` (a negative `eps` crashed with `ZeroDivisionError`; the others returned `OPTIMAL` with a NaN objective, a violated row or a wrong point).
-- **MILP branch and bound** re-solves each node with the dual simplex from its parent's basis and dives depth-first before taking the best queued node (7 branching benchmarks: 8.6 s to 2 s, 5 to 14 times fewer LP pivots).
-- **LP/MILP Rust kernel:** the simplex tableau behind `solve_lp`, `solve_milp` and `MilpModel` runs in Rust when the extension is installed (new `backend` keyword, `"auto"` by default). It performs the same float operations in the same order as the Python kernel, so results are bit-identical on either backend; branch and bound, presolve and heuristics stay in Python. 13 branching benchmarks run about 60 times faster in total, the root LP of a 540-variable packing model about 75 times faster.
-
-## [0.6.2] 2026-04-07
+- **LP/MILP input**: `solve_lp` and `solve_milp` accept sparse rows (`{column: coefficient}` dicts, mixable with dense rows), per-row `senses` (`"<="`, `">="`, `"="`) and variable bounds `lb`/`ub`. `solve_milp` adds `binary=` (0/1 variables) and `integers` becomes optional. The 0.6.2 call form is unchanged.
+- **Incremental MILP**: `MilpModel` adds rows and re-solves warm (lazy cuts, objective locks, new objectives); `solve_lexicographic` optimizes objectives in priority order on a model (a 270-variable, 4-stage downstream model: 7.4 ms). Adding a cut to a 540-variable model and re-solving takes 13% of a fresh solve.
 
 ### Fixed
 
-- **Rust:** Dijkstra, BFS, DFS, and Bellman-Ford now raise `ValueError` on out-of-bounds source/target instead of crashing the process.
-- **Rust:** Floyd-Warshall callback errors are now propagated to Python instead of being silently swallowed.
-- **Rust:** `PyList` construction in bindings uses proper error propagation instead of `unwrap()`.
-- **Rust:** Dijkstra and Kruskal use `total_cmp` for deterministic NaN handling in edge weights.
-- **Rust:** PageRank validates `damping`, `max_iter`, and `tol` parameters at the binding boundary.
+- **Deep graphs**: `articulation_points`, `bridges` and `strongly_connected_components` no longer raise `RecursionError` when the DFS goes deeper than Python's recursion limit (about 1,000 nodes on one path; code dependency graphs reach that easily). All three now use an iterative DFS with the same results, result order and iteration counts; a 100,000-node path or tree takes under 0.3 s. The SCC docstring's advice to raise the recursion limit is removed.
+- **Rust SCC crash**: `strongly_connected_components_edges` with the Rust backend (the default) no longer kills the Python process with a native stack overflow on deep graphs (a 100,000-node chain did). The Rust implementation is now iterative; results are identical to the Python backend, component order included.
+- **Version**: `solvor.__version__` reported 0.6.1 in the 0.6.2 release. It now reads the installed package metadata, and the version lives only in `rust/Cargo.toml`.
+- **Determinism**: `louvain` and `pagerank` no longer depend on set iteration order: with mutually comparable nodes (ints, strs, tuples) the same graph gives the same result under any `PYTHONHASHSEED`, also when `neighbors` returns values that are not nodes (they are ignored). Result lists and dicts follow sorted node order.
+- **PageRank**: `max_iter=0`, a `tol` that is not positive and finite, and `damping` outside `[0, 1)` now raise `ValueError` on both backends (the Python path crashed or misbehaved). `pagerank_edges(backend="python")` ignores out-of-range edges like the Rust backend instead of raising `IndexError`, and the Rust backend now also ignores edges with negative endpoints or endpoints beyond 64 bits (it raised `OverflowError`). A negative `n_nodes` raises `ValueError` on both backends.
+- **Badly scaled MILPs (big-M)**: `solve_milp` and `MilpModel` could return a point that violates a constraint, a worse objective than the optimum, or no solution for a feasible model when big-M coefficients of about 1e5 and up sit next to coefficients near 1 (0.6.2 too). The LP relaxations now use their own 1e-9 tolerance, rows and columns whose coefficients differ by a factor of 256 or more are scaled by powers of two, every integer solution is checked against all rows after it is snapped to integers, a warm-started "infeasible" verdict in such a model is confirmed with a fresh LP, and branching can no longer repeat a node. On 2,000 solves of random binary models with coefficients from 0.1 to 9e6, 0.6.2 returned 131 points that violate a row, 67 worse objectives and 115 "no solution" answers for feasible models, all without a warning; 0.6.3 returns 0, 2 and 4, each with the reason in `error` and none marked `OPTIMAL`.
+- **Small costs next to big-M rows**: in a badly scaled model the LP behind `solve_lp`, `solve_milp` and `MilpModel` could stop short of its optimum when a reduced cost below `eps` hid a large gain (the slack of a row with a large coefficient costs almost nothing per unit but can move very far). With a good `warm_start`, branch and bound then pruned the root and returned that warm start as `OPTIMAL`. Such a column now enters when its step gains more than `eps * (1 + |objective|)`; well-scaled models keep the plain test. On 800 random LPs with costs down to 1e-5 next to coefficients up to 9e6, answers worse than HiGHS dropped from 14 to 1 (0.6.2 had this too).
+
+## [0.6.2] - 2026-04-07
+
+### Fixed
+
+- **Rust**: Dijkstra, BFS, DFS, and Bellman-Ford now raise `ValueError` on out-of-bounds source/target instead of crashing the process.
+- **Rust**: Floyd-Warshall callback errors are now propagated to Python instead of being silently swallowed.
+- **Rust**: `PyList` construction in bindings uses proper error propagation instead of `unwrap()`.
+- **Rust**: Dijkstra and Kruskal use `total_cmp` for deterministic NaN handling in edge weights.
+- **Rust**: PageRank validates `damping`, `max_iter`, and `tol` parameters at the binding boundary.
 
 ### Changed
 
-- **Rust:** Removed `hashbrown` and `ahash` dependencies from `Cargo.toml`.
+- **Rust**: Removed `hashbrown` and `ahash` dependencies from `Cargo.toml`.
 
 ## [0.6.1] - 2026-02-01
 
 ### Fixed
 
-- **Build:** Fixed LICENSE file not included in source distribution.
-- **CI:** Updated macOS runner from deprecated macos-13 to macos-14.
-- **PyPI:** Normalized package name to lowercase `solvor` for wheel compatibility.
+- **Build**: Fixed LICENSE file not included in source distribution.
+- **CI**: Updated macOS runner from deprecated macos-13 to macos-14.
+- **PyPI**: Normalized package name to lowercase `solvor` for wheel compatibility.
 
 ## [0.6.0] - 2026-02-01
 
@@ -81,9 +102,9 @@ Every change in solver output is listed here, float-level ones included, so down
 
 ### Added
 
-- **Rust Backend:** Optional high-performance Rust implementations via PyO3. Algorithms automatically use Rust when available, with seamless Python fallback. Use `backend="rust"` or `backend="python"` to force a specific implementation.
+- **Rust Backend**: Optional high-performance Rust implementations via PyO3. Algorithms automatically use Rust when available, with seamless Python fallback. Use `backend="rust"` or `backend="python"` to force a specific implementation.
 
-- **Algorithms with Rust backends:**
+- **Algorithms with Rust backends**:
   - `floyd_warshall` - All-pairs shortest paths (45-60x speedup)
   - `bellman_ford` - Negative weight shortest paths (10-20x speedup)
   - `dijkstra_edges` - Single-source shortest paths (5-10x speedup)
@@ -92,51 +113,51 @@ Every change in solver output is listed here, float-level ones included, so down
   - `strongly_connected_components_edges`, `topological_sort_edges` - Dependency analysis (5-10x speedup)
   - `kruskal` - Minimum spanning tree (5-10x speedup)
 
-- **Two API styles for graph algorithms:**
+- **Two API styles for graph algorithms**:
   - Callback-based (`dijkstra`, `bfs`, etc.) - Flexible, works with any node type, pure Python
   - Edge-list (`dijkstra_edges`, `bfs_edges`, etc.) - Integer nodes 0..n-1, Rust-accelerated
 
-- **Performance documentation:** New [Performance page](https://solvOR.ai/getting-started/performance/) with benchmarks, backend usage guide, and API comparison.
+- **Performance documentation**: New [Performance page](https://solvOR.ai/getting-started/performance/) with benchmarks, backend usage guide, and API comparison.
 
-- **Backend Infrastructure:**
+- **Backend Infrastructure**:
   - `solvor/rust/` - Backend detection, routing, and adapters
   - `rust/` - Rust crate with PyO3 bindings
   - Multi-platform wheel builds (Linux, macOS, Windows) via GitHub Actions
 
-- **Developer Tooling:**
+- **Developer Tooling**:
   - Added [prek](https://github.com/j178/prek) for fast pre-commit hooks (Rust-based, uv-compatible)
 
 ### Changed
 
-- **Build System:** Switched from hatchling to maturin for mixed Python/Rust builds.
-- **CI:** New `publish.yml` workflow builds wheels for all platforms.
-- **Code Organization:** Moved Rust backend utilities to `solvor/rust/` module.
+- **Build System**: Switched from hatchling to maturin for mixed Python/Rust builds.
+- **CI**: New `publish.yml` workflow builds wheels for all platforms.
+- **Code Organization**: Moved Rust backend utilities to `solvor/rust/` module.
 
 ## [0.5.5] - 2026-01-31
 
 ### Added
 
-- **Branch-and-Price:** Added `solve_bp()` for optimal integer solutions via branch-and-price. Combines column generation with branch-and-bound to find provably optimal integer solutions. Same interface as `solve_cg()` with additional B&B parameters (`max_nodes`, `gap_tol`).
+- **Branch-and-Price**: Added `solve_bp()` for optimal integer solutions via branch-and-price. Combines column generation with branch-and-bound to find provably optimal integer solutions. Same interface as `solve_cg()` with additional B&B parameters (`max_nodes`, `gap_tol`).
 
 ## [0.5.4] - 2026-01-24
 
 ### Added
 
-- **Column Generation:** Added `solve_cg()` for problems with exponentially many variables. Implements Dantzig-Wolfe decomposition with LP master problem and customizable pricing. Built-in cutting stock mode with knapsack pricing, or provide your own pricing function for bin packing, vehicle routing, crew scheduling, graph coloring, etc.
+- **Column Generation**: Added `solve_cg()` for problems with exponentially many variables. Implements Dantzig-Wolfe decomposition with LP master problem and customizable pricing. Built-in cutting stock mode with knapsack pricing, or provide your own pricing function for bin packing, vehicle routing, crew scheduling, graph coloring, etc.
 
-- **OR-Tools Examples:** 24 converted examples showing solvOR as drop-in replacement for Google OR-Tools. Organized by category:
-  - **Linear Solver (13):** LP, MIP, assignment, bin packing, knapsack problems using `solve_lp`, `solve_milp`, `solve_hungarian`, `solve_bin_pack`
-  - **CP-SAT (7):** Constraint satisfaction using `Model` and `solve_job_shop` - simple CSP, N-Queens, nurse scheduling, job shop, solution enumeration
-  - **Graph (2):** Max flow and linear sum assignment using `max_flow`, `solve_hungarian`
-  - **Algorithms (2):** Knapsack problems using `solve_knapsack`
+- **OR-Tools Examples**: 24 converted examples showing solvOR as drop-in replacement for Google OR-Tools. Organized by category:
+  - **Linear Solver (13)**: LP, MIP, assignment, bin packing, knapsack problems using `solve_lp`, `solve_milp`, `solve_hungarian`, `solve_bin_pack`
+  - **CP-SAT (7)**: Constraint satisfaction using `Model` and `solve_job_shop` - simple CSP, N-Queens, nurse scheduling, job shop, solution enumeration
+  - **Graph (2)**: Max flow and linear sum assignment using `max_flow`, `solve_hungarian`
+  - **Algorithms (2)**: Knapsack problems using `solve_knapsack`
 
 *All converted examples where generated using AI.
 
-- **OR-Tools Documentation:** New index page at `docs/examples/ortools.md` with benchmark comparisons. solvOR often faster for small problems (pure Python startup vs C++ overhead), competitive on medium problems, OR-Tools wins on large problems as expected.
+- **OR-Tools Documentation**: New index page at `docs/examples/ortools.md` with benchmark comparisons. solvOR often faster for small problems (pure Python startup vs C++ overhead), competitive on medium problems, OR-Tools wins on large problems as expected.
 
 ### Changed
 
-- **MILP:** Greedy rounding + LNS heuristics for binary MIPs. Enable with `lns_iterations` parameter.
+- **MILP**: Greedy rounding + LNS heuristics for binary MIPs. Enable with `lns_iterations` parameter.
 
 ### Fixed
 
@@ -148,19 +169,19 @@ Some small QoL improvements and ported all the graph algorithms from another pro
 
 ### Added
 
-- **Graph analysis:** `topological_sort`, `strongly_connected_components`, `condense` for dependency ordering and cycle detection. `pagerank` for node importance. `louvain` for community detection. `articulation_points`, `bridges` for finding critical connections. `kcore_decomposition`, `kcore` for core/periphery analysis.
-- **Version:** Added `__version__` to package.
+- **Graph analysis**: `topological_sort`, `strongly_connected_components`, `condense` for dependency ordering and cycle detection. `pagerank` for node importance. `louvain` for community detection. `articulation_points`, `bridges` for finding critical connections. `kcore_decomposition`, `kcore` for core/periphery analysis.
+- **Version**: Added `__version__` to package.
 
 ### Changed
 
-- **CI:** Parallelized lint/typecheck jobs, added publish version tag verification.
-- **Exports:** Added `Progress`, `ProgressCallback` to public API.
-- **Refactor:** Extracted `reconstruct_path` to utils (shared by dijkstra, bfs, a_star).
+- **CI**: Parallelized lint/typecheck jobs, added publish version tag verification.
+- **Exports**: Added `Progress`, `ProgressCallback` to public API.
+- **Refactor**: Extracted `reconstruct_path` to utils (shared by dijkstra, bfs, a_star).
 
 ### Fixed
 
-- **Flow solvers:** Now track iterations correctly.
-- **Exports:** Fixed missing `__all__` in utils/validate.py.
+- **Flow solvers**: Now track iterations correctly.
+- **Exports**: Fixed missing `__all__` in utils/validate.py.
 
 ## [0.5.2] - 2025-12-28
 
@@ -169,27 +190,27 @@ solvOR went through some nice changes. CP got amputated, LP got more company, do
 
 ### Added
 
-- **CI docs test:** `test_docs.py` runs `mkdocs build --strict` to catch missing type hints and broken links before they reach main.
-- **Interior point:** Added `solve_lp_interior()` for linear programming. Primal-dual method with Mehrotra predictor-corrector. Alternative to simplex method.
+- **CI docs test**: `test_docs.py` runs `mkdocs build --strict` to catch missing type hints and broken links before they reach main.
+- **Interior point**: Added `solve_lp_interior()` for linear programming. Primal-dual method with Mehrotra predictor-corrector. Alternative to simplex method.
 
 ### Fixed
 
-- **README:** Fixed incorrect `solve_vrptw` example (wrong parameter names, missing customer IDs).
+- **README**: Fixed incorrect `solve_vrptw` example (wrong parameter names, missing customer IDs).
 
 ### Changed
 
-- **CP refactor:** Extracted SAT encoding to `cp_encoder.py` (cp.py went from 861 to 428 lines, much easier to read now). `Model.solve()` defaults to `solver="auto"` which picks DFS for simple constraints and SAT for globals (circuit, no_overlap, cumulative, sum_*). Force a specific solver with `solver="dfs"` or `solver="sat"`. Also, `IntVar` now supports multiplication (`x * 3`, `3 * x`) for expressions like `timeslot * n_rooms + room`.
-- **Module docstrings:** Standardized all 18 solvor docstrings with consistent format: "How it works" section, "Use this for" bullets, "Parameters" section, r"""string. Same style, so easier when scanning the different solvors.
-- **solvOR.ai documentation:** Added "How It Works" sections explaining the math behind 16 algorithms (simplex, interior point, dijkstra, bellman-ford, floyd-warshall, A*, anneal, tabu, genetic, PSO, DE, BFGS, knapsack, bin-packing, SAT, DLX). Also added references, tips, and full signature sections.
-- **Tests:** Removed tests with weak assertions, improved edge case coverage. No bugs found (yet).
-- **CI/pre-commit:** Turned on uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
-- **README:** Added docs badge.
+- **CP refactor**: Extracted SAT encoding to `cp_encoder.py` (cp.py went from 861 to 428 lines, much easier to read now). `Model.solve()` defaults to `solver="auto"` which picks DFS for simple constraints and SAT for globals (circuit, no_overlap, cumulative, sum_*). Force a specific solver with `solver="dfs"` or `solver="sat"`. Also, `IntVar` now supports multiplication (`x * 3`, `3 * x`) for expressions like `timeslot * n_rooms + room`.
+- **Module docstrings**: Standardized all 18 solvor docstrings with consistent format: "How it works" section, "Use this for" bullets, "Parameters" section, r"""string. Same style, so easier when scanning the different solvors.
+- **solvOR.ai documentation**: Added "How It Works" sections explaining the math behind 16 algorithms (simplex, interior point, dijkstra, bellman-ford, floyd-warshall, A*, anneal, tabu, genetic, PSO, DE, BFGS, knapsack, bin-packing, SAT, DLX). Also added references, tips, and full signature sections.
+- **Tests**: Removed tests with weak assertions, improved edge case coverage. No bugs found (yet).
+- **CI/pre-commit**: Turned on uv cache, removed redundant type checks across Python versions, added no-commit-to-branch for main.
+- **README**: Added docs badge.
 
 ## [0.5.1] - 2025-12-27
 
 ### Fixed
 
-- **Documentation consistency pass:** Reviewed all 29 solvors and 7 extended examples against MkDocs pages. Fixed parameter name mismatches, incorrect signatures, and outdated solution formats across 15+ documentation files.
+- **Documentation consistency pass**: Reviewed all 29 solvors and 7 extended examples against MkDocs pages. Fixed parameter name mismatches, incorrect signatures, and outdated solution formats across 15+ documentation files.
 
 ## [0.5.0] - 2025-12-26
 
@@ -205,7 +226,7 @@ Documentation finally has a proper home. Moved everything from the wiki to MkDoc
 
 ### Changed
 
-- **BREAKING:** `evolve()` renamed `max_gen` to `max_iter` for consistency. Update your code: `evolve(..., max_gen=100)` → `evolve(..., max_iter=100)`
+- **BREAKING**: `evolve()` renamed `max_gen` to `max_iter` for consistency. Update your code: `evolve(..., max_gen=100)` → `evolve(..., max_iter=100)`
 
 - `Result` is now generic (`Result[T]`), so type checkers actually know what `.solution` contains. Less red underscores in the IDE.
 
@@ -221,7 +242,7 @@ Examples! Finally they all work (and can be used as extra tests! optional for no
 
 ### Added
 
-- **We need examples, lots of examples:**
+- **We need examples, lots of examples**:
   - `quick_examples/` minimal working code for every solver, copy-paste ready
   - `classic/` TSP, knapsack, bin packing, job shop, VRP benchmarks
   - `puzzles/` sudoku, n-queens, zebra puzzle, pentomino, magic square
@@ -233,17 +254,17 @@ Examples! Finally they all work (and can be used as extra tests! optional for no
 
 ### Changed
 
-- **WIKILEAKS:** Wiki completely up to date, using quick examples from the repo now for consistency. Lots of copy-pasting.
+- **WIKILEAKS**: Wiki completely up to date, using quick examples from the repo now for consistency. Lots of copy-pasting.
 
-- **Full tests overhaul:** Tests reorganized into `tests/solvers/` and `tests/examples/`, grouped example tests into folder categories. More copy-pasting.
+- **Full tests overhaul**: Tests reorganized into `tests/solvers/` and `tests/examples/`, grouped example tests into folder categories. More copy-pasting.
 
 - **CI simplified** the per-solver conditional testing was clever but unmaintainable, just run everything now, tweaked some of the slower tests.
 
-- **Input validation added to graph algorithms and MILP:** bellman_ford, floyd_warshall, mst and milp now tell you what's wrong instead of crashing.
+- **Input validation added to graph algorithms and MILP**: bellman_ford, floyd_warshall, mst and milp now tell you what's wrong instead of crashing.
 
-- **Extra parameters:** I don't want to add too many parameters and complexity, but added warm_start to milp and a solution limit. Added `allow_forest=True` for kruskals, which returns minimum spanning forest instead of giving up.
+- **Extra parameters**: I don't want to add too many parameters and complexity, but added warm_start to milp and a solution limit. Added `allow_forest=True` for kruskals, which returns minimum spanning forest instead of giving up.
 
-- **README & CONTRIBUTING:** Up-to-date again, were lagging behind with new solvers and parameters, CI changes and more. Should be consistent with the repo's content again.
+- **README & CONTRIBUTING**: Up-to-date again, were lagging behind with new solvers and parameters, CI changes and more. Should be consistent with the repo's content again.
 
 ## [0.4.7] - 2025-12-25
 
@@ -266,19 +287,19 @@ Santa's been busy, a lot more solvors, focussing on more real world problems, go
 
 ### Changed
 
-- **`bayesian_opt` a lot of upgrades, including:**
+- **`bayesian_opt` a lot of upgrades, including**:
   - Acquisition optimization now tries multiple starting points (was single-shot before)
   - Progress callbacks for monitoring long runs
   - Cholesky decomposition instead of Gaussian elimination, more stable numerically
   - Fixed status reporting when hitting iteration limit
 
-- **`adam` added learning rate schedules:**
+- **`adam` added learning rate schedules**:
   - Supports constant, step, cosine, and warmup decay
 
-- **`solve_exact_cover` added secondary columns:**
+- **`solve_exact_cover` added secondary columns**:
   - Optional constraints, covered at most once, but not required
 
-- **`evolve` now with adaptive mutation:**
+- **`evolve` now with adaptive mutation**:
   - Mutation rate responds to progress and increases when stuck, decreases when improving
 
 ## [0.4.6] - 2025-12-24
@@ -287,10 +308,10 @@ Gradient-free optimizers join the party.
 
 ### Added
 
-- **Quasi-Newton Methods:**
+- **Quasi-Newton Methods**:
   - `bfgs` BFGS with optional line search and progress callbacks
   - `lbfgs` L-BFGS for when memory matters
-- **Derivative-Free Optimization:**
+- **Derivative-Free Optimization**:
   - `nelder_mead` simplex method with adaptive parameters
   - `powell` conjugate direction method with optional bounds
 
@@ -367,15 +388,15 @@ Graph algorithms join the party.
 
 Some extracted logic from old AoC solutions:
 
-- **Pathfinding:**
+- **Pathfinding**:
   - `astar`, `astar_grid` A* for graphs and grids
   - `bfs`, `dfs` the classics
   - `dijkstra` shortest paths
   - `bellman_ford` when edges go negative
   - `floyd_warshall` all pairs, all the time
-- **Minimum Spanning Tree:**
+- **Minimum Spanning Tree**:
   - `kruskal`, `prim` two ways to connect everything cheaply
-- **Assignment & Flow:**
+- **Assignment & Flow**:
   - `hungarian` optimal assignment in polynomial time
   - `network_simplex` min cost flow done right
 
@@ -427,28 +448,29 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 
 ### Added
 
-- **Linear Programming:**
+- **Linear Programming**:
   - `solve_lp` simplex method
   - `solve_milp` mixed-integer LP
-- **Constraint Satisfaction:**
+- **Constraint Satisfaction**:
   - `solve_sat` SAT solver
   - `solve_assignment` assignment problems
   - `solve_tsp` traveling salesman
-- **Metaheuristics:**
+- **Metaheuristics**:
   - `anneal` simulated annealing
   - `tabu_search` tabu search
   - `evolve` genetic algorithm
-- **Continuous Optimization:**
+- **Continuous Optimization**:
   - `gradient_descent`, `momentum`, `rmsprop`, `adam` gradient-based optimizers
   - `bayesian_opt` when you can't compute gradients
-- **Network Flow:**
+- **Network Flow**:
   - `max_flow` Ford-Fulkerson
   - `min_cost_flow` minimum cost flow
 - `Result` dataclass with `.ok` property and `Status` enum
 - Pure Python, no dependencies, works everywhere
 
 
-[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...HEAD
+[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.6.4...HEAD
+[0.6.4]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/StevenBtw/solvOR/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/StevenBtw/solvOR/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/StevenBtw/solvOR/compare/v0.6.0...v0.6.1

@@ -1,114 +1,327 @@
-/* Custom styles for solvOR documentation */
+/* Generated from the solvOR design tokens (the design repo's tokens/build.mjs) and copied in as is; edits here are lost on the next build, so put site rules in solvor.css. */
+
+/* red-hat-text-latin-ext-400-normal */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-text-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-text-latin-400-normal */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-text-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-text-latin-ext-400-italic */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-text-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-text-latin-400-italic */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-text-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-text-latin-ext-500-normal */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("fonts/red-hat-text-latin-ext-500-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-text-latin-500-normal */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("fonts/red-hat-text-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-text-latin-ext-700-normal */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("fonts/red-hat-text-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-text-latin-700-normal */
+@font-face {
+  font-family: "Red Hat Text";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("fonts/red-hat-text-latin-700-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-display-latin-ext-400-normal */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-display-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-display-latin-400-normal */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-display-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-display-latin-ext-400-italic */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-display-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-display-latin-400-italic */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-display-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-display-latin-ext-500-normal */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("fonts/red-hat-display-latin-ext-500-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-display-latin-500-normal */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("fonts/red-hat-display-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-display-latin-ext-700-normal */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("fonts/red-hat-display-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-display-latin-700-normal */
+@font-face {
+  font-family: "Red Hat Display";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("fonts/red-hat-display-latin-700-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-mono-latin-ext-400-normal */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-mono-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-mono-latin-400-normal */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-mono-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-mono-latin-ext-400-italic */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-mono-latin-ext-400-italic.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-mono-latin-400-italic */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url("fonts/red-hat-mono-latin-400-italic.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-mono-latin-ext-500-normal */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("fonts/red-hat-mono-latin-ext-500-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-mono-latin-500-normal */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("fonts/red-hat-mono-latin-500-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+/* red-hat-mono-latin-ext-700-normal */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("fonts/red-hat-mono-latin-ext-700-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+/* red-hat-mono-latin-700-normal */
+@font-face {
+  font-family: "Red Hat Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("fonts/red-hat-mono-latin-700-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
 
 :root {
-  /* Dark slate for header/primary elements */
-  --md-primary-fg-color: #1e293b;
-  --md-primary-fg-color--light: #334155;
-  --md-primary-fg-color--dark: #0f172a;
-  /* Teal for accent/interactive elements */
-  --md-accent-fg-color: #009688;
-  --md-accent-fg-color--transparent: #00968820;
+  --radius-box: 3px;
+  --radius-control: 6px;
+  --md-text-font: "Red Hat Text", sans-serif;
+  --md-code-font: "Red Hat Mono", monospace;
 }
 
-/* Code block styling */
-.md-typeset code {
-  font-size: 0.85em;
+[data-md-color-scheme="default"] {
+  color-scheme: light;
+  --md-primary-fg-color: #1f1d19;
+  --md-primary-fg-color--light: #1f1d19;
+  --md-primary-fg-color--dark: #1f1d19;
+  --md-primary-bg-color: #f3efe6;
+  --md-primary-bg-color--light: #b7b0a2;
+  --md-accent-fg-color: #8a5a00;
+  --md-accent-fg-color--transparent: #8a5a001a;
+  --md-accent-bg-color: #faf9f6;
+  --md-default-bg-color: #faf9f6;
+  --md-default-bg-color--light: #faf9f6;
+  --md-default-bg-color--lighter: #f3f0e9;
+  --md-default-bg-color--lightest: #e7e3da;
+  --md-default-fg-color: #1c1a16;
+  --md-typeset-color: #1c1a16;
+  --md-default-fg-color--light: #67625a;
+  --md-default-fg-color--lighter: #cfc8ba;
+  --md-default-fg-color--lightest: #e7e3da;
+  --md-code-bg-color: #f3f0e9;
+  --md-code-bg-color--light: #f3f0e9;
+  --md-code-bg-color--lighter: #f3f0e9;
+  --md-code-fg-color: #1c1a16;
+  --md-typeset-a-color: #8a5a00;
+  --md-admonition-bg-color: #faf9f6;
+  --md-admonition-fg-color: #1c1a16;
+  --sig-rule: #d49a1c;
+  --sig-ok: #1f9d55;
+  --sig-warn: #c4421a;
+  --sig-error: #d93a3a;
+  --sig-adm-title-bg: #fbf1da;
+  --sig-header-line: transparent;
+  --sig-header-bg: #1f1d19;
+  --sig-header-fg: #f3efe6;
+  --sig-header-muted: #b7b0a2;
+  --sig-search-bg: #2d2a25;
+  --sig-highlight: #f6e3b4;
 }
 
-/* Make tables more readable */
-.md-typeset table:not([class]) {
-  font-size: 0.8rem;
+[data-md-color-scheme="slate"] {
+  color-scheme: dark;
+  --md-primary-fg-color: #0f0e0c;
+  --md-primary-fg-color--light: #0f0e0c;
+  --md-primary-fg-color--dark: #0f0e0c;
+  --md-primary-bg-color: #f3efe6;
+  --md-primary-bg-color--light: #a39d90;
+  --md-accent-fg-color: #e8b54a;
+  --md-accent-fg-color--transparent: #e8b54a1a;
+  --md-accent-bg-color: #151411;
+  --md-default-bg-color: #151411;
+  --md-default-bg-color--light: #151411;
+  --md-default-bg-color--lighter: #1b1a16;
+  --md-default-bg-color--lightest: #2a2823;
+  --md-default-fg-color: #ece8df;
+  --md-typeset-color: #ece8df;
+  --md-default-fg-color--light: #a39d90;
+  --md-default-fg-color--lighter: #3d3a33;
+  --md-default-fg-color--lightest: #2a2823;
+  --md-code-bg-color: #1b1a16;
+  --md-code-bg-color--light: #1b1a16;
+  --md-code-bg-color--lighter: #1b1a16;
+  --md-code-fg-color: #ece8df;
+  --md-typeset-a-color: #e8b54a;
+  --md-admonition-bg-color: #151411;
+  --md-admonition-fg-color: #ece8df;
+  --sig-rule: #e8b54a;
+  --sig-ok: #4cc38a;
+  --sig-warn: #f07a4a;
+  --sig-error: #ff6b6b;
+  --sig-adm-title-bg: #2a2414;
+  --sig-header-line: transparent;
+  --sig-header-bg: #0f0e0c;
+  --sig-header-fg: #f3efe6;
+  --sig-header-muted: #a39d90;
+  --sig-search-bg: #1f1d19;
+  --sig-highlight: #4a3a14;
 }
 
-/* Hero section on home page */
-.md-typeset h1 {
-  font-weight: 700;
-}
-
-/* Card grid styling */
-.grid.cards > ul > li {
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.5rem;
-  padding: 1rem;
-}
-
-/* Admonition styling */
-.md-typeset .admonition {
-  border-radius: 0.25rem;
-}
-
-/* Navigation links - more visible in dark mode */
-.md-nav__link {
-  color: var(--md-default-fg-color--light) !important;
-}
-
-.md-nav__link:hover,
-.md-nav__link--active {
-  color: var(--md-accent-fg-color) !important;
-}
-
-/* Sidebar nav items */
-[data-md-color-scheme="slate"] .md-nav__link {
-  color: #94a3b8 !important;
-}
-
-[data-md-color-scheme="slate"] .md-nav__link:hover,
-[data-md-color-scheme="slate"] .md-nav__link--active {
-  color: #5eead4 !important;
-}
-
-/* Content links */
-[data-md-color-scheme="slate"] .md-typeset a {
-  color: #5eead4;
-}
-
-/* Fix for Firefox: code elements inside links need explicit color */
-[data-md-color-scheme="slate"] .md-typeset a code {
-  color: #5eead4;
-}
-
-[data-md-color-scheme="slate"] .md-typeset a:hover,
-[data-md-color-scheme="slate"] .md-typeset a:hover code {
-  color: #99f6e4;
-}
-
-/* Hide site name text in header (logo is enough) */
-.md-header__topic .md-ellipsis {
-  display: none;
-}
-
-/* Hero logo on homepage */
-.logo-hero {
-  height: 80px;
-  width: auto;
-  margin-bottom: 0.5rem;
-}
-
-/* Visually hidden (for accessibility/SEO) */
-.visually-hidden,
-.md-typeset h1.visually-hidden {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-
-/* Hide permalink until heading is hovered */
-.md-typeset .headerlink {
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.md-typeset h1:hover .headerlink,
-.md-typeset h2:hover .headerlink,
-.md-typeset h3:hover .headerlink,
-.md-typeset h4:hover .headerlink,
-.md-typeset h5:hover .headerlink,
-.md-typeset h6:hover .headerlink {
-  opacity: 1;
-}
+/* Signature rules: hairlines, radius by role, depth only where layers float. */
+.md-header, .md-tabs { background-color: var(--sig-header-bg); color: var(--sig-header-fg); }
+.md-header { box-shadow: none; border-bottom: 1px solid var(--sig-header-line); }
+.md-header__title { color: var(--sig-header-fg); }
+.md-tabs { border-bottom: 1px solid var(--sig-header-line); }
+.md-tabs__item--active .md-tabs__link, .md-tabs__link--active { box-shadow: inset 0 -2px 0 var(--sig-rule); }
+.md-search__button { background-color: var(--sig-search-bg); color: var(--sig-header-muted); }
+.md-header .md-search__button :is(span, svg) { color: var(--sig-header-muted); fill: currentColor; }
+.md-search__form, .md-search__button { border-radius: var(--radius-control); }
+.md-typeset :is(h1, h2, h3, h4, h5, h6) { color: var(--md-typeset-color); }
+.md-typeset .md-button { border-radius: var(--radius-control); }
+.md-typeset pre > code, .md-typeset .highlight, .md-typeset .highlighttable { border-radius: var(--radius-box); }
+.md-typeset .admonition[class], .md-typeset details[class] { background-color: transparent; border: 1px solid var(--md-default-fg-color--lightest); border-left: 3px solid var(--sig-type, var(--sig-rule)); border-radius: var(--radius-box); box-shadow: none; }
+.md-typeset .admonition[class] > .admonition-title, .md-typeset details[class] > summary { background-color: var(--sig-adm-title-bg); }
+.md-typeset .admonition[class] > .admonition-title::before, .md-typeset details[class] > summary::before { background-color: var(--sig-type, var(--sig-rule)); }
+.md-typeset :is(.admonition, details):is(.warning, .caution, .attention) { --sig-type: var(--sig-warn); --sig-adm-title-bg: var(--md-default-bg-color--lighter); }
+.md-typeset :is(.admonition, details):is(.danger, .error, .failure, .fail, .missing, .bug) { --sig-type: var(--sig-error); --sig-adm-title-bg: var(--md-default-bg-color--lighter); }
+.md-typeset :is(.admonition, details):is(.success, .check, .done) { --sig-type: var(--sig-ok); --sig-adm-title-bg: var(--md-default-bg-color--lighter); }
+.md-typeset table:not([class]) { border: 1px solid var(--md-default-fg-color--lightest); border-radius: var(--radius-box); box-shadow: none; font-variant-numeric: tabular-nums; }
+.md-typeset table:not([class]) th { border-bottom: 1px solid var(--md-default-fg-color--lighter); }
+.md-typeset mark { background-color: var(--sig-highlight); color: inherit; }
+.md-typeset .grid.cards > ul > li, .md-typeset .grid > .card { border-radius: var(--radius-box); box-shadow: none; }
+.md-typeset :is(h1, h2, h3, h4, h5, h6), .md-header__title { font-family: "Red Hat Display", sans-serif; }

@@ -7,8 +7,8 @@ import pytest
 
 
 @pytest.mark.docs
-def test_mkdocs_builds():
-    """Ensure MkDocs builds successfully in strict mode.
+def test_docs_build():
+    """Ensure the docs build with Zensical in strict mode.
 
     This catches:
     - Missing type annotations on public APIs
@@ -17,7 +17,7 @@ def test_mkdocs_builds():
     - Missing referenced files
     """
     result = subprocess.run(
-        [sys.executable, "-m", "mkdocs", "build", "--strict"],
+        [sys.executable, "-m", "zensical", "build", "--strict"],
         capture_output=True,
         text=True,
     )
@@ -27,4 +27,4 @@ def test_mkdocs_builds():
         print("STDOUT:", result.stdout)
         print("STDERR:", result.stderr)
 
-    assert result.returncode == 0, f"mkdocs build --strict failed:\n{result.stderr}"
+    assert result.returncode == 0, f"zensical build --strict failed:\n{result.stderr}"
