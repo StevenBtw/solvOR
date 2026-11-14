@@ -2,9 +2,9 @@
 
 What broke, what got fixed, and what's new.
 
-## [0.6.4] - 2026-11-14
+## [0.7.0] - 2026-11-14
 
-Docs release: the site builds with Zensical, has its own look with fonts served locally, and opens on interactive examples. Solver code and results are unchanged from 0.6.3.
+Python versions and docs release: solvOR now supports Python 3.13 to 3.15, and the docs site builds with Zensical, has its own look and opens on interactive examples. Python 3.12 is no longer supported; on 3.12, pip keeps installing 0.6.3. Solver code and results are unchanged from 0.6.3.
 
 ### Changed
 
@@ -16,7 +16,12 @@ Docs release: the site builds with Zensical, has its own look with fonts served 
 
 ### Added
 
+- **Python 3.15 is supported**: CI tests 3.13, 3.14 and 3.15, and the wheels install on 3.15 with the Rust backend.
 - **Interactive examples on the home page**: four tabs (simplex with an interior-point switch, A* on a grid, tabu search on a TSP, Nelder-Mead on Himmelblau's function) to edit by hand, with a Solve button that steps to the optimum every 0.5 s, a legend, hover tooltips with the numbers behind the picture and short definitions for the jargon. The code under each picture is the matching solvOR call for the problem as drawn.
+
+### Removed
+
+- **Python 3.12 support**: `requires-python` is now `>=3.13`, and the wheels are abi3 for CPython 3.13 and newer. Projects on 3.12 can stay on 0.6.3.
 
 ## [0.6.3] - 2026-10-06
 
@@ -469,8 +474,8 @@ First public release. Moved my solver collection from "random scripts folder(s)"
 - Pure Python, no dependencies, works everywhere
 
 
-[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.6.4...HEAD
-[0.6.4]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...v0.6.4
+[Unreleased]: https://github.com/StevenBtw/solvOR/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/StevenBtw/solvOR/compare/v0.6.3...v0.7.0
 [0.6.3]: https://github.com/StevenBtw/solvOR/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/StevenBtw/solvOR/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/StevenBtw/solvOR/compare/v0.6.0...v0.6.1

@@ -6,7 +6,7 @@ Common issues and how to fix them.
 
 ### "Python version not supported"
 
-solvOR requires **Python 3.12+**.
+solvOR requires **Python 3.13+**.
 
 ```bash
 python --version  # Check your version
