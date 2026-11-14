@@ -6,7 +6,7 @@
 </picture>
 
 [![Build Status](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml/badge.svg)](https://github.com/StevenBtw/solvOR/actions/workflows/ci.yml)
-[![Docs](https://github.com/StevenBtw/solvOR/actions/workflows/docs.yml/badge.svg)](https://solvOR.ai)
+[![Docs](https://github.com/StevenBtw/solvOR/actions/workflows/docs.yml/badge.svg)](https://solvor.ai)
 [![codecov](https://codecov.io/gh/StevenBtw/solvOR/graph/badge.svg?token=A3H2COO119)](https://codecov.io/gh/StevenBtw/solvOR)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/solvOR)](https://pypi.org/project/solvOR/)
@@ -19,10 +19,10 @@ Solvor all your optimization needs.
 
 | Category | Solvors | Use Case |
 |----------|---------|----------|
-| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp`, `solve_cg`, `solve_bp` | Resource allocation, cutting stock |
+| **Linear/Integer** | `solve_lp`, `solve_lp_interior`, `solve_milp`, `MilpModel`, `solve_lexicographic`, `solve_cg`, `solve_bp` | Resource allocation, cutting stock, multi-objective |
 | **Constraint** | `solve_sat`, `Model` | Sudoku, puzzles, and that one config problem that's been bugging you |
 | **Combinatorial** | `solve_knapsack`, `solve_bin_pack`, `solve_job_shop`, `solve_vrptw` | Packing, scheduling, routing |
-| **Local Search** | `anneal`, `tabu_search`, `lns`, `alns` | TSP, combinatorial optimization |
+| **Local Search** | `anneal`, `tabu_search`, `solve_tsp`, `lns`, `alns` | TSP, combinatorial optimization |
 | **Population** | `evolve`, `differential_evolution`, `particle_swarm` | Global search, nature-inspired |
 | **Gradient** | `gradient_descent`, `momentum`, `rmsprop`, `adam` | ML, curve fitting |
 | **Quasi-Newton** | `bfgs`, `lbfgs` | Fast convergence, smooth functions |
@@ -501,7 +501,7 @@ result = floyd_warshall(n_nodes, edges, backend="python")
 
 Pre-built wheels include Rust extensions for Linux, macOS, and Windows: one abi3 wheel per platform that works on CPython 3.13 and newer. If Rust isn't available, solvOR falls back to Python automatically.
 
-See the [Performance docs](https://solvOR.ai/getting-started/performance/) for which algorithms have Rust backends and benchmarks.
+See the [Performance docs](https://solvor.ai/getting-started/performance/) for which algorithms have Rust backends and benchmarks.
 
 ---
 
@@ -516,7 +516,7 @@ See the [Performance docs](https://solvOR.ai/getting-started/performance/) for w
 
 ## Documentation
 
-Full docs at **[solvOR.ai](https://solvOR.ai):** getting started, algorithm reference, cookbook with worked examples, and troubleshooting.
+Full docs at **[solvor.ai](https://solvor.ai):** getting started, algorithm reference, cookbook with worked examples, and troubleshooting.
 
 ---
 
@@ -533,7 +533,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
 <summary><strong>A little bit of history..</strong></summary>
 I learned about solvers back in 2011, working with some great minds at a startup in Paris. I started writing python myself around 2018, always as a hobby, and in 2024 I got back into solvers for an energy management system (EMS) and wrote a few tools (simplex, milp, genetic) myself mainly to improve my understanding.
 
-Over time this toolbox got larger and larger, so I decided to publish it on GitHub so others can use it and improve it even further. Since I am learning Rust, I will eventually replace some performance critical operations with a high performance Rust implementation. But since I work on this project (and others) in my spare time, what and when is uncertain. The name solvOR is a mix of solver(s) and OR (Operations Research).
+Over time this toolbox got larger and larger, so I decided to publish it on GitHub so others can use it and improve it even further. Since I am learning Rust, the performance-critical algorithms now have optional Rust backends, and more may follow. The name solvOR is a mix of solver(s) and OR (Operations Research).
 
 Disclaimer; I am not a professional software engineer, so there are probably some obvious improvements possible. If so let me know, or create a PR!
 
