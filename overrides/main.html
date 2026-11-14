@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{#- Link previews (LinkedIn, Slack, Mastodon, X): Open Graph and Twitter card tags on every page.
+    The theme does not turn extra.meta into tags; this block writes them. The image is docs/assets/og/solvor.png. -#}
+{% block extrahead %}
+  {{ super() }}
+  {%- if page and page.meta and page.meta.description -%}
+    {%- set og_description = page.meta.description -%}
+  {%- else -%}
+    {%- set og_description = config.site_description -%}
+  {%- endif -%}
+  {#- Zensical does not set page.is_homepage; the home page is the one at the site root -#}
+  {%- if page and (page.is_homepage or page.canonical_url == config.site_url) -%}
+    {%- set og_title = "solvOR: optimization you can read" -%}
+  {%- elif page and page.title -%}
+    {%- set og_title = page.title ~ " · solvOR" -%}
+  {%- else -%}
+    {%- set og_title = config.site_name -%}
+  {%- endif -%}
+  {%- set og_image = config.site_url ~ "assets/og/solvor.png" %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="solvOR">
+  <meta property="og:title" content="{{ og_title | e }}">
+  <meta property="og:description" content="{{ og_description | e }}">
+  {%- if page and page.canonical_url %}
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  {%- endif %}
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="627">
+  <meta property="og:image:alt" content="The solvOR wordmark and the line Optimization you can read, next to a search stepping across level sets to a gold optimum">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ og_title | e }}">
+  <meta name="twitter:description" content="{{ og_description | e }}">
+  <meta name="twitter:image" content="{{ og_image }}">
+{% endblock %}
