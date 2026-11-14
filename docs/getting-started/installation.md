@@ -44,4 +44,4 @@ cd solvOR
 uv sync --extra dev
 ```
 
-This installs pytest, ruff, type checkers, and mkdocs for documentation.
+This installs pytest, ruff, ty and maturin. Add `--extra docs` for the documentation tools (Zensical).

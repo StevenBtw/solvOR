@@ -742,7 +742,7 @@ uv run pytest -m real_world --no-cov
 
 ### Documentation Tests
 
-The `test_docs.py` file runs `mkdocs build --strict` to catch documentation issues before they reach production:
+The `test_docs.py` file runs `zensical build --strict` to catch documentation issues before they reach production:
 
 - Missing type annotations on public APIs
 - Broken internal links
@@ -807,14 +807,14 @@ Type hints are required on public APIs but optional for internal helpers.
 
 ## Documentation
 
-Docs live in `docs/` and are built with MkDocs + Material theme. Deployed to [solvOR.ai](https://solvOR.ai) via GitHub Actions.
+Docs live in `docs/` and are built with [Zensical](https://zensical.org) from `mkdocs.yml` (`uv sync --extra docs` installs it). Deployed to [solvOR.ai](https://solvOR.ai) via GitHub Actions.
 
 ```bash
 # Serve locally
-uv run mkdocs serve
+uv run zensical serve
 
 # Build (use --strict to catch issues before CI does)
-uv run mkdocs build --strict
+uv run zensical build --strict
 ```
 
 **Strict mode catches:** Missing type annotations on public APIs, broken links, invalid markdown. CI runs this automatically via `test_docs.py`.
@@ -857,7 +857,7 @@ We follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format, with 
 - Documentation-only changes (unless the docs are what the release ships, like 0.7.0)
 - Test additions/fixes
 
-The next version has its own section from the start, such as `## [0.7.0] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
+The next version has its own section from the start, such as `## [0.7.1] - Unreleased`; the release replaces `Unreleased` with the date and opens with a short paragraph on what the release is about. Add entries to it in these sections, in this order (leave out the empty ones):
 
 - `Gotta need for speed`: performance, with numbers (`345 ms to 12 ms`)
 - `Changed`: calls that ran in the previous release and now fail or behave differently, opened by one line saying so
